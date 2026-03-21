@@ -1,7 +1,7 @@
 {
-  "outputDirectory": "client/dist",
-  "buildCommand": "cd client && pnpm install && pnpm run build",
-  "installCommand": "cd client && pnpm install",
+  "outputDirectory": "dist/public",
+  "buildCommand": "pnpm install && pnpm run build",
+  "installCommand": "pnpm install",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
