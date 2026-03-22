@@ -11,6 +11,8 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/practice", label: "Practice" },
+    { href: "/aptitude", label: "Aptitude" },
+    { href: "/explore", label: "Explore" },
     { href: "/contests", label: "Contests" },
     { href: "/leaderboard", label: "Leaderboard" },
     { href: "/resources", label: "Resources" },
