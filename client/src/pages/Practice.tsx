@@ -1,716 +1,364 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { AlertCircle, CheckCircle2, XCircle, RotateCcw, Zap } from "lucide-react";
-import { toast } from "sonner";
-import MockTestGenerator, { MockTestConfig } from "@/components/MockTestGenerator";
-import MockTestSession, { TestResults } from "@/components/MockTestSession";
+import { useState, useMemo } from "react";
+import { Link } from "wouter";
+import {
+  Filter, Search, Shuffle, ChevronLeft, ChevronRight,
+  Bookmark, BookmarkCheck, Flag, Clock, CheckCircle2, Circle,
+  X, SlidersHorizontal
+} from "lucide-react";
+import {
+  questions, allTopics, allYears,
+  type Exam, type Difficulty, type QuestionType, type Question
+} from "../data/questions";
 
-interface Question {
-  id: number;
-  text: string;
-  options: string[];
-  correct: number;
-  explanation: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-}
-
-interface TopicQuestions {
-  [key: string]: Question[];
-}
-
-const QUESTIONS_DATA: TopicQuestions = {
-  Polity: [
-    {
-      id: 1,
-      text: "Which Article of the Indian Constitution deals with the Right to Education?",
-      options: ["Article 19", "Article 21A", "Article 24", "Article 32"],
-      correct: 1,
-      explanation: "Article 21A was inserted by the 86th Constitutional Amendment Act 2002, making free and compulsory education a fundamental right for children aged 6-14.",
-      difficulty: "Easy",
-    },
-    {
-      id: 2,
-      text: "The concept of 'Judicial Review' in India is borrowed from which country?",
-      options: ["UK", "USA", "Canada", "Australia"],
-      correct: 1,
-      explanation: "India borrowed the concept of Judicial Review from the USA, though in India it is more limited in scope than in the American system.",
-      difficulty: "Medium",
-    },
-    {
-      id: 3,
-      text: "Which Article of the Constitution provides for the abolition of untouchability?",
-      options: ["Article 15", "Article 17", "Article 19", "Article 21"],
-      correct: 1,
-      explanation: "Article 17 abolishes untouchability and prohibits its practice in any form. Enforcement of any disability arising out of untouchability is forbidden.",
-      difficulty: "Easy",
-    },
-    {
-      id: 4,
-      text: "The President of India can dissolve the Lok Sabha on the advice of:",
-      options: ["Prime Minister", "Chief Justice", "Speaker", "Vice President"],
-      correct: 0,
-      explanation: "The President can dissolve the Lok Sabha on the advice of the Prime Minister, as per Article 85 of the Constitution.",
-      difficulty: "Medium",
-    },
-    {
-      id: 5,
-      text: "Which constitutional amendment introduced the concept of 'Fundamental Duties'?",
-      options: ["42nd Amendment", "44th Amendment", "52nd Amendment", "73rd Amendment"],
-      correct: 0,
-      explanation: "The 42nd Constitutional Amendment, passed in 1976, introduced Part IVA which contains the Fundamental Duties of citizens.",
-      difficulty: "Hard",
-    },
-  ],
-  History: [
-    {
-      id: 1,
-      text: "The Indus Valley Civilization was discovered in the year?",
-      options: ["1901", "1911", "1921", "1931"],
-      correct: 2,
-      explanation: "The Indus Valley Civilisation was discovered in 1921 when excavations began at Harappa under the Archaeological Survey of India.",
-      difficulty: "Easy",
-    },
-    {
-      id: 2,
-      text: "Who was the founder of the Mauryan Empire?",
-      options: ["Ashoka", "Chandragupta Maurya", "Bindusara", "Brihadratha"],
-      correct: 1,
-      explanation: "Chandragupta Maurya founded the Mauryan Empire around 322 BCE with the help of Chanakya (Kautilya).",
-      difficulty: "Easy",
-    },
-    {
-      id: 3,
-      text: "The Battle of Plassey was fought in which year?",
-      options: ["1757", "1764", "1775", "1780"],
-      correct: 0,
-      explanation: "The Battle of Plassey was fought on June 23, 1757, between the British East India Company and the Nawab of Bengal.",
-      difficulty: "Medium",
-    },
-    {
-      id: 4,
-      text: "Which Mughal emperor built the Taj Mahal?",
-      options: ["Akbar", "Jahangir", "Shah Jahan", "Aurangzeb"],
-      correct: 2,
-      explanation: "Emperor Shah Jahan built the Taj Mahal in memory of his beloved wife Mumtaz Mahal. Construction began in 1632 and was completed in 1653.",
-      difficulty: "Easy",
-    },
-    {
-      id: 5,
-      text: "The Revolt of 1857 started from which place?",
-      options: ["Delhi", "Meerut", "Kanpur", "Lucknow"],
-      correct: 1,
-      explanation: "The Revolt of 1857 started from Meerut on May 10, 1857, when Indian soldiers (sepoys) rebelled against the British East India Company.",
-      difficulty: "Medium",
-    },
-  ],
-  Geography: [
-    {
-      id: 1,
-      text: "Which river is known as the 'Sorrow of Bihar'?",
-      options: ["Gandak", "Kosi", "Ghaghara", "Bagmati"],
-      correct: 1,
-      explanation: "The Kosi river is called the Sorrow of Bihar due to its frequent and devastating floods that cause massive destruction in the state.",
-      difficulty: "Easy",
-    },
-    {
-      id: 2,
-      text: "The Western Ghats are located in which part of India?",
-      options: ["North", "South", "East", "Northeast"],
-      correct: 1,
-      explanation: "The Western Ghats run along the western coast of India, primarily in the southern part, extending from Gujarat to Kerala.",
-      difficulty: "Easy",
-    },
-    {
-      id: 3,
-      text: "Which is the highest peak in India?",
-      options: ["Kangchenjunga", "Makalu", "Mount Everest", "Kanchenjunga"],
-      correct: 0,
-      explanation: "Kangchenjunga (8,586 m) is the highest peak in India, located in the Himalayas on the India-Nepal border.",
-      difficulty: "Easy",
-    },
-    {
-      id: 4,
-      text: "The Deccan Plateau is located in which part of India?",
-      options: ["North", "South", "East", "West"],
-      correct: 1,
-      explanation: "The Deccan Plateau is located in the southern part of India, covering most of the Peninsular India.",
-      difficulty: "Medium",
-    },
-    {
-      id: 5,
-      text: "Which state has the longest coastline in India?",
-      options: ["Maharashtra", "Odisha", "Andhra Pradesh", "Gujarat"],
-      correct: 3,
-      explanation: "Gujarat has the longest coastline in India, spanning approximately 1,600 km along the Arabian Sea.",
-      difficulty: "Medium",
-    },
-  ],
-  Environment: [
-    {
-      id: 1,
-      text: "The 'Paris Agreement' on climate change was adopted in which year?",
-      options: ["2012", "2015", "2017", "2019"],
-      correct: 1,
-      explanation: "The Paris Agreement was adopted on December 12, 2015 at COP21 and entered into force on November 4, 2016.",
-      difficulty: "Easy",
-    },
-    {
-      id: 2,
-      text: "Which gas is primarily responsible for the greenhouse effect?",
-      options: ["Nitrogen", "Oxygen", "Carbon Dioxide", "Hydrogen"],
-      correct: 2,
-      explanation: "Carbon Dioxide (CO2) is the primary greenhouse gas responsible for global warming and climate change.",
-      difficulty: "Easy",
-    },
-    {
-      id: 3,
-      text: "The Montreal Protocol is related to the protection of:",
-      options: ["Forests", "Ozone Layer", "Oceans", "Wetlands"],
-      correct: 1,
-      explanation: "The Montreal Protocol (1987) is an international treaty designed to protect the ozone layer by phasing out CFCs and other ozone-depleting substances.",
-      difficulty: "Medium",
-    },
-    {
-      id: 4,
-      text: "Which of the following is a renewable energy source?",
-      options: ["Coal", "Natural Gas", "Solar Energy", "Petroleum"],
-      correct: 2,
-      explanation: "Solar energy is a renewable energy source that can be continuously replenished, unlike fossil fuels.",
-      difficulty: "Easy",
-    },
-    {
-      id: 5,
-      text: "The Kyoto Protocol was adopted in which year?",
-      options: ["1992", "1997", "2001", "2005"],
-      correct: 1,
-      explanation: "The Kyoto Protocol was adopted on December 11, 1997, and entered into force on February 16, 2005.",
-      difficulty: "Hard",
-    },
-  ],
-  Economy: [
-    {
-      id: 1,
-      text: "What is the currency of India?",
-      options: ["Dollar", "Pound", "Indian Rupee", "Euro"],
-      correct: 2,
-      explanation: "The Indian Rupee (₹) is the official currency of India, with the currency code INR.",
-      difficulty: "Easy",
-    },
-    {
-      id: 2,
-      text: "Which organization publishes the Human Development Index (HDI)?",
-      options: ["IMF", "World Bank", "UNDP", "WTO"],
-      correct: 2,
-      explanation: "The United Nations Development Programme (UNDP) publishes the Human Development Index annually.",
-      difficulty: "Medium",
-    },
-    {
-      id: 3,
-      text: "What is the primary function of the Reserve Bank of India?",
-      options: ["Lending money", "Monetary policy", "Tax collection", "Trade regulation"],
-      correct: 1,
-      explanation: "The RBI is responsible for formulating and implementing monetary policy to maintain price stability and economic growth.",
-      difficulty: "Medium",
-    },
-    {
-      id: 4,
-      text: "Which is the largest economy in the world by GDP?",
-      options: ["China", "Japan", "USA", "Germany"],
-      correct: 2,
-      explanation: "The United States has the largest economy in the world by nominal GDP.",
-      difficulty: "Easy",
-    },
-    {
-      id: 5,
-      text: "What is the Gini Coefficient used to measure?",
-      options: ["Inflation", "Income Inequality", "GDP Growth", "Unemployment"],
-      correct: 1,
-      explanation: "The Gini Coefficient measures income inequality within a population, ranging from 0 (perfect equality) to 1 (perfect inequality).",
-      difficulty: "Hard",
-    },
-  ],
+const EXAM_COLORS: Record<Exam, string> = {
+  UPSC:  "bg-orange-100 text-orange-700 border border-orange-200",
+  SSC:   "bg-blue-100 text-blue-700 border border-blue-200",
+  TSPSC: "bg-purple-100 text-purple-700 border border-purple-200",
+  APPSC: "bg-green-100 text-green-700 border border-green-200",
+  RRB:   "bg-red-100 text-red-700 border border-red-200",
+  IBPS:  "bg-cyan-100 text-cyan-700 border border-cyan-200",
 };
 
-const TOPICS = Object.keys(QUESTIONS_DATA);
+const DIFF_COLORS: Record<Difficulty, string> = {
+  Easy:   "text-green-600 bg-green-50 border border-green-200",
+  Medium: "text-yellow-600 bg-yellow-50 border border-yellow-200",
+  Hard:   "text-red-600 bg-red-50 border border-red-200",
+};
+
+const EXAMS: Exam[] = ["UPSC", "SSC", "TSPSC", "APPSC", "RRB", "IBPS"];
+const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
+const TYPES: QuestionType[] = ["PYQ", "Conceptual", "CurrentAffairs", "Mock"];
+const PER_PAGE = 15;
 
 export default function Practice() {
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<(number | null)[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [completed, setCompleted] = useState(false);
-  const [timer, setTimer] = useState(0);
-  const [showMockTestGenerator, setShowMockTestGenerator] = useState(false);
-  const [mockTestConfig, setMockTestConfig] = useState<MockTestConfig | null>(null);
-  const [mockTestResults, setMockTestResults] = useState<TestResults | null>(null);
+  // ── filters ──────────────────────────────────────────────────────
+  const [search, setSearch]         = useState("");
+  const [selExams, setSelExams]     = useState<Exam[]>([]);
+  const [selDiff, setSelDiff]       = useState<Difficulty | "">("");
+  const [selTypes, setSelTypes]     = useState<QuestionType[]>([]);
+  const [selTopics, setSelTopics]   = useState<string[]>([]);
+  const [selYears, setSelYears]     = useState<number[]>([]);
+  const [sortBy, setSortBy]         = useState<"default"|"difficulty"|"year">("default");
+  const [page, setPage]             = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
 
-  const questions = selectedTopic ? QUESTIONS_DATA[selectedTopic] : [];
-  const currentQuestion = questions[currentQuestionIndex];
-  const answered = selectedAnswers.filter((a) => a !== null).length;
+  // ── question panel ───────────────────────────────────────────────
+  const [activeQ, setActiveQ]       = useState<Question | null>(null);
+  const [selected, setSelected]     = useState<number | null>(null);
+  const [bookmarks, setBookmarks]   = useState<number[]>([]);
+  const [solved, setSolved]         = useState<number[]>([]);
 
-  useEffect(() => {
-    if (selectedTopic && !completed) {
-      const interval = setInterval(() => {
-        setTimer((t) => t + 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedTopic, completed]);
+  // ── filtering & sorting ──────────────────────────────────────────
+  const filtered = useMemo(() => {
+    let q = [...questions];
+    if (search)         q = q.filter(x => x.question.toLowerCase().includes(search.toLowerCase()) || x.topic.toLowerCase().includes(search.toLowerCase()));
+    if (selExams.length)  q = q.filter(x => selExams.includes(x.exam));
+    if (selDiff)          q = q.filter(x => x.difficulty === selDiff);
+    if (selTypes.length)  q = q.filter(x => selTypes.includes(x.type));
+    if (selTopics.length) q = q.filter(x => selTopics.includes(x.topic));
+    if (selYears.length)  q = q.filter(x => x.year !== null && selYears.includes(x.year!));
+    if (sortBy === "difficulty") q.sort((a,b) => ["Easy","Medium","Hard"].indexOf(a.difficulty) - ["Easy","Medium","Hard"].indexOf(b.difficulty));
+    if (sortBy === "year") q.sort((a,b) => (b.year ?? 0) - (a.year ?? 0));
+    return q;
+  }, [search, selExams, selDiff, selTypes, selTopics, selYears, sortBy]);
 
-  const handleSelectAnswer = (optionIndex: number) => {
-    const newAnswers = [...selectedAnswers];
-    newAnswers[currentQuestionIndex] = optionIndex;
-    setSelectedAnswers(newAnswers);
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated  = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE);
 
-    if (optionIndex === currentQuestion.correct) {
-      toast.success("Correct! ✅");
-    } else {
-      toast.error("Incorrect ❌");
-    }
+  const toggle = <T,>(arr: T[], setArr: (v:T[])=>void, val: T) =>
+    arr.includes(val) ? setArr(arr.filter(x=>x!==val)) : setArr([...arr, val]);
 
-    setShowResults(true);
-
-    setTimeout(() => {
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-        setShowResults(false);
-      } else {
-        setCompleted(true);
-      }
-    }, 1500);
+  const clearAll = () => {
+    setSearch(""); setSelExams([]); setSelDiff(""); setSelTypes([]);
+    setSelTopics([]); setSelYears([]); setSortBy("default"); setPage(1);
   };
 
-  const calculateScore = (): number => {
-    return selectedAnswers.reduce((score: number, answer: number | null, idx: number) => {
-      if (answer === null || !questions[idx]) return score;
-      return answer === questions[idx].correct ? score + 1 : score;
-    }, 0);
+  const openRandom = () => {
+    const r = filtered[Math.floor(Math.random()*filtered.length)];
+    if (r) { setActiveQ(r); setSelected(null); }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs}s`;
-  };
+  const openQuestion = (q: Question) => { setActiveQ(q); setSelected(null); };
 
-  // Handle mock test completion
-  const handleMockTestComplete = (results: TestResults) => {
-    setMockTestResults(results);
-    setMockTestConfig(null);
-  };
+  const activeIdx = activeQ ? filtered.findIndex(q=>q.id===activeQ.id) : -1;
 
-  // Handle exit from mock test
-  const handleExitMockTest = () => {
-    setMockTestConfig(null);
-  };
-
-  // Show mock test session if config is set
-  if (mockTestConfig) {
-    return (
-      <MockTestSession
-        config={mockTestConfig}
-        onComplete={handleMockTestComplete}
-        onExit={handleExitMockTest}
-      />
-    );
-  }
-
-  // Show mock test results
-  if (mockTestResults) {
-    const { correctAnswers, totalQuestions, accuracy, timeSpent, topicWisePerformance } = mockTestResults;
-    const minutes = Math.floor(timeSpent / 60);
-    const seconds = timeSpent % 60;
-
-    return (
-      <div className="min-h-screen bg-white dark:bg-slate-900">
-        <Navbar />
-        <div className="container mx-auto px-4 py-12">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-                Test Completed! 🎉
-              </h1>
-              <p className="text-xl text-gray-600 dark:text-gray-400">
-                Here's how you performed
-              </p>
-            </div>
-
-            {/* Score Card */}
-            <Card className="p-12 mb-8 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800 text-center">
-              <div className="mb-6">
-                <div className="text-7xl font-bold text-orange-600 dark:text-orange-400 mb-2">
-                  {accuracy}%
-                </div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {correctAnswers} out of {totalQuestions} correct
-                </p>
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Time spent: {minutes}m {seconds}s
-              </p>
-              <div className="flex gap-3 justify-center">
-                <Button
-                  onClick={() => setMockTestResults(null)}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold"
-                >
-                  Create Another Test
-                </Button>
-                <Button
-                  onClick={() => window.location.href = "/practice"}
-                  variant="outline"
-                  className="border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                >
-                  Back to Practice
-                </Button>
-              </div>
-            </Card>
-
-            {/* Topic-wise Performance */}
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-              Topic-wise Performance
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-              {Object.entries(topicWisePerformance).map(([topic, performance]) => {
-                const topicAccuracy = Math.round((performance.correct / performance.total) * 100);
-                return (
-                  <Card key={topic} className="p-6 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
-                    <h3 className="font-bold text-slate-900 dark:text-white mb-3">
-                      {topic}
-                    </h3>
-                    <div className="flex items-end gap-4">
-                      <div className="flex-1">
-                        <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3 mb-2">
-                          <div
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 h-3 rounded-full"
-                            style={{ width: `${topicAccuracy}%` }}
-                          />
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {performance.correct}/{performance.total} correct
-                        </p>
-                      </div>
-                      <span className="text-2xl font-bold text-orange-500">
-                        {topicAccuracy}%
-                      </span>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!selectedTopic) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-slate-900">
-        <Navbar />
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-              Practice Questions
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
-              Select a topic to start practicing
-            </p>
-
-            <div className="mb-12 p-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <Zap className="w-5 h-5" />
-                    Create Custom Mock Test
-                  </h3>
-                  <p className="opacity-90">
-                    Combine multiple topics and customize difficulty for a personalized test experience
-                  </p>
-                </div>
-                <Button
-                  onClick={() => setShowMockTestGenerator(true)}
-                  className="bg-white text-orange-600 hover:bg-gray-100 font-bold whitespace-nowrap ml-4"
-                >
-                  Create Test
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {TOPICS.map((topic) => (
-                <button
-                  key={topic}
-                  onClick={() => {
-                    setSelectedTopic(topic);
-                    setCurrentQuestionIndex(0);
-                    setSelectedAnswers(new Array(QUESTIONS_DATA[topic].length).fill(null));
-                    setCompleted(false);
-                    setTimer(0);
-                  }}
-                  className="p-8 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-slate-800 dark:to-slate-700 rounded-lg hover:shadow-lg transition-all duration-300 text-left border-2 border-transparent hover:border-orange-500"
-                >
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                    {topic}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {QUESTIONS_DATA[topic].length} questions
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <Footer />
-
-        <MockTestGenerator
-          isOpen={showMockTestGenerator}
-          onClose={() => setShowMockTestGenerator(false)}
-          onGenerateTest={(config) => {
-            setMockTestConfig(config);
-          }}
-        />
-      </div>
-    );
-  }
-
-  if (completed) {
-    const score: number = calculateScore();
-    const accuracy = Math.round((score / questions.length) * 100);
-
-    return (
-      <div className="min-h-screen bg-white dark:bg-slate-900">
-        <Navbar />
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-2xl mx-auto">
-            <Card className="p-12 text-center bg-gradient-to-br from-orange-50 to-orange-100 dark:from-slate-800 dark:to-slate-700 border-2 border-orange-500">
-              <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
-              <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-                Quiz Completed!
-              </h2>
-
-              <div className="grid grid-cols-3 gap-6 mb-8">
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
-                    Score
-                  </p>
-                  <p className="text-3xl font-bold text-orange-500">
-                    {score}/{questions.length}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
-                    Accuracy
-                  </p>
-                  <p className="text-3xl font-bold text-orange-500">
-                    {accuracy}%
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
-                    Time
-                  </p>
-                  <p className="text-3xl font-bold text-orange-500">
-                    {formatTime(timer)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  onClick={() => {
-                    setCurrentQuestionIndex(0);
-                    setSelectedAnswers(new Array(questions.length).fill(null));
-                    setCompleted(false);
-                    setTimer(0);
-                    setShowResults(false);
-                  }}
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Practice Again
-                </Button>
-                <Button
-                  onClick={() => {
-                    setSelectedTopic(null);
-                    setCurrentQuestionIndex(0);
-                    setSelectedAnswers([]);
-                    setCompleted(false);
-                    setTimer(0);
-                  }}
-                  variant="outline"
-                  className="border-2 border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-slate-800"
-                >
-                  Try Another Topic
-                </Button>
-              </div>
-            </Card>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  const filterCount = selExams.length + (selDiff?1:0) + selTypes.length + selTopics.length + selYears.length;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900">
-      <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {selectedTopic}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Question {currentQuestionIndex + 1} of {questions.length}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Time: {formatTime(timer)}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Completed: {answered}/{questions.length}
-                </p>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
-              <div
-                className="bg-orange-500 h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
-                }}
-              />
-            </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* ── Navbar ── */}
+      <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
+          <Link href="/" className="flex items-center gap-2 font-bold text-lg text-orange-500">
+            <span className="w-8 h-8 bg-orange-500 text-white rounded-lg flex items-center justify-center text-sm font-bold">P</span>
+            PrepBros
+          </Link>
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-300">
+            {[["Home","/"],["Practice","/practice"],["Explore","/explore"],["Contests","/contests"],["Leaderboard","/leaderboard"],["Resources","/resources"],["Premium","/premium"]].map(([label,href])=>(
+              <Link key={href} href={href} className={`hover:text-orange-500 transition-colors ${href==="/practice"?"text-orange-500 font-semibold":""}`}>{label}</Link>
+            ))}
           </div>
+          <div className="flex items-center gap-2">
+            <button className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">Login</button>
+            <button className="text-sm px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600">Start Free</button>
+          </div>
+        </div>
+      </nav>
 
-          {/* Question Card */}
-          <Card className="p-8 mb-8 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                  {currentQuestion.text}
-                </h3>
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Practice Questions</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Showing <span className="font-semibold text-orange-500">{filtered.length}</span> questions</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={openRandom} className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors">
+              <Shuffle size={14}/> Random
+            </button>
+            <select value={sortBy} onChange={e=>setSortBy(e.target.value as any)} className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700">
+              <option value="default">Sort: Default</option>
+              <option value="difficulty">Sort: Difficulty</option>
+              <option value="year">Sort: Year</option>
+            </select>
+            <button onClick={()=>setShowFilters(!showFilters)} className="md:hidden flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+              <SlidersHorizontal size={14}/> Filters {filterCount>0 && <span className="bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">{filterCount}</span>}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex gap-4">
+          {/* ── Sidebar Filters ── */}
+          <aside className={`w-56 flex-shrink-0 ${showFilters?"block":"hidden"} md:block`}>
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sticky top-20">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-semibold text-sm text-gray-700 dark:text-gray-200 flex items-center gap-1.5"><Filter size={14}/>Filters</span>
+                {filterCount>0 && <button onClick={clearAll} className="text-xs text-orange-500 hover:underline">Clear all</button>}
               </div>
-              <span className={`difficulty-badge difficulty-${currentQuestion.difficulty.toLowerCase()}`}>
-                {currentQuestion.difficulty}
-              </span>
+
+              {/* Search */}
+              <div className="relative mb-4">
+                <Search size={13} className="absolute left-2.5 top-2.5 text-gray-400"/>
+                <input value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}} placeholder="Search questions..." className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-1 focus:ring-orange-400"/>
+              </div>
+
+              {/* Exam */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Exam</p>
+                {EXAMS.map(e=>(
+                  <label key={e} className="flex items-center gap-2 py-1 cursor-pointer">
+                    <input type="checkbox" checked={selExams.includes(e)} onChange={()=>{toggle(selExams,setSelExams,e);setPage(1);}} className="accent-orange-500"/>
+                    <span className="text-xs text-gray-700 dark:text-gray-300">{e}</span>
+                    <span className={`ml-auto text-xs px-1.5 py-0.5 rounded font-medium ${EXAM_COLORS[e]}`}>{questions.filter(q=>q.exam===e).length}</span>
+                  </label>
+                ))}
+              </div>
+
+              {/* Difficulty */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Difficulty</p>
+                {["", ...DIFFICULTIES].map(d=>(
+                  <label key={d} className="flex items-center gap-2 py-1 cursor-pointer">
+                    <input type="radio" name="diff" checked={selDiff===d} onChange={()=>{setSelDiff(d as any);setPage(1);}} className="accent-orange-500"/>
+                    <span className="text-xs text-gray-700 dark:text-gray-300">{d||"All"}</span>
+                  </label>
+                ))}
+              </div>
+
+              {/* Type */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Type</p>
+                {TYPES.map(t=>(
+                  <label key={t} className="flex items-center gap-2 py-1 cursor-pointer">
+                    <input type="checkbox" checked={selTypes.includes(t)} onChange={()=>{toggle(selTypes,setSelTypes,t);setPage(1);}} className="accent-orange-500"/>
+                    <span className="text-xs text-gray-700 dark:text-gray-300">{t}</span>
+                  </label>
+                ))}
+              </div>
+
+              {/* Topic */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Topic</p>
+                <div className="max-h-40 overflow-y-auto">
+                  {allTopics.map(t=>(
+                    <label key={t} className="flex items-center gap-2 py-1 cursor-pointer">
+                      <input type="checkbox" checked={selTopics.includes(t)} onChange={()=>{toggle(selTopics,setSelTopics,t);setPage(1);}} className="accent-orange-500"/>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">{t}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Year */}
+              <div className="mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Year</p>
+                <div className="max-h-36 overflow-y-auto">
+                  {allYears.map(y=>(
+                    <label key={y} className="flex items-center gap-2 py-1 cursor-pointer">
+                      <input type="checkbox" checked={selYears.includes(y)} onChange={()=>{toggle(selYears,setSelYears,y);setPage(1);}} className="accent-orange-500"/>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">{y}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <button onClick={openRandom} className="w-full mt-3 flex items-center justify-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-xs rounded-lg hover:bg-orange-600 transition-colors">
+                <Shuffle size={12}/> Random Question
+              </button>
             </div>
+          </aside>
 
-            {/* Options */}
-            <div className="space-y-3 mb-8">
-              {currentQuestion.options.map((option, idx) => {
-                const isSelected = selectedAnswers[currentQuestionIndex] === idx;
-                const isCorrect = idx === currentQuestion.correct;
-                const showCorrect = showResults && isCorrect;
-                const showIncorrect = showResults && isSelected && !isCorrect;
+          {/* ── Main Content ── */}
+          <div className="flex-1 min-w-0">
+            {/* Question List */}
+            {!activeQ ? (
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                {/* Table Header */}
+                <div className="grid grid-cols-[40px_1fr_80px_120px_80px_60px_60px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <span>#</span>
+                  <span>Question</span>
+                  <span>Exam</span>
+                  <span>Topic</span>
+                  <span>Difficulty</span>
+                  <span>Year</span>
+                  <span>Solved</span>
+                </div>
 
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => !showResults && handleSelectAnswer(idx)}
-                    disabled={showResults}
-                    className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
-                      showCorrect
-                        ? "border-green-500 bg-green-50 dark:bg-green-900"
-                        : showIncorrect
-                        ? "border-red-500 bg-red-50 dark:bg-red-900"
-                        : isSelected
-                        ? "border-orange-500 bg-orange-50 dark:bg-orange-900"
-                        : "border-gray-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-orange-400"
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center font-bold text-sm ${
-                          showCorrect
-                            ? "border-green-500 bg-green-500 text-white"
-                            : showIncorrect
-                            ? "border-red-500 bg-red-500 text-white"
-                            : isSelected
-                            ? "border-orange-500 bg-orange-500 text-white"
-                            : "border-gray-300 dark:border-slate-500"
-                        }`}
-                      >
-                        {String.fromCharCode(65 + idx)}
-                      </div>
-                      <span className="text-gray-800 dark:text-gray-200">
-                        {option}
-                      </span>
-                      {showCorrect && <CheckCircle2 className="w-5 h-5 text-green-500 ml-auto" />}
-                      {showIncorrect && <XCircle className="w-5 h-5 text-red-500 ml-auto" />}
+                {/* Rows */}
+                {paginated.length === 0 ? (
+                  <div className="text-center py-16 text-gray-400">
+                    <Search size={32} className="mx-auto mb-2 opacity-40"/>
+                    <p className="text-sm">No questions match your filters</p>
+                    <button onClick={clearAll} className="mt-2 text-orange-500 text-sm hover:underline">Clear filters</button>
+                  </div>
+                ) : paginated.map((q, i) => (
+                  <div key={q.id} onClick={()=>openQuestion(q)} className="grid grid-cols-[40px_1fr_80px_120px_80px_60px_60px] gap-2 px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-orange-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                    <span className="text-xs text-gray-400 flex items-center">{(page-1)*PER_PAGE+i+1}</span>
+                    <span className="text-sm text-gray-800 dark:text-gray-200 flex items-center truncate pr-2">{q.question.length>65?q.question.slice(0,65)+"...":q.question}</span>
+                    <span className="flex items-center"><span className={`text-xs px-1.5 py-0.5 rounded font-medium ${EXAM_COLORS[q.exam]}`}>{q.exam}</span></span>
+                    <span className="text-xs text-gray-500 flex items-center truncate">{q.topic}</span>
+                    <span className="flex items-center"><span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_COLORS[q.difficulty]}`}>{q.difficulty}</span></span>
+                    <span className="text-xs text-gray-400 flex items-center">{q.year ?? "—"}</span>
+                    <span className="flex items-center">{solved.includes(q.id) ? <CheckCircle2 size={14} className="text-green-500"/> : <Circle size={14} className="text-gray-300"/>}</span>
+                  </div>
+                ))}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-800">
+                    <span className="text-xs text-gray-500">{(page-1)*PER_PAGE+1}–{Math.min(page*PER_PAGE,filtered.length)} of {filtered.length}</span>
+                    <div className="flex items-center gap-1">
+                      <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} className="p-1.5 rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
+                        <ChevronLeft size={14}/>
+                      </button>
+                      {Array.from({length:Math.min(5,totalPages)},(_,i)=>{
+                        const p = page<=3?i+1:page+i-2;
+                        if(p<1||p>totalPages) return null;
+                        return <button key={p} onClick={()=>setPage(p)} className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${p===page?"bg-orange-500 text-white":"border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"}`}>{p}</button>;
+                      })}
+                      <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} className="p-1.5 rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
+                        <ChevronRight size={14}/>
+                      </button>
                     </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Question Solve View ── */
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                {/* Top bar */}
+                <div className="flex items-center justify-between mb-4">
+                  <button onClick={()=>{setActiveQ(null);setSelected(null);}} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-orange-500 transition-colors">
+                    <ChevronLeft size={16}/> Back to list
                   </button>
-                );
-              })}
-            </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">Question {activeIdx+1} of {filtered.length}</span>
+                    <button onClick={()=>setBookmarks(b=>b.includes(activeQ.id)?b.filter(x=>x!==activeQ.id):[...b,activeQ.id])} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                      {bookmarks.includes(activeQ.id)?<BookmarkCheck size={16} className="text-orange-500"/>:<Bookmark size={16} className="text-gray-400"/>}
+                    </button>
+                    <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-red-500 transition-colors">
+                      <Flag size={16}/>
+                    </button>
+                    <button onClick={()=>{setActiveQ(null);setSelected(null);}} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                      <X size={16} className="text-gray-400"/>
+                    </button>
+                  </div>
+                </div>
 
-            {/* Explanation */}
-            {showResults && (
-              <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 flex gap-3">
-                <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-blue-900 dark:text-blue-200 mb-1">
-                    Explanation
-                  </p>
-                  <p className="text-blue-800 dark:text-blue-300 text-sm">
-                    {currentQuestion.explanation}
-                  </p>
+                {/* Badges */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${EXAM_COLORS[activeQ.exam]}`}>{activeQ.exam}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFF_COLORS[activeQ.difficulty]}`}>{activeQ.difficulty}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600 border border-gray-200">{activeQ.topic}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-50 text-blue-600 border border-blue-200">{activeQ.type}</span>
+                  {activeQ.year && <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600 border border-gray-200 flex items-center gap-1"><Clock size={10}/>{activeQ.year}</span>}
+                </div>
+
+                {/* Question */}
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 leading-relaxed">{activeQ.question}</h2>
+
+                {/* Options */}
+                <div className="grid grid-cols-1 gap-3 mb-6">
+                  {activeQ.options.map((opt, i) => {
+                    let cls = "border-2 border-gray-200 bg-white hover:border-orange-400 hover:bg-orange-50 dark:bg-gray-800 dark:border-gray-700";
+                    if (selected !== null) {
+                      if (i === activeQ.correct) cls = "border-2 border-green-500 bg-green-50 dark:bg-green-950";
+                      else if (i === selected) cls = "border-2 border-red-500 bg-red-50 dark:bg-red-950";
+                      else cls = "border-2 border-gray-200 bg-gray-50 opacity-60 dark:bg-gray-800 dark:border-gray-700";
+                    }
+                    return (
+                      <button key={i} onClick={()=>{ if(selected===null){ setSelected(i); if(!solved.includes(activeQ.id)) setSolved(s=>[...s,activeQ.id]); }}}
+                        className={`w-full text-left px-4 py-3 rounded-xl transition-all ${cls} ${selected===null?"cursor-pointer":"cursor-default"}`}>
+                        <span className="inline-flex items-center gap-3">
+                          <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 ${selected!==null && i===activeQ.correct?"border-green-500 bg-green-500 text-white":selected!==null && i===selected?"border-red-500 bg-red-500 text-white":"border-gray-300 text-gray-500"}`}>
+                            {["A","B","C","D"][i]}
+                          </span>
+                          <span className="text-sm text-gray-800 dark:text-gray-200">{opt}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Explanation */}
+                {selected !== null && (
+                  <div className={`p-4 rounded-xl border-2 mb-6 ${selected===activeQ.correct?"border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800":"border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800"}`}>
+                    <p className="text-sm font-semibold mb-1 flex items-center gap-1.5">
+                      {selected===activeQ.correct?<CheckCircle2 size={14} className="text-green-600"/>:<Flag size={14} className="text-orange-600"/>}
+                      <span className={selected===activeQ.correct?"text-green-700":"text-orange-700"}>
+                        {selected===activeQ.correct?"Correct! Well done 🎉":"Incorrect — the correct answer is: "+activeQ.options[activeQ.correct]}
+                      </span>
+                    </p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{activeQ.explanation}</p>
+                  </div>
+                )}
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1.5 mb-6">
+                  {activeQ.tags.map(tag=>(
+                    <span key={tag} className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-full">#{tag}</span>
+                  ))}
+                </div>
+
+                {/* Nav buttons */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <button onClick={()=>{if(activeIdx>0){setActiveQ(filtered[activeIdx-1]);setSelected(null);}}} disabled={activeIdx===0}
+                    className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 disabled:opacity-40 transition-colors">
+                    <ChevronLeft size={14}/> Previous
+                  </button>
+                  <button onClick={openRandom} className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <Shuffle size={14}/> Random
+                  </button>
+                  <button onClick={()=>{if(activeIdx<filtered.length-1){setActiveQ(filtered[activeIdx+1]);setSelected(null);}}} disabled={activeIdx===filtered.length-1}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-40 transition-colors">
+                    Next <ChevronRight size={14}/>
+                  </button>
                 </div>
               </div>
             )}
-          </Card>
-
-          {/* Navigation */}
-          <div className="flex justify-between items-center">
-            <Button
-              onClick={() => {
-                if (currentQuestionIndex > 0) {
-                  setCurrentQuestionIndex(currentQuestionIndex - 1);
-                  setShowResults(false);
-                }
-              }}
-              disabled={currentQuestionIndex === 0}
-              variant="outline"
-            >
-              Previous
-            </Button>
-
-            <Button
-              onClick={() => {
-                setSelectedTopic(null);
-                setCurrentQuestionIndex(0);
-                setSelectedAnswers([]);
-                setCompleted(false);
-                setTimer(0);
-              }}
-              variant="ghost"
-            >
-              Back to Topics
-            </Button>
-
-            <Button
-              onClick={() => {
-                if (currentQuestionIndex < questions.length - 1) {
-                  setCurrentQuestionIndex(currentQuestionIndex + 1);
-                  setShowResults(false);
-                }
-              }}
-              disabled={currentQuestionIndex === questions.length - 1}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              Next
-            </Button>
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }
