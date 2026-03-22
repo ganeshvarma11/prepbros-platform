@@ -12,6 +12,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Resources from "./pages/Resources";
 import Premium from "./pages/Premium";
 import Dashboard from "./pages/Dashboard";
+import Explore from "./pages/Explore";
 
 function Router() {
   return (
@@ -24,7 +25,7 @@ function Router() {
       <Route path={"/premium"} component={Premium} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/profile"} component={Profile} />
-      <Route path={"/404"} component={NotFound} />
+      <Route path={"/explore"} component={Explore} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
