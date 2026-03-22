@@ -1,3 +1,4 @@
+import { AuthProvider } from "./contexts/AuthContext";
 import Aptitude from "./pages/Aptitude";
 import Profile from "./pages/Profile";
 import { Toaster } from "@/components/ui/sonner";
@@ -37,14 +38,15 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light" switchable>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="light" switchable>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
-
 export default App;
