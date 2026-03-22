@@ -1,3 +1,4 @@
+import Aptitude from "./pages/Aptitude";
 import Profile from "./pages/Profile";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +20,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/practice"} component={Practice} />
+      <Route path={"/aptitude"} component={Aptitude} />
       <Route path={"/contests"} component={Contests} />
       <Route path={"/leaderboard"} component={Leaderboard} />
       <Route path={"/resources"} component={Resources} />
