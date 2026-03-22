@@ -1,3 +1,4 @@
+import Profile from "./pages/Profile";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -22,6 +23,7 @@ function Router() {
       <Route path={"/resources"} component={Resources} />
       <Route path={"/premium"} component={Premium} />
       <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/profile"} component={Profile} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
