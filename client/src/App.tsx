@@ -1,3 +1,4 @@
+import Admin from "./pages/Admin";
 import { AuthProvider } from "./contexts/AuthContext";
 import Aptitude from "./pages/Aptitude";
 import Profile from "./pages/Profile";
@@ -29,6 +30,7 @@ function Router() {
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/profile"} component={Profile} />
       <Route path={"/explore"} component={Explore} />
+      <Route path={"/admin"} component={Admin} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
