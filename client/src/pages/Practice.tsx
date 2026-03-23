@@ -203,21 +203,21 @@ export default function Practice() {
 
       <main className="px-4 py-8 md:py-10">
         <div className="container-shell space-y-6">
-          <div className="glass-panel rounded-[32px] px-6 py-8 md:px-8 md:py-10">
+          <div className="glass-panel rounded-[24px] px-6 py-8 md:px-8 md:py-10">
             <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
               <div>
                 <SectionHeader
                   eyebrow="Practice engine"
-                  title="Solve with focus, not clutter."
-                  description="The practice surface is now cleaner and easier to trust on first use, especially for mobile users landing from social traffic."
+                  title="A denser, cleaner question bank built for daily use."
+                  description="Filter fast, open a question without losing context, and keep the core loop focused on solving instead of navigating."
                 />
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <button type="button" onClick={openRandom} className="btn-primary rounded-full px-5">
+                  <button type="button" onClick={openRandom} className="btn-primary rounded-[12px] px-5">
                     <Shuffle size={15} />
                     Random question
                   </button>
                   <Link href="/dashboard">
-                    <span className="btn-secondary inline-flex cursor-pointer rounded-full px-5">
+                    <span className="btn-secondary inline-flex cursor-pointer rounded-[12px] px-5">
                       View dashboard
                     </span>
                   </Link>
@@ -230,10 +230,7 @@ export default function Practice() {
                   { label: "Bookmarked", value: bookmarks.length },
                   { label: "Solved", value: solved.length },
                 ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] p-4"
-                  >
+                  <div key={item.label} className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-4">
                     <p className="text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                       {item.value}
                     </p>
@@ -246,7 +243,7 @@ export default function Practice() {
 
           <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
             <aside className={`${showFilters ? "block" : "hidden"} lg:block`}>
-              <div className="glass-panel sticky top-[92px] rounded-[28px] p-5">
+              <div className="glass-panel sticky top-[92px] rounded-[20px] p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
                     <Filter size={15} className="text-[var(--brand)]" />
@@ -383,7 +380,7 @@ export default function Practice() {
             </aside>
 
             <section className="space-y-4">
-              <div className="glass-panel flex flex-col gap-4 rounded-[28px] p-5 md:flex-row md:items-center md:justify-between">
+              <div className="glass-panel flex flex-col gap-4 rounded-[20px] p-5 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-[var(--text-primary)]">Practice library</p>
                   <p className="text-sm text-[var(--text-secondary)]">
@@ -401,7 +398,7 @@ export default function Practice() {
                   <button
                     type="button"
                     onClick={() => setShowFilters((current) => !current)}
-                    className="btn-secondary rounded-full px-4 lg:hidden"
+                    className="btn-secondary rounded-[12px] px-4 lg:hidden"
                   >
                     <SlidersHorizontal size={14} />
                     Filters
@@ -415,15 +412,15 @@ export default function Practice() {
               </div>
 
               {questionsLoading ? (
-                <div className="glass-panel flex min-h-[420px] items-center justify-center rounded-[28px] p-6">
+                <div className="glass-panel flex min-h-[420px] items-center justify-center rounded-[20px] p-6">
                   <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-5 py-3 text-sm text-[var(--text-secondary)]">
                     <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
                     Loading questions...
                   </div>
                 </div>
               ) : !activeQ ? (
-                <div className="glass-panel overflow-hidden rounded-[28px]">
-                  <div className="hidden grid-cols-[56px_1fr_90px_120px_92px_70px_64px] gap-3 border-b border-[var(--border)] bg-[var(--bg-subtle)] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] md:grid">
+                <div className="glass-panel overflow-hidden rounded-[20px]">
+                  <div className="hidden grid-cols-[56px_1fr_90px_140px_92px_70px_64px] gap-3 border-b border-[var(--border)] bg-[var(--bg-subtle)] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] md:grid">
                     <span>#</span>
                     <span>Question</span>
                     <span>Exam</span>
@@ -442,7 +439,7 @@ export default function Practice() {
                         Clear a few filters to widen the pool and keep users from hitting dead
                         ends too quickly.
                       </p>
-                      <button type="button" onClick={clearAll} className="btn-primary mt-5 rounded-full px-5">
+                      <button type="button" onClick={clearAll} className="btn-primary mt-5 rounded-[12px] px-5">
                         Clear filters
                       </button>
                     </div>
@@ -454,7 +451,7 @@ export default function Practice() {
                             key={question.id}
                             type="button"
                             onClick={() => openQuestion(question)}
-                            className="table-row grid w-full gap-3 px-5 py-4 text-left md:grid-cols-[56px_1fr_90px_120px_92px_70px_64px]"
+                            className="table-row grid w-full gap-3 px-5 py-4 text-left md:grid-cols-[56px_1fr_90px_140px_92px_70px_64px]"
                           >
                             <span className="text-xs text-[var(--text-faint)] md:flex md:items-center">
                               {(page - 1) * PER_PAGE + index + 1}
@@ -505,7 +502,7 @@ export default function Practice() {
                               type="button"
                               onClick={() => setPage((current) => Math.max(1, current - 1))}
                               disabled={page === 1}
-                              className="btn-secondary rounded-full px-3 disabled:opacity-40"
+                              className="btn-secondary rounded-[12px] px-3 disabled:opacity-40"
                             >
                               <ChevronLeft size={14} />
                             </button>
@@ -519,8 +516,8 @@ export default function Practice() {
                                   onClick={() => setPage(currentPage)}
                                   className={
                                     currentPage === page
-                                      ? "btn-primary rounded-full px-4 py-2"
-                                      : "btn-secondary rounded-full px-4 py-2"
+                                      ? "btn-primary rounded-[12px] px-4 py-2"
+                                      : "btn-secondary rounded-[12px] px-4 py-2"
                                   }
                                 >
                                   {currentPage}
@@ -531,7 +528,7 @@ export default function Practice() {
                               type="button"
                               onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                               disabled={page === totalPages}
-                              className="btn-secondary rounded-full px-3 disabled:opacity-40"
+                              className="btn-secondary rounded-[12px] px-3 disabled:opacity-40"
                             >
                               <ChevronRight size={14} />
                             </button>
@@ -542,7 +539,7 @@ export default function Practice() {
                   )}
                 </div>
               ) : (
-                <div className="glass-panel rounded-[28px] p-5 md:p-6">
+                <div className="glass-panel rounded-[20px] p-5 md:p-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <button
                       type="button"
@@ -550,7 +547,7 @@ export default function Practice() {
                         setActiveQ(null);
                         setSelected(null);
                       }}
-                      className="btn-secondary rounded-full px-4"
+                      className="btn-secondary rounded-[12px] px-4"
                     >
                       <ChevronLeft size={14} />
                       Back to list
@@ -560,14 +557,14 @@ export default function Practice() {
                       <span className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         {activeIdx + 1} of {filtered.length}
                       </span>
-                      <button type="button" onClick={handleBookmark} className="btn-secondary rounded-full px-3">
+                      <button type="button" onClick={handleBookmark} className="btn-secondary rounded-[12px] px-3">
                         {bookmarks.includes(activeQ.id) ? (
                           <BookmarkCheck size={14} className="text-[var(--brand)]" />
                         ) : (
                           <Bookmark size={14} />
                         )}
                       </button>
-                      <button type="button" className="btn-secondary rounded-full px-3">
+                      <button type="button" className="btn-secondary rounded-[12px] px-3">
                         <Flag size={14} />
                       </button>
                       <button
@@ -576,7 +573,7 @@ export default function Practice() {
                           setActiveQ(null);
                           setSelected(null);
                         }}
-                        className="btn-secondary rounded-full px-3"
+                        className="btn-secondary rounded-[12px] px-3"
                       >
                         <X size={14} />
                       </button>

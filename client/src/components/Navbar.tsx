@@ -69,13 +69,13 @@ export default function Navbar() {
       <nav
         className={cn(
           "navbar transition-all duration-200",
-          scrolled && "shadow-[0_10px_40px_-32px_rgba(15,23,42,0.5)]",
+          scrolled && "shadow-[0_14px_44px_-30px_rgba(0,0,0,0.72)]",
         )}
       >
         <div className="container-shell flex min-h-[72px] items-center justify-between gap-4 py-3">
           <div className="flex items-center gap-4">
             <BrandLogo compact />
-            <div className="hidden items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] p-1 lg:flex">
+            <div className="hidden items-center gap-1 rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] p-1 lg:flex">
               {NAV_LINKS.map((item) => (
                 <Link key={item.href} href={item.href}>
                   <span
@@ -95,14 +95,14 @@ export default function Navbar() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:border-[var(--brand-muted)] hover:text-[var(--text-primary)]"
+              className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:border-[var(--brand-muted)] hover:text-[var(--text-primary)]"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
             <Link href="/premium">
-              <span className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--brand-muted)] hover:text-[var(--text-primary)]">
+              <span className="inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-[var(--border)] bg-[linear-gradient(180deg,#221b11_0%,#181818_100%)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--brand-muted)]">
                 <Sparkles size={14} className="text-[var(--brand)]" />
                 PrepBros Pro
               </span>
@@ -111,8 +111,8 @@ export default function Navbar() {
             {user ? (
               <>
                 <Link href="/profile">
-                  <span className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 transition hover:border-[var(--brand-muted)]">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-subtle)] text-sm font-semibold text-[var(--brand-dark)]">
+                  <span className="inline-flex cursor-pointer items-center gap-3 rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 transition hover:border-[var(--brand-muted)]">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[var(--brand-subtle)] text-sm font-semibold text-[var(--brand-light)]">
                       {displayName.charAt(0).toUpperCase()}
                     </span>
                     <span className="max-w-28 truncate text-sm font-medium text-[var(--text-primary)]">
@@ -123,7 +123,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => signOut()}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:border-[var(--red)] hover:text-[var(--red)]"
+                  className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:border-[var(--red)] hover:text-[var(--red)]"
                   aria-label="Sign out"
                 >
                   <LogOut size={16} />
@@ -131,13 +131,13 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <button type="button" onClick={openLogin} className="btn-secondary rounded-full px-5">
+                <button type="button" onClick={openLogin} className="btn-secondary rounded-[12px] px-5">
                   Log in
                 </button>
                 <button
                   type="button"
                   onClick={openSignup}
-                  className="btn-primary rounded-full px-5"
+                  className="btn-primary rounded-[12px] px-5"
                 >
                   Start free
                 </button>
@@ -149,7 +149,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)]"
+              className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)]"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -157,7 +157,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setIsOpen((value) => !value)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)]"
+              className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)]"
               aria-label="Open menu"
             >
               {isOpen ? <X size={18} /> : <Menu size={18} />}
@@ -172,7 +172,7 @@ export default function Navbar() {
                 <Link href="/dashboard">
                   <span
                     onClick={() => setIsOpen(false)}
-                    className="inline-flex cursor-pointer items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 text-sm font-medium text-[var(--text-primary)]"
+                    className="inline-flex cursor-pointer items-center gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 text-sm font-medium text-[var(--text-primary)]"
                   >
                     <LayoutDashboard size={16} className="text-[var(--brand)]" />
                     Dashboard
@@ -183,9 +183,9 @@ export default function Navbar() {
                     <span
                       onClick={() => setIsOpen(false)}
                       className={cn(
-                        "inline-flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition",
+                        "inline-flex cursor-pointer items-center gap-3 rounded-[14px] border px-4 py-3 text-sm font-medium transition",
                         activeRoute(item.href)
-                          ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-dark)]"
+                          ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-light)]"
                           : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)]",
                       )}
                     >
@@ -196,7 +196,7 @@ export default function Navbar() {
                 ))}
               </div>
 
-              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+              <div className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-[var(--text-primary)]">
@@ -216,7 +216,7 @@ export default function Navbar() {
                     <Link href="/profile">
                       <span
                         onClick={() => setIsOpen(false)}
-                        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-sm font-medium text-[var(--text-primary)]"
+                        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-sm font-medium text-[var(--text-primary)]"
                       >
                         <User size={14} />
                         Profile
@@ -228,7 +228,7 @@ export default function Navbar() {
                         setIsOpen(false);
                         signOut();
                       }}
-                      className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--red)]/30 bg-[var(--red-bg)] px-4 py-2 text-sm font-medium text-[var(--red)]"
+                      className="inline-flex items-center justify-center gap-2 rounded-[12px] border border-[var(--red)]/30 bg-[var(--red-bg)] px-4 py-2 text-sm font-medium text-[var(--red)]"
                     >
                       <LogOut size={14} />
                       Sign out
@@ -236,11 +236,11 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <div className="grid gap-2">
-                    <button type="button" onClick={openSignup} className="btn-primary rounded-full">
+                    <button type="button" onClick={openSignup} className="btn-primary rounded-[12px]">
                       <ArrowRight size={14} />
                       Start free
                     </button>
-                    <button type="button" onClick={openLogin} className="btn-secondary rounded-full">
+                    <button type="button" onClick={openLogin} className="btn-secondary rounded-[12px]">
                       Log in
                     </button>
                   </div>

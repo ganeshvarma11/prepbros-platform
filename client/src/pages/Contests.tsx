@@ -157,8 +157,8 @@ export default function Contests() {
               <div>
                 <SectionHeader
                   eyebrow="Contests"
-                  title="Competition now feels like a real product surface."
-                  description="The page is cleaner, more premium, and better at signaling what a contest means, why a user should care, and what happens next."
+                  title="Compete weekly, track outcomes, and build exam pressure into practice."
+                  description="Contests add urgency, visibility, and a reason for serious users to return on schedule."
                 />
                 <div className="mt-6 flex flex-wrap gap-3">
                   <span className="badge border-white/15 bg-white/10 px-4 py-2 text-white">Weekly contest</span>
@@ -169,7 +169,7 @@ export default function Contests() {
               <div className="rounded-[28px] border border-white/12 bg-white/8 p-6 backdrop-blur">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Next up</p>
                 <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">Weekly Contest #14</p>
-                <p className="mt-2 text-sm text-white/76">A cleaner pre-event surface increases trust even before contests become fully dynamic.</p>
+                <p className="mt-2 text-sm text-white/76">See the next contest at a glance, understand the scope quickly, and know when to show up.</p>
                 <div className="mt-6 grid grid-cols-4 gap-3">
                   {[
                     { label: "Days", value: countdown.days },
@@ -191,14 +191,14 @@ export default function Contests() {
             <div className="glass-panel rounded-[32px] p-6 md:p-8">
               <SectionHeader
                 eyebrow="Why this is stronger"
-                title="The contest page now sells aspiration better."
-                description="Even with placeholder contest data, the page feels more intentional and less like a filler feature."
+                title="Contest UX should make competition feel exciting and credible."
+                description="Dates, prizes, topic scope, and status all need to be easy to parse if users are going to care."
               />
               <div className="mt-6 grid gap-3">
                 {[
-                  "Cleaner hero and countdown build anticipation.",
-                  "Better card structure makes prizes, dates, and topic scope easier to understand.",
-                  "The page now feels worthy of future real-time contest data and rankings.",
+                  "Countdown and hero context build anticipation before the event starts.",
+                  "Contest cards make prizes, dates, and topic scope easier to understand.",
+                  "The surface is ready for fully live rankings and participation data.",
                 ].map((item) => (
                   <div key={item} className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] p-4 text-sm text-[var(--text-secondary)]">
                     {item}
@@ -212,11 +212,10 @@ export default function Contests() {
                 <Sparkles size={18} />
               </div>
               <p className="mt-5 text-2xl font-semibold tracking-[-0.05em] text-white">
-                This page will get dramatically better once contests are truly live and synced.
+                This becomes much stronger once contests are fully live and synced.
               </p>
               <p className="mt-3 text-sm text-white/72">
-                The UI is now ready for that future; the missing piece is real contest operations and
-                participation tracking.
+                The interface is ready. The next step is real contest operations, attempts, and rank updates.
               </p>
             </div>
           </div>

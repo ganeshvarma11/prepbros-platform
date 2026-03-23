@@ -213,8 +213,8 @@ export default function Profile() {
               <div>
                 <SectionHeader
                   eyebrow="Account and settings"
-                  title="A cleaner profile that feels useful, not ornamental."
-                  description="This page now acts as a real account center: target exam, progress summary, and high-level feedback on where the user should focus next."
+                  title="Your prep profile, targets, and performance in one place."
+                  description="Keep your exam goal current, monitor streaks and bookmarks, and use your results to see where your preparation is strongest."
                 />
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
                   <div className="rounded-[28px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-5">
@@ -237,7 +237,7 @@ export default function Profile() {
                       Progress becomes sticky when it feels visible.
                     </p>
                     <p className="mt-2 text-sm text-white/72">
-                      This redesign pushes that idea across profile, dashboard, and practice.
+                      Good prep platforms make effort visible, which is what helps users return consistently.
                     </p>
                   </div>
                 </div>
@@ -277,7 +277,7 @@ export default function Profile() {
               <SectionHeader
                 eyebrow="Needs focus"
                 title="Topics to revisit next"
-                description="Weak-topic visibility helps the profile reinforce the same learning loop as the dashboard."
+                description="Use weaker areas to decide what deserves your next study block."
               />
               <div className="mt-6 space-y-3">
                 {needsWork.length > 0 ? (

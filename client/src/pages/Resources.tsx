@@ -141,11 +141,10 @@ export default function Resources() {
                 <Sparkles size={18} />
               </div>
               <p className="mt-5 text-2xl font-semibold tracking-[-0.05em] text-white">
-                This page should eventually become a major retention surface.
+                Strong resources give users another reason to return between practice sessions.
               </p>
               <p className="mt-3 text-sm text-white/72">
-                Once you add better content operations, resources can become a reason users return
-                even when they are not doing question practice that day.
+                As your content library improves, resources can support revision, deeper reading, and calmer study days outside the question bank.
               </p>
             </div>
           </div>

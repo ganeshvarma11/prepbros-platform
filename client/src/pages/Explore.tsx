@@ -115,18 +115,18 @@ export default function Explore() {
               <div>
                 <SectionHeader
                   eyebrow="Explore"
-                  title="A better front door into the product."
-                  description="This page now acts like discovery and onboarding combined: daily spark, exam hubs, curated paths, and clearer reasons to keep browsing."
+                  title="Discover where to start, what to practice, and what to open next."
+                  description="Explore brings together daily challenge, exam hubs, and guided paths so users can enter the product without confusion."
                 />
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link href={user ? "/dashboard" : "/practice"}>
-                    <span className="btn-primary inline-flex cursor-pointer rounded-full px-6 py-3">
+                    <span className="btn-primary inline-flex cursor-pointer rounded-[12px] px-6 py-3">
                       {user ? "Continue your prep" : "Start with practice"}
                       <ArrowRight size={16} />
                     </span>
                   </Link>
                   <Link href="/resources">
-                    <span className="btn-secondary inline-flex cursor-pointer rounded-full px-6 py-3">
+                    <span className="btn-secondary inline-flex cursor-pointer rounded-[12px] px-6 py-3">
                       Browse resources
                     </span>
                   </Link>
@@ -139,10 +139,7 @@ export default function Explore() {
                   { label: "PYQs", value: totalPYQ },
                   { label: "Topics", value: totalTopics },
                 ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] p-4"
-                  >
+                  <div key={item.label} className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-4">
                     <p className="text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                       {item.value}
                     </p>
@@ -154,7 +151,7 @@ export default function Explore() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="glass-panel rounded-[32px] p-6 md:p-8">
+            <div className="glass-panel rounded-[24px] p-6 md:p-8">
               <div className="flex items-center gap-3">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-subtle)] text-[var(--brand)]">
                   <Flame size={18} />
@@ -169,7 +166,7 @@ export default function Explore() {
                 </div>
               </div>
 
-              <div className="mt-6 rounded-[28px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-5">
+              <div className="mt-6 rounded-[20px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-5">
                 {dailyQuestion ? (
                   <>
                     <div className="flex flex-wrap gap-2">
@@ -231,20 +228,17 @@ export default function Explore() {
             </div>
 
             <div className="grid gap-6">
-              <div className="glass-panel rounded-[32px] p-6 md:p-8">
+              <div className="glass-panel rounded-[24px] p-6 md:p-8">
                 <SectionHeader
                   eyebrow="Why this page matters"
-                  title="Explore now feels like a guided product surface."
-                  description="It’s no longer just another content page. It helps users discover value before they bounce."
+                  title="Explore should reduce hesitation and increase curiosity."
+                  description="It gives new users enough structure to start, while still helping returning users discover more of the platform."
                 />
                 <div className="mt-6 space-y-3">
                   {productBenefits.map((item) => {
                     const Icon = item.icon;
                     return (
-                      <div
-                        key={item.title}
-                        className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] p-4"
-                      >
+                      <div key={item.title} className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-4">
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--bg-subtle)] text-[var(--brand)]">
                             <Icon size={16} />
@@ -260,16 +254,15 @@ export default function Explore() {
                 </div>
               </div>
 
-              <div className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-inverse)] p-6 text-white md:p-8">
+              <div className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-inverse)] p-6 text-white md:p-8">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
                   <Rocket size={18} />
                 </div>
                 <p className="mt-5 text-2xl font-semibold tracking-[-0.05em] text-white">
-                  This is the right page to send curious traffic to after the homepage.
+                  This is where curious visitors can turn into active users.
                 </p>
                 <p className="mt-3 text-sm text-white/72">
-                  It now gives users multiple entry points into the platform without dropping them
-                  into complexity too early.
+                  It gives users multiple entry points into the platform without dropping them into complexity too early.
                 </p>
               </div>
             </div>

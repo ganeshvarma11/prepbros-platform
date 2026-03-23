@@ -66,7 +66,7 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ThemeProvider defaultTheme="light" switchable>
+        <ThemeProvider defaultTheme="dark" switchable>
           <TooltipProvider>
             <Toaster />
             <RouteTracker />

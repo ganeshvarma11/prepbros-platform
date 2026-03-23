@@ -109,7 +109,7 @@ export default function AuthModal({
   };
 
   const fieldClasses =
-    "w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--brand)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)]";
+    "w-full rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--brand)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)]";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -120,50 +120,51 @@ export default function AuthModal({
         aria-label="Close authentication modal"
       />
 
-      <div className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[32px] border border-white/10 bg-[var(--bg-card-strong)] shadow-[0_40px_120px_-32px_rgba(15,23,42,0.55)]">
+      <div className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--bg-card-strong)] shadow-[0_40px_120px_-32px_rgba(0,0,0,0.82)]">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+          className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
         >
           <X size={16} />
         </button>
 
         <div className="grid md:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative overflow-hidden bg-[linear-gradient(160deg,#0f172a_0%,#1d4ed8_42%,#16a34a_120%)] px-6 py-8 text-white md:px-8 md:py-10">
-            <div className="absolute inset-0 hero-grid opacity-20" />
+          <div className="relative overflow-hidden border-r border-[var(--border)] bg-[linear-gradient(180deg,#181818_0%,#111111_100%)] px-6 py-8 text-white md:px-8 md:py-10">
+            <div className="absolute inset-0 hero-grid opacity-10" />
+            <div className="absolute -right-16 top-16 h-40 w-40 rounded-full bg-[var(--brand-glow)] blur-3xl" />
             <div className="relative">
               <BrandLogo
                 textClassName="text-white"
-                markClassName="border-white/20"
+                markClassName="border-[rgba(255,161,22,0.28)]"
                 className="[&_p:last-child]:text-white/70"
               />
 
               <div className="mt-10 space-y-4">
-                <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/80">
+                <p className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[rgba(255,161,22,0.08)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-light)]">
                   <Sparkles size={14} />
                   Built for serious aspirants
                 </p>
                 <h2 className="max-w-md text-4xl font-semibold tracking-[-0.06em] text-white">
-                  Turn daily practice into visible progress.
+                  Practice with the kind of interface users actually trust.
                 </h2>
                 <p className="max-w-md text-sm text-white/78 md:text-base">
-                  Save answers, keep your streak alive, revisit weak areas, and make PrepBros
-                  feel like your actual prep companion.
+                  Your account keeps solved questions, streaks, bookmarks, and weak-topic review
+                  in one place so progress feels tangible after every session.
                 </p>
               </div>
 
               <div className="mt-10 grid gap-4">
                 {[
-                  "Track solved questions, accuracy, and daily goals in one place.",
-                  "Practice with cleaner focus on mobile and desktop.",
-                  "Build trust with a consistent profile, dashboard, and revision rhythm.",
+                  "Follow one clean loop: solve, review, and improve.",
+                  "Return to a dashboard that shows momentum instead of noise.",
+                  "Keep the same account, streak, and prep context across sessions.",
                 ].map((item) => (
                   <div
                     key={item}
-                    className="flex items-start gap-3 rounded-3xl border border-white/12 bg-white/8 p-4 backdrop-blur"
+                    className="flex items-start gap-3 rounded-[16px] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4"
                   >
-                    <ShieldCheck size={18} className="mt-0.5 text-emerald-300" />
+                    <ShieldCheck size={18} className="mt-0.5 text-[var(--brand)]" />
                     <p className="text-sm text-white/82">{item}</p>
                   </div>
                 ))}
@@ -171,7 +172,7 @@ export default function AuthModal({
             </div>
           </div>
 
-          <div className="max-h-[90vh] overflow-y-auto px-6 py-8 md:px-8 md:py-10">
+          <div className="max-h-[90vh] overflow-y-auto bg-[var(--bg-card-strong)] px-6 py-8 md:px-8 md:py-10">
             {success ? (
               <div className="flex min-h-full flex-col justify-center text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--green-bg)] text-[var(--green)]">
@@ -211,7 +212,7 @@ export default function AuthModal({
                   </p>
                 </div>
 
-                <div className="mb-6 inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] p-1">
+                <div className="mb-6 inline-flex rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] p-1">
                   {(["login", "signup"] as const).map((item) => (
                     <button
                       key={item}
@@ -222,9 +223,9 @@ export default function AuthModal({
                         trackEvent(item === "login" ? "auth_tab_login_opened" : "auth_tab_signup_opened");
                       }}
                       className={cn(
-                        "rounded-full px-4 py-2 text-sm font-medium capitalize transition",
+                        "rounded-[10px] px-4 py-2 text-sm font-medium capitalize transition",
                         tab === item
-                          ? "bg-[var(--bg-card-strong)] text-[var(--text-primary)] shadow-sm"
+                          ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm"
                           : "text-[var(--text-muted)] hover:text-[var(--text-primary)]",
                       )}
                     >
@@ -276,7 +277,7 @@ export default function AuthModal({
                     </div>
 
                     {error ? (
-                      <div className="rounded-2xl border border-[var(--red)]/20 bg-[var(--red-bg)] px-4 py-3 text-sm text-[var(--red)]">
+                      <div className="rounded-[14px] border border-[var(--red)]/20 bg-[var(--red-bg)] px-4 py-3 text-sm text-[var(--red)]">
                         {error}
                       </div>
                     ) : null}
@@ -284,7 +285,7 @@ export default function AuthModal({
                     <button
                       type="submit"
                       disabled={loading}
-                      className="btn-primary flex w-full rounded-full py-3"
+                      className="btn-primary flex w-full rounded-[12px] py-3"
                     >
                       {loading ? (
                         <>
@@ -387,7 +388,7 @@ export default function AuthModal({
                     </div>
 
                     {error ? (
-                      <div className="rounded-2xl border border-[var(--red)]/20 bg-[var(--red-bg)] px-4 py-3 text-sm text-[var(--red)]">
+                      <div className="rounded-[14px] border border-[var(--red)]/20 bg-[var(--red-bg)] px-4 py-3 text-sm text-[var(--red)]">
                         {error}
                       </div>
                     ) : null}
@@ -395,7 +396,7 @@ export default function AuthModal({
                     <button
                       type="submit"
                       disabled={loading}
-                      className="btn-primary flex w-full rounded-full py-3"
+                      className="btn-primary flex w-full rounded-[12px] py-3"
                     >
                       {loading ? (
                         <>

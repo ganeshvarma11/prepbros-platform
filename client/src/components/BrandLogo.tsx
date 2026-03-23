@@ -20,8 +20,8 @@ function BrandLogoInner({
     <div className={cn("inline-flex items-center gap-3", className)}>
       <div
         className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-[linear-gradient(135deg,#0f172a_0%,#4f46e5_48%,#22c55e_100%)] text-sm font-black tracking-[-0.12em] text-white shadow-[0_18px_40px_-18px_rgba(79,70,229,0.9)]",
-          compact && "h-9 w-9 rounded-xl text-xs",
+          "flex h-11 w-11 items-center justify-center rounded-[12px] border border-[rgba(255,161,22,0.28)] bg-[linear-gradient(180deg,#2a2114_0%,#171717_100%)] text-sm font-black tracking-[-0.08em] text-[var(--brand)] shadow-[0_16px_34px_-18px_rgba(0,0,0,0.8)]",
+          compact && "h-9 w-9 rounded-[10px] text-xs",
           markClassName,
         )}
       >
@@ -36,7 +36,7 @@ function BrandLogoInner({
         >
           PrepBros
         </p>
-        <p className="text-xs text-[var(--text-muted)]">Exam prep, designed to compound</p>
+        <p className="text-xs text-[var(--text-muted)]">Focused exam practice for serious aspirants</p>
       </div>
     </div>
   );

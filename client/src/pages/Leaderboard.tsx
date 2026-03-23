@@ -110,14 +110,14 @@ export default function Leaderboard() {
             <div className="glass-panel rounded-[32px] p-6 md:p-8">
               <SectionHeader
                 eyebrow="Why this matters"
-                title="A better leaderboard increases aspiration and repeat visits."
-                description="Even before it becomes fully dynamic, this page now supports the brand better and feels more like part of a real product."
+                title="Recognition works when the leaderboard feels credible."
+                description="Users should be able to scan rank, compare performance, and understand where they stand without friction."
               />
               <div className="mt-6 grid gap-3">
                 {[
-                  "Clearer visual hierarchy makes ranks easier to parse.",
-                  "The top-performer section now feels more celebratory and less generic.",
-                  "This page is ready for live Supabase-backed rankings later.",
+                  "Clearer hierarchy makes top ranks easier to scan.",
+                  "Top performers get enough emphasis to feel earned.",
+                  "The page is ready for fully live Supabase-backed rankings.",
                 ].map((item) => (
                   <div key={item} className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] p-4 text-sm text-[var(--text-secondary)]">
                     {item}
@@ -134,8 +134,7 @@ export default function Leaderboard() {
                 Recognition becomes a real retention feature once it feels credible.
               </p>
               <p className="mt-3 text-sm text-white/72">
-                The UI now supports that. The next step is replacing placeholders with live ranking
-                logic and user-specific positioning.
+                The interface supports that. The next step is replacing placeholders with live ranking logic and user-specific positioning.
               </p>
             </div>
           </div>

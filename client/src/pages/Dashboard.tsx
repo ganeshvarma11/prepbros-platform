@@ -192,7 +192,7 @@ export default function Dashboard() {
 
       <main className="px-4 py-8 md:py-10">
         <div className="container-shell space-y-8">
-          <div className="glass-panel rounded-[32px] px-6 py-8 md:px-8 md:py-10">
+          <div className="glass-panel rounded-[24px] px-6 py-8 md:px-8 md:py-10">
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
@@ -202,25 +202,25 @@ export default function Dashboard() {
                   Welcome back, {displayName}.
                 </h1>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] md:text-base">
-                  Your current prep loop is clear: maintain momentum, close weak-topic gaps, and
-                  stay consistent enough to make the platform part of your daily routine.
+                  Pick up where you left off, protect your daily goal, and use your recent answers
+                  to decide what deserves attention next.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link href="/practice">
-                    <span className="btn-primary inline-flex cursor-pointer rounded-full px-6 py-3">
+                    <span className="btn-primary inline-flex cursor-pointer rounded-[12px] px-6 py-3">
                       Continue practice
                       <ArrowRight size={16} />
                     </span>
                   </Link>
                   <Link href="/profile">
-                    <span className="btn-secondary inline-flex cursor-pointer rounded-full px-6 py-3">
+                    <span className="btn-secondary inline-flex cursor-pointer rounded-[12px] px-6 py-3">
                       Open profile
                     </span>
                   </Link>
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-6">
+              <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
@@ -242,7 +242,7 @@ export default function Dashboard() {
                     ? "You’ve hit today’s goal. Keep going to build tomorrow’s confidence."
                     : `${dailyGoal - todaySolved} more questions to hit today’s target.`}
                 </p>
-                <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+                <div className="mt-6 rounded-[16px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                     Target exam
                   </p>
@@ -267,7 +267,7 @@ export default function Dashboard() {
               const Icon = item.icon;
 
               return (
-                <div key={item.label} className="stat-card rounded-[28px]">
+                <div key={item.label} className="stat-card rounded-[18px]">
                   <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-subtle)] text-[var(--brand)]">
                     <Icon size={18} />
                   </div>
@@ -281,18 +281,18 @@ export default function Dashboard() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="glass-panel rounded-[32px] p-6 md:p-8">
+            <div className="glass-panel rounded-[24px] p-6 md:p-8">
               <SectionHeader
                 eyebrow="Recent momentum"
                 title="What you touched most recently"
-                description="The dashboard now surfaces recent practice in a simpler, more useful way."
+                description="The dashboard should surface what happened, not make you dig for it."
               />
               <div className="mt-6 space-y-3">
                 {recentSessions.length > 0 ? (
                   recentSessions.map((session) => (
                     <div
                       key={`${session.id}-${session.date}`}
-                      className="flex items-center justify-between gap-4 rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] px-4 py-4"
+                      className="flex items-center justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-4 py-4"
                     >
                       <div>
                         <p className="font-semibold text-[var(--text-primary)]">{session.topic}</p>
@@ -317,7 +317,7 @@ export default function Dashboard() {
                       cues.
                     </p>
                     <Link href="/practice">
-                      <span className="btn-primary mt-5 inline-flex cursor-pointer rounded-full px-5 py-2.5">
+                      <span className="btn-primary mt-5 inline-flex cursor-pointer rounded-[12px] px-5 py-2.5">
                         Start now
                       </span>
                     </Link>
@@ -327,7 +327,7 @@ export default function Dashboard() {
             </div>
 
             <div className="grid gap-6">
-              <div className="glass-panel rounded-[32px] p-6 md:p-8">
+              <div className="glass-panel rounded-[24px] p-6 md:p-8">
                 <SectionHeader
                   eyebrow="Improve next"
                   title="Topics that need another pass"
@@ -336,10 +336,7 @@ export default function Dashboard() {
                 <div className="mt-6 space-y-3">
                   {improvementTopics.length > 0 ? (
                     improvementTopics.map((topic) => (
-                      <div
-                        key={topic.topic}
-                        className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] p-4"
-                      >
+                      <div key={topic.topic} className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="font-semibold text-[var(--text-primary)]">{topic.topic}</p>
@@ -364,7 +361,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-inverse)] p-6 text-white md:p-8">
+              <div className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-inverse)] p-6 text-white md:p-8">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
                   <Sparkles size={18} />
                 </div>

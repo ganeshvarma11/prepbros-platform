@@ -25,18 +25,18 @@ export default function NotFound() {
               This page took a wrong turn.
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] md:text-base">
-              The route you opened doesn’t exist right now, or it may have moved during the redesign.
-              Use one of the main product surfaces below to get back on track.
+              The route you opened doesn’t exist right now, or the URL may be incorrect. Use one
+              of the main product surfaces below to get back on track.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <button type="button" onClick={handleGoHome} className="btn-primary rounded-full px-6 py-3">
+              <button type="button" onClick={handleGoHome} className="btn-primary rounded-[12px] px-6 py-3">
                 <Home size={16} />
                 Go home
               </button>
               <button
                 type="button"
                 onClick={() => setLocation("/practice")}
-                className="btn-secondary rounded-full px-6 py-3"
+                className="btn-secondary rounded-[12px] px-6 py-3"
               >
                 Start practice
                 <ArrowRight size={16} />
