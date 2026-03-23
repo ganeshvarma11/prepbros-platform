@@ -21,7 +21,6 @@ const EMPTY_Q = { question:"", option_a:"", option_b:"", option_c:"", option_d:"
 const EMPTY_R = { title:"", description:"", type:"PDF", url:"", exam:"All", category:"Syllabus" };
 
 export default function Admin() {
-  const { user, signOut } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<"questions"|"resources">("questions");
   const [loading, setLoading] = useState(false);
@@ -40,12 +39,15 @@ export default function Admin() {
   const [showRForm, setShowRForm] = useState(false);
 
   // Guard — only admin
+ const { user, signOut, loading: authLoading } = useAuth();
+
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { navigate("/"); return; }
     if (user.email !== ADMIN_EMAIL) { navigate("/"); return; }
     loadQuestions();
     loadResources();
-  }, [user]);
+  }, [user, authLoading]);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
