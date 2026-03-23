@@ -3,17 +3,15 @@ import { Link } from "wouter";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { saveAnswer, toggleBookmark, getBookmarks, getSolvedQuestions } from "../lib/userProgress";
+import { fetchQuestions } from "../lib/questionsDB";
 import {
   Filter, Search, Shuffle, ChevronLeft, ChevronRight,
   Bookmark, BookmarkCheck, Flag, Clock, CheckCircle2, Circle,
-  X, SlidersHorizontal, Sun, Moon, LogIn
+  X, SlidersHorizontal, Sun, Moon, LogIn, Loader2
 } from "lucide-react";
-import {
-  questions, allTopics, allYears,
-  type Exam, type Difficulty, type QuestionType, type Question
-} from "../data/questions";
+import { type Exam, type Difficulty, type QuestionType, type Question } from "../data/questions";
 
-const EXAM_COLORS: Record<Exam, string> = {
+const EXAM_COLORS: Record<string, string> = {
   UPSC:  "bg-orange-100 text-orange-700 border border-orange-200",
   SSC:   "bg-blue-100 text-blue-700 border border-blue-200",
   TSPSC: "bg-purple-100 text-purple-700 border border-purple-200",
@@ -22,25 +20,30 @@ const EXAM_COLORS: Record<Exam, string> = {
   IBPS:  "bg-cyan-100 text-cyan-700 border border-cyan-200",
 };
 
-const DIFF_COLORS: Record<Difficulty, string> = {
+const DIFF_COLORS: Record<string, string> = {
   Easy:   "text-green-600 bg-green-50 border border-green-200",
   Medium: "text-yellow-600 bg-yellow-50 border border-yellow-200",
   Hard:   "text-red-600 bg-red-50 border border-red-200",
 };
 
-const EXAMS: Exam[] = ["UPSC", "SSC", "TSPSC", "APPSC", "RRB", "IBPS"];
-const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
-const TYPES: QuestionType[] = ["PYQ", "Conceptual", "CurrentAffairs", "Mock"];
+const EXAMS = ["UPSC", "SSC", "TSPSC", "APPSC", "RRB", "IBPS"];
+const DIFFICULTIES = ["Easy", "Medium", "Hard"];
+const TYPES = ["PYQ", "Conceptual", "CurrentAffairs", "Mock"];
 const PER_PAGE = 15;
 
 export default function Practice() {
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
 
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [allTopics, setAllTopics] = useState<string[]>([]);
+  const [allYears, setAllYears] = useState<number[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+
   const [search, setSearch]           = useState("");
-  const [selExams, setSelExams]       = useState<Exam[]>([]);
-  const [selDiff, setSelDiff]         = useState<Difficulty | "">("");
-  const [selTypes, setSelTypes]       = useState<QuestionType[]>([]);
+  const [selExams, setSelExams]       = useState<string[]>([]);
+  const [selDiff, setSelDiff]         = useState<string>("");
+  const [selTypes, setSelTypes]       = useState<string[]>([]);
   const [selTopics, setSelTopics]     = useState<string[]>([]);
   const [selYears, setSelYears]       = useState<number[]>([]);
   const [sortBy, setSortBy]           = useState<"default"|"difficulty"|"year">("default");
@@ -52,6 +55,17 @@ export default function Practice() {
   const [solved, setSolved]           = useState<number[]>([]);
   const [answerStart, setAnswerStart] = useState<number>(Date.now());
 
+  // Load questions from Supabase
+  useEffect(() => {
+    fetchQuestions().then(qs => {
+      setQuestions(qs);
+      setAllTopics([...new Set(qs.map(q => q.topic))]);
+      setAllYears([...new Set(qs.filter(q => q.year).map(q => q.year as number))].sort((a,b) => b-a));
+      setQuestionsLoading(false);
+    });
+  }, []);
+
+  // Load user progress from Supabase
   useEffect(() => {
     if (!user) { setBookmarks([]); setSolved([]); return; }
     getBookmarks(user.id).then(setBookmarks);
@@ -69,7 +83,7 @@ export default function Practice() {
     if (sortBy === "difficulty") q.sort((a,b) => ["Easy","Medium","Hard"].indexOf(a.difficulty) - ["Easy","Medium","Hard"].indexOf(b.difficulty));
     if (sortBy === "year")       q.sort((a,b) => (b.year ?? 0) - (a.year ?? 0));
     return q;
-  }, [search, selExams, selDiff, selTypes, selTopics, selYears, sortBy]);
+  }, [questions, search, selExams, selDiff, selTypes, selTopics, selYears, sortBy]);
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated  = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE);
@@ -85,7 +99,8 @@ export default function Practice() {
   };
 
   const openRandom = () => {
-    const r = filtered[Math.floor(Math.random()*filtered.length)];
+    const pool = filtered.length > 0 ? filtered : questions;
+    const r = pool[Math.floor(Math.random()*pool.length)];
     if (r) { setActiveQ(r); setSelected(null); setAnswerStart(Date.now()); }
   };
 
@@ -153,12 +168,12 @@ export default function Practice() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Practice Questions</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Showing <span className="font-semibold text-orange-500">{filtered.length}</span> questions
+              {questionsLoading ? "Loading..." : <>Showing <span className="font-semibold text-orange-500">{filtered.length}</span> questions</>}
               {!user && <span className="ml-2 text-orange-400 text-xs">· Login to save progress</span>}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={openRandom} className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors">
+            <button onClick={openRandom} disabled={questionsLoading} className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors">
               <Shuffle size={14}/> Random
             </button>
             <select value={sortBy} onChange={e=>setSortBy(e.target.value as any)} className="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200">
@@ -197,7 +212,7 @@ export default function Practice() {
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Difficulty</p>
                 {["", ...DIFFICULTIES].map(d=>(
                   <label key={d} className="flex items-center gap-2 py-1 cursor-pointer">
-                    <input type="radio" name="diff" checked={selDiff===d} onChange={()=>{setSelDiff(d as any);setPage(1);}} className="accent-orange-500"/>
+                    <input type="radio" name="diff" checked={selDiff===d} onChange={()=>{setSelDiff(d);setPage(1);}} className="accent-orange-500"/>
                     <span className="text-xs text-gray-700 dark:text-gray-300">{d||"All"}</span>
                   </label>
                 ))}
@@ -240,7 +255,14 @@ export default function Practice() {
           </aside>
 
           <div className="flex-1 min-w-0">
-            {!activeQ ? (
+            {questionsLoading ? (
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center py-24">
+                <div className="flex items-center gap-2 text-gray-400">
+                  <Loader2 size={18} className="animate-spin"/>
+                  <span className="text-sm">Loading questions...</span>
+                </div>
+              </div>
+            ) : !activeQ ? (
               <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="grid grid-cols-[40px_1fr_80px_120px_80px_60px_60px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   <span>#</span><span>Question</span><span>Exam</span><span>Topic</span><span>Difficulty</span><span>Year</span><span>Solved</span>
@@ -255,7 +277,7 @@ export default function Practice() {
                   <div key={q.id} onClick={()=>openQuestion(q)} className="grid grid-cols-[40px_1fr_80px_120px_80px_60px_60px] gap-2 px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-orange-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
                     <span className="text-xs text-gray-400 flex items-center">{(page-1)*PER_PAGE+i+1}</span>
                     <span className="text-sm text-gray-800 dark:text-gray-200 flex items-center truncate pr-2">{q.question.length>65?q.question.slice(0,65)+"...":q.question}</span>
-                    <span className="flex items-center"><span className={`text-xs px-1.5 py-0.5 rounded font-medium ${EXAM_COLORS[q.exam]}`}>{q.exam}</span></span>
+                    <span className="flex items-center"><span className={`text-xs px-1.5 py-0.5 rounded font-medium ${EXAM_COLORS[q.exam]||"bg-gray-100 text-gray-600"}`}>{q.exam}</span></span>
                     <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center truncate">{q.topic}</span>
                     <span className="flex items-center"><span className={`text-xs px-1.5 py-0.5 rounded font-medium ${DIFF_COLORS[q.difficulty]}`}>{q.difficulty}</span></span>
                     <span className="text-xs text-gray-400 flex items-center">{q.year ?? "—"}</span>
@@ -301,7 +323,7 @@ export default function Practice() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${EXAM_COLORS[activeQ.exam]}`}>{activeQ.exam}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${EXAM_COLORS[activeQ.exam]||"bg-gray-100 text-gray-600"}`}>{activeQ.exam}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFF_COLORS[activeQ.difficulty]}`}>{activeQ.difficulty}</span>
                   <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">{activeQ.topic}</span>
                   <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900">{activeQ.type}</span>
