@@ -1,145 +1,139 @@
+import { ArrowUpRight, HeartHandshake, Mail, ShieldCheck, Sparkles } from "lucide-react";
 import { Link } from "wouter";
-import { Mail, Linkedin, Twitter, Github } from "lucide-react";
+
+import BrandLogo from "@/components/BrandLogo";
+
+const FOOTER_LINKS: Record<
+  string,
+  Array<{ label: string; href: string; external?: boolean }>
+> = {
+  Product: [
+    { label: "Practice", href: "/practice" },
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Explore", href: "/explore" },
+    { label: "Resources", href: "/resources" },
+  ],
+  Platform: [
+    { label: "Contests", href: "/contests" },
+    { label: "Leaderboard", href: "/leaderboard" },
+    { label: "Profile", href: "/profile" },
+    { label: "Premium", href: "/premium" },
+  ],
+  Trust: [
+    { label: "Support", href: "/support" },
+    { label: "Privacy", href: "/privacy" },
+    { label: "Terms", href: "/terms" },
+    { label: "Status", href: "/status" },
+  ],
+};
+
+const PROMISES = [
+  {
+    icon: ShieldCheck,
+    title: "Progress you can trust",
+    description: "Secure auth with Supabase and a cleaner practice history across sessions.",
+  },
+  {
+    icon: Sparkles,
+    title: "Designed for focus",
+    description: "No cluttered coaching-site feel. Clear hierarchy, better pacing, stronger mobile UX.",
+  },
+  {
+    icon: HeartHandshake,
+    title: "Built for real aspirants",
+    description: "Study workflows that reduce overwhelm and reward consistency, not just speed.",
+  },
+];
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800">
-      <div className="container mx-auto px-4 py-16 md:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
-          {/* Brand Section */}
-          <div className="lg:col-span-1">
-            <Link href="/">
-              <a className="flex items-center gap-2.5 mb-4 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-all duration-300">
-                  P
-                </div>
-                <span className="text-xl font-bold text-slate-900 dark:text-white">
-                  PrepBros
-                </span>
-              </a>
-            </Link>
-            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-6">
-              Master UPSC preparation with our comprehensive platform featuring daily practice, contests, and expert resources.
-            </p>
-            <div className="flex items-center gap-3">
-              {[
-                { icon: Twitter, href: "#", label: "Twitter" },
-                { icon: Linkedin, href: "#", label: "LinkedIn" },
-                { icon: Github, href: "#", label: "GitHub" },
-                { icon: Mail, href: "mailto:hello@prepbros.com", label: "Email" },
-              ].map((social) => {
-                const Icon = social.icon;
+    <footer className="border-t border-[var(--border)] bg-[var(--bg-base)]/90 pb-10 pt-14 backdrop-blur">
+      <div className="container-shell space-y-10">
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+          <div className="glass-panel rounded-[28px] p-6 md:p-8">
+            <BrandLogo />
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {PROMISES.map((item) => {
+                const Icon = item.icon;
+
                 return (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    aria-label={social.label}
-                    className="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-900 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 transform hover:scale-110"
+                  <div
+                    key={item.title}
+                    className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)]/70 p-4"
                   >
-                    <Icon className="w-4 h-4" />
-                  </a>
+                    <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--brand-subtle)] text-[var(--brand)]">
+                      <Icon size={18} />
+                    </div>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">{item.title}</p>
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">{item.description}</p>
+                  </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Product */}
-          <div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 tracking-wide uppercase">
-              Product
-            </h4>
-            <ul className="space-y-3">
-              {[
-                { label: "Practice", href: "/practice" },
-                { label: "Contests", href: "/contests" },
-                { label: "Leaderboard", href: "/leaderboard" },
-                { label: "Premium", href: "/premium" },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href}>
-                    <a className="text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 text-sm transition-colors duration-200">
-                      {link.label}
-                    </a>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 tracking-wide uppercase">
-              Resources
-            </h4>
-            <ul className="space-y-3">
-              {[
-                { label: "Study Materials", href: "/resources" },
-                { label: "Blog", href: "#" },
-                { label: "FAQ", href: "#" },
-                { label: "Contact", href: "#" },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href}>
-                    <a className="text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 text-sm transition-colors duration-200">
-                      {link.label}
-                    </a>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 tracking-wide uppercase">
-              Legal
-            </h4>
-            <ul className="space-y-3">
-              {[
-                { label: "Privacy Policy", href: "#" },
-                { label: "Terms of Service", href: "#" },
-                { label: "Cookie Policy", href: "#" },
-                { label: "Disclaimer", href: "#" },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href}>
-                    <a className="text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 text-sm transition-colors duration-200">
-                      {link.label}
-                    </a>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <div className="glass-panel rounded-[28px] p-6 md:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand)]">
+              Launch Checklist
+            </p>
+            <h3 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+              Make your first impression feel established.
+            </h3>
+            <p className="mt-3 text-sm text-[var(--text-secondary)]">
+              Add your domain, support email, privacy policy, and real social proof before sending
+              paid or organic traffic to the homepage.
+            </p>
+            <a
+              href="mailto:hello@prepbros.com"
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--brand-muted)]"
+            >
+              <Mail size={14} className="text-[var(--brand)]" />
+              hello@prepbros.com
+            </a>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-slate-700 to-transparent mb-8" />
-
-        {/* Bottom Section */}
-        <div className="flex flex-col md:flex-row items-center justify-between">
-          <p className="text-gray-600 dark:text-gray-400 text-sm text-center md:text-left mb-4 md:mb-0">
-            © {currentYear} PrepBros. All rights reserved. Built with passion for UPSC aspirants.
-          </p>
-          <div className="flex items-center gap-6">
-            <Link href="#">
-              <a className="text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 text-sm transition-colors duration-200">
-                Status
-              </a>
-            </Link>
-            <Link href="#">
-              <a className="text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 text-sm transition-colors duration-200">
-                Support
-              </a>
-            </Link>
-            <Link href="#">
-              <a className="text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 text-sm transition-colors duration-200">
-                Feedback
-              </a>
-            </Link>
+        <div className="grid gap-8 rounded-[28px] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:grid-cols-4 md:p-8">
+          {Object.entries(FOOTER_LINKS).map(([group, items]) => (
+            <div key={group}>
+              <p className="mb-4 text-sm font-semibold text-[var(--text-primary)]">{group}</p>
+              <div className="space-y-3">
+                {items.map((item) =>
+                  item.external ? (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+                    >
+                      {item.label}
+                      <ArrowUpRight size={13} className="text-[var(--text-faint)]" />
+                    </a>
+                  ) : (
+                    <Link key={item.label} href={item.href}>
+                      <span className="block cursor-pointer text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]">
+                        {item.label}
+                      </span>
+                    </Link>
+                  ),
+                )}
+              </div>
+            </div>
+          ))}
+          <div>
+            <p className="mb-4 text-sm font-semibold text-[var(--text-primary)]">Why users stay</p>
+            <div className="space-y-3 text-sm text-[var(--text-secondary)]">
+              <p>Daily challenge and streak loops encourage consistency.</p>
+              <p>Dashboard context turns practice into a visible plan.</p>
+              <p>Better copy and structure reduce drop-off for first-time visitors.</p>
+            </div>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-6 text-sm text-[var(--text-muted)] md:flex-row md:items-center md:justify-between">
+          <p>© {year} PrepBros. Built to help serious aspirants prepare with clarity and confidence.</p>
+          <p>Domain, policies, analytics, and support flows should be finalized before launch.</p>
         </div>
       </div>
     </footer>

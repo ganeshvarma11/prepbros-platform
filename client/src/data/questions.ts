@@ -722,6 +722,8 @@ export const getPYQs = () =>
 export const getRandomQuestion = () =>
   questions[Math.floor(Math.random() * questions.length)];
 
-export const allTopics = [...new Set(questions.map((q) => q.topic))];
+export const allTopics = Array.from(new Set(questions.map((q) => q.topic)));
 export const allExams: Exam[] = ["UPSC", "SSC", "TSPSC", "APPSC", "RRB", "IBPS"];
-export const allYears = [...new Set(questions.filter(q => q.year).map((q) => q.year as number))].sort((a, b) => b - a);
+export const allYears = Array.from(
+  new Set(questions.filter((q) => q.year).map((q) => q.year as number)),
+).sort((a, b) => b - a);

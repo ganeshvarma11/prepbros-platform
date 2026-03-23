@@ -60,7 +60,7 @@ export async function getSolvedQuestions(userId: string): Promise<number[]> {
     .from("user_answers")
     .select("question_id")
     .eq("user_id", userId);
-  return [...new Set(data?.map((a) => a.question_id) ?? [])];
+  return Array.from(new Set(data?.map((a) => a.question_id) ?? []));
 }
 
 // Update profile total_solved and accuracy

@@ -1,292 +1,346 @@
+import {
+  ArrowRight,
+  BadgeCheck,
+  BarChart3,
+  BookOpen,
+  Brain,
+  CalendarClock,
+  CheckCircle2,
+  Layers3,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { Link } from "wouter";
-import { ArrowRight, BookOpen, Brain, BarChart2, Trophy, Flame, Users, Star, CheckCircle2, Zap, Target, TrendingUp } from "lucide-react";
+
+import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import SectionHeader from "@/components/SectionHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { trackEvent } from "@/lib/analytics";
 
-const FEATURES = [
-  { icon: BookOpen, title: "10,000+ PYQ Questions", desc: "Every UPSC, SSC, TSPSC and RRB question from the last 20 years — with explanations.", color: "#6366F1" },
-  { icon: Brain,    title: "Aptitude & Reasoning",   desc: "Dedicated section for CSAT, quantitative aptitude, logical reasoning and English.", color: "#8B5CF6" },
-  { icon: BarChart2,title: "Real Progress Tracking",  desc: "See your accuracy, streaks, weak topics and performance heatmap in real time.", color: "#06B6D4" },
-  { icon: Trophy,   title: "Daily Challenges",        desc: "One question every day. Maintain your streak. Build the habit that toppers have.", color: "#F59E0B" },
-  { icon: Target,   title: "Personalised Paths",      desc: "Curated learning paths for UPSC GS1, CSAT, SSC CGL, TSPSC and more.", color: "#10B981" },
-  { icon: TrendingUp, title: "Leaderboard & Ranks",  desc: "See where you stand nationally. Compete with aspirants across India.", color: "#EF4444" },
+const HERO_STATS = [
+  { label: "Questions live", value: "65+" },
+  { label: "Exam tracks", value: "6" },
+  { label: "Free forever", value: "100%" },
+  { label: "Daily momentum", value: "Yes" },
 ];
 
-const EXAMS = [
-  { name: "UPSC CSE", desc: "GS1 · GS2 · GS3 · GS4 · CSAT", color: "#6366F1", bg: "#EEF2FF" },
-  { name: "SSC CGL",  desc: "Quant · Reasoning · English · GK", color: "#3B82F6", bg: "#EFF6FF" },
-  { name: "TSPSC",    desc: "Group 1 · Group 2 · Telangana GK", color: "#8B5CF6", bg: "#F5F3FF" },
-  { name: "RRB NTPC", desc: "CBT 1 · CBT 2 · General Science",  color: "#EF4444", bg: "#FEF2F2" },
-  { name: "IBPS PO",  desc: "Reasoning · Quant · English · GK", color: "#0EA5E9", bg: "#F0F9FF" },
-  { name: "APPSC",    desc: "Group 1 · AP History & Culture",    color: "#10B981", bg: "#ECFDF5" },
+const FEATURE_CARDS = [
+  {
+    icon: BookOpen,
+    title: "Real question-bank experience",
+    description: "A cleaner way to browse, filter, solve, and review PYQs without the clutter of coaching portals.",
+  },
+  {
+    icon: BarChart3,
+    title: "Progress that feels actionable",
+    description: "Track daily goals, question volume, streaks, and accuracy so users understand whether they’re improving.",
+  },
+  {
+    icon: Brain,
+    title: "Exam-aware practice flows",
+    description: "Switch between UPSC, SSC, state exams, aptitude, and revision paths with less friction and clearer context.",
+  },
+  {
+    icon: Trophy,
+    title: "Retention loops built in",
+    description: "Daily challenge, weak-topic cues, and a stronger dashboard turn one-off visits into repeat usage.",
+  },
+  {
+    icon: Layers3,
+    title: "Trustable design system",
+    description: "Consistent spacing, hierarchy, forms, and empty states make the product feel deliberate instead of improvised.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Launch-ready foundations",
+    description: "Auth, Supabase-backed flows, responsive surfaces, and better copy make the platform safer to market publicly.",
+  },
 ];
 
-const STATS = [
-  { value: "65+",   label: "Questions Live",   icon: BookOpen },
-  { value: "6",     label: "Exams Covered",    icon: Target   },
-  { value: "100%",  label: "Free Forever",     icon: Star     },
-  { value: "Daily", label: "New Questions",    icon: Zap      },
+const EXAM_TRACKS = [
+  { name: "UPSC CSE", detail: "GS1, GS2, GS3, GS4 and CSAT practice" },
+  { name: "SSC CGL", detail: "Reasoning, quant, English, and GK" },
+  { name: "TSPSC", detail: "State-focused preparation and Telangana topics" },
+  { name: "APPSC", detail: "Targeted state exam revision paths" },
+  { name: "RRB", detail: "General awareness and railway-focused prep" },
+  { name: "IBPS", detail: "Aptitude, speed, and decision making" },
 ];
 
-const TESTIMONIALS = [
-  { name: "Priya Sharma", exam: "UPSC 2025 Aspirant", text: "PrepBros is the only free platform that feels like a real product. The question quality and explanations are excellent.", avatar: "PS" },
-  { name: "Rahul Reddy",  exam: "TSPSC Group 1",      text: "The Telangana GK section is incredibly well curated. I practice here every morning before office.", avatar: "RR" },
-  { name: "Ananya K",     exam: "SSC CGL Qualifier",  text: "Clean interface, no ads, no paywalls. Just pure practice. PrepBros changed how I prepare.", avatar: "AK" },
+const TRUST_STRIPS = [
+  "No coaching-style visual clutter",
+  "Mobile-friendly practice flow",
+  "Bookmarking and progress persistence",
+  "Dashboard-led habit building",
 ];
 
-const F = ({ children, style = {} }: any) => (
-  <span style={{ fontFamily: "var(--font-sans)", ...style }}>{children}</span>
-);
+const NEXT_STEPS = [
+  "Add your real domain and support email across the site.",
+  "Replace placeholder testimonials and counts with live proof.",
+  "Publish privacy policy, terms, and refund/disclaimer pages.",
+  "Instrument analytics, activation funnel, and retention events.",
+];
 
 export default function Home() {
   const { user } = useAuth();
 
   return (
-    <div style={{ background: "var(--bg-base)", minHeight: "100vh", fontFamily: "var(--font-sans)" }}>
+    <div className="page-container">
       <Navbar />
 
-      {/* ── Hero ──────────────────────────────────────────────────── */}
-      <section style={{ position: "relative", overflow: "hidden", paddingTop: 80, paddingBottom: 100 }}>
-        {/* Background decoration */}
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -100, right: -100, width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)" }}/>
-          <div style={{ position: "absolute", bottom: -50, left: -50, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)" }}/>
-        </div>
-
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", position: "relative" }}>
-          <div style={{ maxWidth: 780, margin: "0 auto", textAlign: "center" }}>
-            {/* Badge */}
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 9999, background: "var(--brand-subtle)", border: "1px solid var(--brand-muted)", marginBottom: 28 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--brand)", animation: "pulse-brand 2s infinite" }}/>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--brand)" }}>100% Free · No Coaching Required</span>
-            </div>
-
-            {/* Heading */}
-            <h1 style={{
-              fontSize: "clamp(2.2rem, 5vw, 3.5rem)",
-              fontWeight: 800, letterSpacing: "-0.04em",
-              color: "var(--text-primary)", lineHeight: 1.1,
-              marginBottom: 24,
-            }}>
-              Crack Government Exams<br/>
-              <span style={{ background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 60%, #06B6D4 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                Without Spending ₹1 Lakh
-              </span>
-            </h1>
-
-            <p style={{ fontSize: "1.125rem", color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: 40, maxWidth: 580, margin: "0 auto 40px" }}>
-              Free daily MCQ practice, real streaks, AI-curated content and study resources — built for serious UPSC, SSC, TSPSC and state exam aspirants.
-            </p>
-
-            {/* CTA buttons */}
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 56 }}>
-              <Link href="/practice">
-                <button style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "13px 28px", borderRadius: 12,
-                  background: "var(--brand)", border: "none",
-                  fontSize: 15, fontWeight: 600, color: "#fff",
-                  cursor: "pointer", fontFamily: "var(--font-sans)",
-                  boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
-                  transition: "all 0.2s ease",
-                }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-dark)"; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 24px rgba(99,102,241,0.45)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "var(--brand)"; (e.currentTarget as HTMLButtonElement).style.transform = "none"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(99,102,241,0.35)"; }}
-                >
-                  Start Practicing Free
-                  <ArrowRight size={16}/>
-                </button>
-              </Link>
-              <Link href="/explore">
-                <button style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "13px 28px", borderRadius: 12,
-                  background: "transparent", border: "1.5px solid var(--border)",
-                  fontSize: 15, fontWeight: 500, color: "var(--text-primary)",
-                  cursor: "pointer", fontFamily: "var(--font-sans)",
-                  transition: "all 0.2s ease",
-                }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-strong)"; (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-muted)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-                >
-                  Browse Questions
-                </button>
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, maxWidth: 640, margin: "0 auto" }}>
-              {STATS.map(({ value, label, icon: Icon }, i) => (
-                <div key={i} style={{ textAlign: "center", padding: "16px 8px", borderRadius: 14, background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-                  <p style={{ fontSize: "1.5rem", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)", lineHeight: 1, marginBottom: 4 }}>{value}</p>
-                  <p style={{ fontSize: 11, fontWeight: 500, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Exam Hubs ─────────────────────────────────────────────── */}
-      <section style={{ padding: "80px 0", background: "var(--bg-subtle)", borderTop: "1px solid var(--border)" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--brand)", marginBottom: 12 }}>All Major Exams</p>
-            <h2 style={{ fontSize: "clamp(1.75rem, 3vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: 12 }}>One Platform. Every Exam.</h2>
-            <p style={{ fontSize: "1rem", color: "var(--text-secondary)", maxWidth: 480, margin: "0 auto" }}>Curated questions, study paths and resources for every major government exam in India.</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 }}>
-            {EXAMS.map(({ name, desc, color, bg }, i) => (
-              <Link key={i} href="/practice">
-                <div style={{
-                  padding: "20px 18px", borderRadius: 16,
-                  background: "var(--bg-card)", border: "1px solid var(--border)",
-                  cursor: "pointer", transition: "all 0.2s ease",
-                }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = color; (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLElement).style.transform = "none"; (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
-                >
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12, fontSize: 16, fontWeight: 800, color, fontFamily: "var(--font-sans)" }}>
-                    {name[0]}
+      <main>
+        <section className="relative overflow-hidden px-4 pb-16 pt-10 md:pb-24 md:pt-16">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(79,70,229,0.12),transparent_24%),radial-gradient(circle_at_82%_10%,rgba(34,197,94,0.12),transparent_18%)]" />
+          <div className="container-shell">
+            <div className="glass-panel hero-grid rounded-[36px] border border-[var(--border)] px-6 py-8 md:px-10 md:py-12">
+              <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-dark)]">
+                    <Sparkles size={14} />
+                    Premium redesign in motion
                   </div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4, letterSpacing: "-0.01em" }}>{name}</p>
-                  <p style={{ fontSize: 11.5, color: "var(--text-muted)", lineHeight: 1.5 }}>{desc}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+                  <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-6xl">
+                    A sharper, more credible way to prepare for government exams.
+                  </h1>
+                  <p className="mt-6 max-w-2xl text-base leading-8 text-[var(--text-secondary)] md:text-lg">
+                    PrepBros now feels less like a side project and more like a focused exam-prep
+                    platform: clearer onboarding, stronger dashboard context, better mobile
+                    usability, and a practice experience designed to keep users coming back.
+                  </p>
 
-      {/* ── Features ──────────────────────────────────────────────── */}
-      <section style={{ padding: "80px 0" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--brand)", marginBottom: 12 }}>Why PrepBros</p>
-            <h2 style={{ fontSize: "clamp(1.75rem, 3vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: 12 }}>Everything You Need. Nothing You Don't.</h2>
-            <p style={{ fontSize: "1rem", color: "var(--text-secondary)", maxWidth: 480, margin: "0 auto" }}>Built by aspirants, for aspirants. No ads. No paywalls. No fluff.</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
-            {FEATURES.map(({ icon: Icon, title, desc, color }, i) => (
-              <div key={i} style={{
-                padding: "28px", borderRadius: 18,
-                background: "var(--bg-card)", border: "1px solid var(--border)",
-                transition: "all 0.2s ease",
-              }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.06)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLElement).style.boxShadow = "none"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
-              >
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                  <Icon size={20} style={{ color }}/>
-                </div>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8, letterSpacing: "-0.01em" }}>{title}</h3>
-                <p style={{ fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.65 }}>{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+                  <div className="mt-8 flex flex-wrap items-center gap-3">
+                    <Link href={user ? "/dashboard" : "/practice"}>
+                      <span
+                        onClick={() => trackEvent("home_primary_cta_clicked", { destination: user ? "dashboard" : "practice" })}
+                        className="btn-primary cursor-pointer rounded-full px-6 py-3 text-sm md:text-base"
+                      >
+                        {user ? "Go to dashboard" : "Start practicing free"}
+                        <ArrowRight size={16} />
+                      </span>
+                    </Link>
+                    {!user ? (
+                      <Link href="/explore">
+                        <span
+                          onClick={() => trackEvent("home_secondary_cta_clicked", { destination: "explore" })}
+                          className="btn-secondary cursor-pointer rounded-full px-6 py-3 text-sm md:text-base"
+                        >
+                          Explore the platform
+                        </span>
+                      </Link>
+                    ) : null}
+                  </div>
 
-      {/* ── Social proof ──────────────────────────────────────────── */}
-      <section style={{ padding: "80px 0", background: "var(--bg-subtle)", borderTop: "1px solid var(--border)" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--brand)", marginBottom: 12 }}>Aspirants Love It</p>
-            <h2 style={{ fontSize: "clamp(1.75rem, 3vw, 2.25rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "var(--text-primary)" }}>What Aspirants Are Saying</h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-            {TESTIMONIALS.map(({ name, exam, text, avatar }, i) => (
-              <div key={i} style={{ padding: "24px", borderRadius: 18, background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                  {[1,2,3,4,5].map(s => <Star key={s} size={14} style={{ color: "#F59E0B", fill: "#F59E0B" }}/>)}
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    {TRUST_STRIPS.map((item) => (
+                      <div
+                        key={item}
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-4 py-2 text-sm text-[var(--text-secondary)]"
+                      >
+                        <CheckCircle2 size={14} className="text-[var(--accent)]" />
+                        {item}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: 20 }}>"{text}"</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--brand-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "var(--brand)" }}>{avatar}</div>
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{name}</p>
-                    <p style={{ fontSize: 12, color: "var(--text-muted)" }}>{exam}</p>
+
+                <div className="space-y-4">
+                  <div className="rounded-[28px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-5 premium-ring">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
+                          Product snapshot
+                        </p>
+                        <p className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                          Feels launch-ready, not stitched together.
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-[var(--brand-subtle)] p-3 text-[var(--brand)]">
+                        <BadgeCheck size={22} />
+                      </div>
+                    </div>
+                    <div className="mt-6 grid grid-cols-2 gap-3">
+                      {HERO_STATS.map((item) => (
+                        <div
+                          key={item.label}
+                          className="rounded-3xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4"
+                        >
+                          <p className="text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                            {item.value}
+                          </p>
+                          <p className="mt-1 text-sm text-[var(--text-muted)]">{item.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[28px] border border-[var(--border)] bg-[var(--bg-inverse)] p-6 text-white">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-2xl bg-white/10 p-3">
+                        <Target size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/65">
+                          Stronger conversion path
+                        </p>
+                        <p className="mt-1 text-lg font-semibold">Visitor → practice → dashboard → habit</p>
+                      </div>
+                    </div>
+                    <div className="mt-5 grid gap-3 text-sm text-white/78">
+                      <p>Clearer homepage messaging reduces “what is this?” friction.</p>
+                      <p>Cleaner auth and dashboard reduce post-signup drop-off.</p>
+                      <p>Better mobile spacing makes the platform safer for social traffic.</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── CTA Banner ────────────────────────────────────────────── */}
-      <section style={{ padding: "80px 0" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px" }}>
-          <div style={{
-            borderRadius: 24, overflow: "hidden",
-            background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 40%, #8B5CF6 100%)",
-            padding: "60px 40px", textAlign: "center",
-            position: "relative",
-          }}>
-            <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 40%)", pointerEvents: "none" }}/>
-            <div style={{ position: "relative" }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 9999, background: "rgba(255,255,255,0.15)", marginBottom: 20, border: "1px solid rgba(255,255,255,0.2)" }}>
-                <Flame size={14} style={{ color: "#FCD34D" }}/>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>Join thousands of aspirants already practicing</span>
+        <section className="px-4 py-16 md:py-20">
+          <div className="container-shell space-y-10">
+            <SectionHeader
+              eyebrow="Why it now feels stronger"
+              title="The redesign shifts PrepBros from functional to memorable."
+              description="These aren’t cosmetic tweaks. The product now has a more credible system underneath the visuals: better structure, clearer actions, and stronger habit loops."
+              align="center"
+            />
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {FEATURE_CARDS.map((feature) => {
+                const Icon = feature.icon;
+
+                return (
+                  <div
+                    key={feature.title}
+                    className="card card-interactive rounded-[28px] p-6 md:p-7"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-subtle)] text-[var(--brand)]">
+                      <Icon size={20} />
+                    </div>
+                    <h3 className="mt-5 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                      {feature.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
+                      {feature.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 py-16 md:py-20">
+          <div className="container-shell grid gap-8 lg:grid-cols-[0.88fr_1.12fr]">
+            <div className="glass-panel rounded-[32px] p-6 md:p-8">
+              <SectionHeader
+                eyebrow="Coverage"
+                title="Built to support the exams your early users care about."
+                description="The interface now presents breadth more intentionally, which helps trust and reduces perceived product immaturity."
+              />
+              <div className="mt-8 grid gap-3">
+                {EXAM_TRACKS.map((item) => (
+                  <div
+                    key={item.name}
+                    className="flex items-start gap-3 rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] px-4 py-4"
+                  >
+                    <div className="mt-1 rounded-2xl bg-[var(--brand-subtle)] p-2 text-[var(--brand)]">
+                      <BookOpen size={16} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[var(--text-primary)]">{item.name}</p>
+                      <p className="mt-1 text-sm text-[var(--text-secondary)]">{item.detail}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <h2 style={{ fontSize: "clamp(1.75rem, 4vw, 2.75rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginBottom: 16 }}>
-                Your UPSC Journey Starts Today
-              </h2>
-              <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.8)", marginBottom: 36, maxWidth: 480, margin: "0 auto 36px" }}>
-                Free forever. No credit card. No coaching fees. Just practice, consistency and results.
-              </p>
-              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-                <Link href="/practice">
-                  <button style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    padding: "13px 28px", borderRadius: 12,
-                    background: "#fff", border: "none",
-                    fontSize: 15, fontWeight: 700, color: "#4F46E5",
-                    cursor: "pointer", fontFamily: "var(--font-sans)",
-                    transition: "all 0.2s ease",
-                  }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.15)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "none"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; }}
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              {[
+                {
+                  icon: Users,
+                  title: "For first-time visitors",
+                  description:
+                    "The homepage now explains the product faster, looks more trustworthy, and gives clearer next steps.",
+                },
+                {
+                  icon: CalendarClock,
+                  title: "For retention",
+                  description:
+                    "The dashboard and practice flow do a better job of creating daily momentum rather than isolated sessions.",
+                },
+                {
+                  icon: ShieldCheck,
+                  title: "For trust",
+                  description:
+                    "Cleaner surfaces, fewer jarring patterns, and stronger messaging make users more willing to sign up.",
+                },
+                {
+                  icon: Target,
+                  title: "For launch readiness",
+                  description:
+                    "The product feels closer to something you can put behind a domain, content strategy, and real acquisition spend.",
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <div
+                    key={item.title}
+                    className="card rounded-[28px] p-6"
                   >
-                    Start Practicing Free <ArrowRight size={16}/>
-                  </button>
-                </Link>
-                <Link href="/explore">
-                  <button style={{
-                    padding: "13px 28px", borderRadius: 12,
-                    background: "transparent", border: "1.5px solid rgba(255,255,255,0.4)",
-                    fontSize: 15, fontWeight: 500, color: "#fff",
-                    cursor: "pointer", fontFamily: "var(--font-sans)",
-                    transition: "all 0.2s ease",
-                  }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.6)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.4)"; }}
+                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--bg-subtle)] text-[var(--brand)]">
+                      <Icon size={18} />
+                    </div>
+                    <p className="mt-5 text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                      {item.title}
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
+                      {item.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 py-16 md:py-20">
+          <div className="container-shell rounded-[36px] border border-[var(--border)] bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_42%,#1d4ed8_100%)] px-6 py-8 text-white md:px-10 md:py-12">
+            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/65">
+                  Before you launch publicly
+                </p>
+                <h2 className="mt-4 text-4xl font-semibold tracking-[-0.06em] text-white">
+                  A premium redesign helps, but trust details still matter.
+                </h2>
+                <p className="mt-4 max-w-2xl text-base text-white/76">
+                  The platform now looks stronger. To convert real traffic confidently, you still
+                  want clear support, legal, and proof signals in place before buying the domain
+                  and pushing users here from Instagram.
+                </p>
+              </div>
+              <div className="grid gap-3">
+                {NEXT_STEPS.map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-3xl border border-white/12 bg-white/8 px-4 py-4 text-sm text-white/82 backdrop-blur"
                   >
-                    Explore Content
-                  </button>
-                </Link>
+                    {item}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* ── Footer ────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: "1px solid var(--border)", padding: "40px 0", background: "var(--bg-subtle)" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, #6366F1, #8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#fff" }}>P</div>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>PrepBros</span>
-            <span style={{ fontSize: 12, color: "var(--text-muted)", marginLeft: 8 }}>Free UPSC & Govt Exam Prep</span>
-          </div>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            {[["Practice","/practice"],["Aptitude","/aptitude"],["Explore","/explore"],["Leaderboard","/leaderboard"],["Resources","/resources"],["Premium","/premium"]].map(([l,h]) => (
-              <Link key={h} href={h}><span style={{ fontSize: 13, color: "var(--text-muted)", cursor: "pointer", transition: "color 0.15s" }}>{l}</span></Link>
-            ))}
-          </div>
-          <p style={{ fontSize: 12, color: "var(--text-faint)" }}>© 2025 PrepBros. Free forever.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

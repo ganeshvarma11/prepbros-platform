@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   Plus, Trash2, Edit2, Save, X, CheckCircle2,
   BookOpen, Link as LinkIcon, FileText, LogOut,
-  ChevronDown, ChevronUp, Loader2, AlertCircle
+  ChevronDown, Loader2, AlertCircle, Trophy
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -16,13 +16,15 @@ const TYPES = ["PYQ","Conceptual","CurrentAffairs","Mock"];
 const TOPICS = ["Polity","History","Geography","Economy","Environment","Science & Technology","Reasoning","Quantitative Aptitude","English Language","Mental Ability","Reading Comprehension","Data Interpretation","Telangana GK","Current Affairs","AP GK"];
 const RESOURCE_TYPES = ["PDF","Book","Video","Link","Notes"];
 const RESOURCE_CATEGORIES = ["Syllabus","Previous Papers","Strategy","Notes","Books","Video Lectures","Current Affairs","State Exam"];
+const CONTEST_STATUSES = ["upcoming", "past"];
 
 const EMPTY_Q = { question:"", option_a:"", option_b:"", option_c:"", option_d:"", correct_option:0, explanation:"", exam:"UPSC", topic:"Polity", subtopic:"", difficulty:"Easy", type:"PYQ", year:"", tags:"" };
 const EMPTY_R = { title:"", description:"", type:"PDF", url:"", exam:"All", category:"Syllabus" };
+const EMPTY_C = { name:"", date:"", duration:"60 minutes", topics:"", prize:"", status:"upcoming", winner:"", your_rank:"" };
 
 export default function Admin() {
   const [, navigate] = useLocation();
-  const [activeTab, setActiveTab] = useState<"questions"|"resources">("questions");
+  const [activeTab, setActiveTab] = useState<"questions"|"resources"|"contests"|"support">("questions");
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
@@ -38,6 +40,15 @@ export default function Admin() {
   const [editingR, setEditingR] = useState<string | null>(null);
   const [showRForm, setShowRForm] = useState(false);
 
+  // Contest state
+  const [dbContests, setDbContests] = useState<any[]>([]);
+  const [cForm, setCForm] = useState({ ...EMPTY_C });
+  const [editingC, setEditingC] = useState<string | null>(null);
+  const [showCForm, setShowCForm] = useState(false);
+
+  // Support state
+  const [supportRequests, setSupportRequests] = useState<any[]>([]);
+
   // Guard — only admin
  const { user, signOut, loading: authLoading } = useAuth();
 
@@ -47,6 +58,8 @@ export default function Admin() {
     if (user.email !== ADMIN_EMAIL) { navigate("/"); return; }
     loadQuestions();
     loadResources();
+    loadContests();
+    loadSupportRequests();
   }, [user, authLoading]);
 
   const showToast = (msg: string, ok = true) => {
@@ -132,6 +145,53 @@ export default function Admin() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // ── Contests CRUD ───────────────────────────────────────────────
+  const loadContests = async () => {
+    const { data } = await supabase.from("contests").select("*").order("date", { ascending: true });
+    setDbContests(data || []);
+  };
+
+  const saveContest = async () => {
+    if (!cForm.name || !cForm.date || !cForm.topics || !cForm.prize) {
+      showToast("Fill all required contest fields", false); return;
+    }
+    setLoading(true);
+    const payload = {
+      ...cForm,
+      your_rank: cForm.your_rank ? Number(cForm.your_rank) : null,
+    };
+    let error;
+    if (editingC) {
+      ({ error } = await supabase.from("contests").update(payload).eq("id", editingC));
+    } else {
+      ({ error } = await supabase.from("contests").insert(payload));
+    }
+    setLoading(false);
+    if (error) { showToast("Error: " + error.message, false); return; }
+    showToast(editingC ? "Contest updated!" : "Contest added!");
+    setCForm({ ...EMPTY_C }); setEditingC(null); setShowCForm(false);
+    loadContests();
+  };
+
+  const deleteContest = async (id: string) => {
+    if (!confirm("Delete this contest?")) return;
+    await supabase.from("contests").delete().eq("id", id);
+    showToast("Contest deleted");
+    loadContests();
+  };
+
+  const startEditC = (contest: any) => {
+    setCForm({ ...contest, your_rank: contest.your_rank || "" });
+    setEditingC(contest.id); setShowCForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // ── Support requests ────────────────────────────────────────────
+  const loadSupportRequests = async () => {
+    const { data } = await supabase.from("support_requests").select("*").order("created_at", { ascending: false });
+    setSupportRequests(data || []);
+  };
+
   if (!user || user.email !== ADMIN_EMAIL) return null;
 
   return (
@@ -175,8 +235,8 @@ export default function Admin() {
           {[
             { label:"DB Questions", value: dbQuestions.length, icon:<BookOpen size={14}/> },
             { label:"Resources",    value: dbResources.length, icon:<LinkIcon size={14}/> },
-            { label:"Active",       value: dbQuestions.filter(q=>q.is_active).length, icon:<CheckCircle2 size={14}/> },
-            { label:"Admin",        value: "You", icon:<Edit2 size={14}/> },
+            { label:"Contests",     value: dbContests.length, icon:<ChevronDown size={14}/> },
+            { label:"Support",      value: supportRequests.length, icon:<AlertCircle size={14}/> },
           ].map((s,i) => (
             <div key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
               <div className="text-orange-500 mb-1">{s.icon}</div>
@@ -188,10 +248,16 @@ export default function Admin() {
 
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-6 w-fit">
-          {(["questions","resources"] as const).map(t => (
+          {(["questions","resources","contests","support"] as const).map(t => (
             <button key={t} onClick={() => setActiveTab(t)}
               className={`px-4 py-2 text-sm font-medium rounded-lg capitalize transition-colors ${activeTab===t?"bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm":"text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}>
-              {t === "questions" ? `Questions (${dbQuestions.length})` : `Resources (${dbResources.length})`}
+              {t === "questions"
+                ? `Questions (${dbQuestions.length})`
+                : t === "resources"
+                  ? `Resources (${dbResources.length})`
+                  : t === "contests"
+                    ? `Contests (${dbContests.length})`
+                    : `Support (${supportRequests.length})`}
             </button>
           ))}
         </div>
@@ -449,6 +515,112 @@ export default function Admin() {
                 </>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── CONTESTS TAB ── */}
+        {activeTab === "contests" && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-700 dark:text-gray-200">Contests</h2>
+              <button onClick={() => { setCForm({...EMPTY_C}); setEditingC(null); setShowCForm(!showCForm); }}
+                className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-sm rounded-xl hover:bg-orange-600 transition-colors">
+                {showCForm ? <><X size={13}/> Cancel</> : <><Plus size={13}/> Add Contest</>}
+              </button>
+            </div>
+
+            {showCForm && (
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{editingC ? "Edit Contest" : "Add New Contest"}</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input value={cForm.name} onChange={e => setCForm(f=>({...f, name:e.target.value}))} placeholder="Contest name" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
+                    <input value={cForm.date} onChange={e => setCForm(f=>({...f, date:e.target.value}))} placeholder="March 28, 2026" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input value={cForm.duration} onChange={e => setCForm(f=>({...f, duration:e.target.value}))} placeholder="60 minutes" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
+                    <select value={cForm.status} onChange={e => setCForm(f=>({...f, status:e.target.value}))} className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400">
+                      {CONTEST_STATUSES.map(status => <option key={status}>{status}</option>)}
+                    </select>
+                  </div>
+                  <input value={cForm.topics} onChange={e => setCForm(f=>({...f, topics:e.target.value}))} placeholder="GS1 + CSAT" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
+                  <input value={cForm.prize} onChange={e => setCForm(f=>({...f, prize:e.target.value}))} placeholder="Prize / reward" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input value={cForm.winner} onChange={e => setCForm(f=>({...f, winner:e.target.value}))} placeholder="Winner (optional)" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
+                    <input value={cForm.your_rank} onChange={e => setCForm(f=>({...f, your_rank:e.target.value}))} placeholder="Your rank (optional)" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button onClick={saveContest} disabled={loading} className="flex items-center gap-1.5 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors">
+                      {loading ? <Loader2 size={14} className="animate-spin"/> : <Save size={14}/>}
+                      {editingC ? "Update Contest" : "Save Contest"}
+                    </button>
+                    <button onClick={() => { setShowCForm(false); setEditingC(null); setCForm({...EMPTY_C}); }} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+              {dbContests.length === 0 ? (
+                <div className="text-center py-12">
+                  <Trophy size={28} className="mx-auto text-gray-200 dark:text-gray-700 mb-3"/>
+                  <p className="text-sm text-gray-400">No contests yet</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-[1fr_100px_100px_100px_80px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <span>Name</span><span>Date</span><span>Status</span><span>Prize</span><span>Actions</span>
+                  </div>
+                  {dbContests.map(c => (
+                    <div key={c.id} className="grid grid-cols-[1fr_100px_100px_100px_80px] gap-2 px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors items-center">
+                      <div>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 truncate">{c.name}</p>
+                        <p className="text-xs text-gray-400 truncate">{c.topics}</p>
+                      </div>
+                      <span className="text-xs text-gray-400">{c.date}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 w-fit">{c.status}</span>
+                      <span className="text-xs text-gray-400 truncate">{c.prize}</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => startEditC(c)} className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 text-gray-400 hover:text-blue-500 transition-colors"><Edit2 size={13}/></button>
+                        <button onClick={() => deleteContest(c.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={13}/></button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── SUPPORT TAB ── */}
+        {activeTab === "support" && (
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+            {supportRequests.length === 0 ? (
+              <div className="text-center py-12">
+                <AlertCircle size={28} className="mx-auto text-gray-200 dark:text-gray-700 mb-3"/>
+                <p className="text-sm text-gray-400">No support requests yet</p>
+                <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">Requests submitted from the support page will appear here when the `support_requests` table is available.</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-[140px_120px_1fr_120px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <span>Email</span><span>Category</span><span>Subject</span><span>Date</span>
+                </div>
+                {supportRequests.map((request) => (
+                  <div key={request.id} className="grid grid-cols-[140px_120px_1fr_120px] gap-2 px-4 py-3 border-b border-gray-100 dark:border-gray-800 items-start">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{request.email}</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400 w-fit">{request.category}</span>
+                    <div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{request.subject}</p>
+                      <p className="text-xs text-gray-400 mt-1 line-clamp-2">{request.message}</p>
+                    </div>
+                    <span className="text-xs text-gray-400">{request.created_at ? new Date(request.created_at).toLocaleDateString("en-IN") : "—"}</span>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         )}
       </div>

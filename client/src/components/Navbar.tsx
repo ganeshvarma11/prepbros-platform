@@ -1,231 +1,257 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Moon, Sun, User, LogOut, ChevronDown } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useAuth } from "@/contexts/AuthContext";
+import {
+  ArrowRight,
+  BookOpen,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Moon,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  User,
+  X,
+} from "lucide-react";
+
 import AuthModal from "@/components/AuthModal";
+import BrandLogo from "@/components/BrandLogo";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { trackEvent } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/practice",    label: "Practice" },
-  { href: "/aptitude",    label: "Aptitude" },
-  { href: "/explore",     label: "Explore" },
-  { href: "/contests",    label: "Contests" },
+  { href: "/practice", label: "Practice" },
+  { href: "/explore", label: "Explore" },
+  { href: "/resources", label: "Resources" },
+  { href: "/contests", label: "Contests" },
   { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/resources",   label: "Resources" },
 ];
 
 export default function Navbar() {
-  const [isOpen, setIsOpen]     = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
-  const [authTab, setAuthTab]   = useState<"login"|"signup">("login");
+  const [authTab, setAuthTab] = useState<"login" | "signup">("login");
   const [scrolled, setScrolled] = useState(false);
-  const { theme, toggleTheme }  = useTheme();
-  const { user, signOut }       = useAuth();
-  const [location]              = useLocation();
+  const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
+  const [location] = useLocation();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const openLogin  = () => { setAuthTab("login");  setShowAuth(true); setIsOpen(false); };
-  const openSignup = () => { setAuthTab("signup"); setShowAuth(true); setIsOpen(false); };
+  const openLogin = () => {
+    trackEvent("auth_login_opened", { source: "navbar" });
+    setAuthTab("login");
+    setShowAuth(true);
+    setIsOpen(false);
+  };
 
-  const isActive = (href: string) => location === href;
+  const openSignup = () => {
+    trackEvent("auth_signup_opened", { source: "navbar" });
+    setAuthTab("signup");
+    setShowAuth(true);
+    setIsOpen(false);
+  };
+
+  const activeRoute = (href: string) =>
+    location === href || (href !== "/" && location.startsWith(`${href}/`));
+
+  const displayName =
+    user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Aspirant";
 
   return (
     <>
-      <nav style={{
-        position: "sticky", top: 0, zIndex: 50,
-        height: 60,
-        background: scrolled
-          ? theme === "dark" ? "rgba(10,10,15,0.92)" : "rgba(255,255,255,0.92)"
-          : theme === "dark" ? "rgba(10,10,15,0.75)" : "rgba(255,255,255,0.75)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        borderBottom: `1px solid ${scrolled ? "var(--border)" : "transparent"}`,
-        transition: "all 0.2s ease",
-      }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
-
-          {/* Logo */}
-          <Link href="/">
-            <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", flexShrink: 0 }}>
-              <div style={{
-                width: 34, height: 34,
-                background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
-                borderRadius: 10,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(99,102,241,0.4)",
-                fontFamily: "var(--font-sans)",
-                fontWeight: 800, fontSize: 16, color: "#fff",
-                letterSpacing: "-0.02em",
-              }}>P</div>
-              <span style={{
-                fontFamily: "var(--font-sans)",
-                fontWeight: 800, fontSize: 17,
-                color: "var(--text-primary)",
-                letterSpacing: "-0.03em",
-              }}>PrepBros</span>
+      <nav
+        className={cn(
+          "navbar transition-all duration-200",
+          scrolled && "shadow-[0_10px_40px_-32px_rgba(15,23,42,0.5)]",
+        )}
+      >
+        <div className="container-shell flex min-h-[72px] items-center justify-between gap-4 py-3">
+          <div className="flex items-center gap-4">
+            <BrandLogo compact />
+            <div className="hidden items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] p-1 lg:flex">
+              {NAV_LINKS.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <span
+                    className={cn(
+                      "nav-link cursor-pointer",
+                      activeRoute(item.href) && "active",
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              ))}
             </div>
-          </Link>
-
-          {/* Desktop nav */}
-          <div style={{ display: "flex", alignItems: "center", gap: 2, flex: 1, justifyContent: "center" }} className="hidden md:flex">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link key={href} href={href}>
-                <div style={{
-                  padding: "6px 13px",
-                  borderRadius: 8,
-                  fontSize: 13.5,
-                  fontWeight: isActive(href) ? 600 : 500,
-                  fontFamily: "var(--font-sans)",
-                  color: isActive(href) ? "var(--brand)" : "var(--text-secondary)",
-                  background: isActive(href) ? "var(--brand-subtle)" : "transparent",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  whiteSpace: "nowrap",
-                }}
-                  onMouseEnter={e => { if (!isActive(href)) { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; (e.currentTarget as HTMLElement).style.background = "var(--bg-muted)"; }}}
-                  onMouseLeave={e => { if (!isActive(href)) { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}}
-                >{label}</div>
-              </Link>
-            ))}
           </div>
 
-          {/* Right section */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            {/* Theme toggle */}
+          <div className="hidden items-center gap-2 md:flex">
             <button
+              type="button"
               onClick={toggleTheme}
-              style={{
-                width: 34, height: 34, borderRadius: 8,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: "transparent", border: "1px solid var(--border)",
-                color: "var(--text-secondary)", cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--bg-muted)"; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:border-[var(--brand-muted)] hover:text-[var(--text-primary)]"
+              aria-label="Toggle theme"
             >
-              {theme === "dark" ? <Sun size={15}/> : <Moon size={15}/>}
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            {/* Auth */}
-            <div className="hidden md:flex" style={{ alignItems: "center", gap: 8 }}>
-              {user ? (
-                <>
-                  <Link href="/profile">
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 7,
-                      padding: "6px 12px",
-                      borderRadius: 8,
-                      border: "1px solid var(--border)",
-                      fontSize: 13, fontWeight: 500,
-                      fontFamily: "var(--font-sans)",
-                      color: "var(--text-primary)",
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                      maxWidth: 140,
-                    }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--bg-muted)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
-                    >
-                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--brand-subtle)", border: "1px solid var(--brand-muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "var(--brand)", flexShrink: 0 }}>
-                        {(user.user_metadata?.full_name || user.email || "U")[0].toUpperCase()}
-                      </div>
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0]}
-                      </span>
-                    </div>
-                  </Link>
-                  <button
-                    onClick={() => signOut()}
-                    style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", transition: "all 0.15s ease" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--red-bg)"; (e.currentTarget as HTMLElement).style.color = "var(--red)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--red)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
-                  >
-                    <LogOut size={14}/>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={openLogin} style={{
-                    padding: "7px 16px", borderRadius: 8,
-                    background: "transparent", border: "1px solid var(--border)",
-                    fontSize: 13, fontWeight: 500, fontFamily: "var(--font-sans)",
-                    color: "var(--text-primary)", cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--bg-muted)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
-                  >Log in</button>
-                  <button onClick={openSignup} style={{
-                    padding: "7px 16px", borderRadius: 8,
-                    background: "var(--brand)", border: "none",
-                    fontSize: 13, fontWeight: 600, fontFamily: "var(--font-sans)",
-                    color: "#fff", cursor: "pointer",
-                    transition: "all 0.15s ease",
-                    boxShadow: "0 1px 3px rgba(99,102,241,0.3)",
-                  }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--brand-dark)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 12px rgba(99,102,241,0.4)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--brand)"; (e.currentTarget as HTMLElement).style.transform = "none"; (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(99,102,241,0.3)"; }}
-                  >Start free</button>
-                </>
-              )}
-            </div>
+            <Link href="/premium">
+              <span className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--brand-muted)] hover:text-[var(--text-primary)]">
+                <Sparkles size={14} className="text-[var(--brand)]" />
+                PrepBros Pro
+              </span>
+            </Link>
 
-            {/* Mobile menu toggle */}
+            {user ? (
+              <>
+                <Link href="/profile">
+                  <span className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 transition hover:border-[var(--brand-muted)]">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-subtle)] text-sm font-semibold text-[var(--brand-dark)]">
+                      {displayName.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="max-w-28 truncate text-sm font-medium text-[var(--text-primary)]">
+                      {displayName}
+                    </span>
+                  </span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => signOut()}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:border-[var(--red)] hover:text-[var(--red)]"
+                  aria-label="Sign out"
+                >
+                  <LogOut size={16} />
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={openLogin} className="btn-secondary rounded-full px-5">
+                  Log in
+                </button>
+                <button
+                  type="button"
+                  onClick={openSignup}
+                  className="btn-primary rounded-full px-5"
+                >
+                  Start free
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 md:hidden">
             <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden"
-              style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer" }}
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)]"
+              aria-label="Toggle theme"
             >
-              {isOpen ? <X size={16}/> : <Menu size={16}/>}
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen((value) => !value)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)]"
+              aria-label="Open menu"
+            >
+              {isOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile drawer */}
-        {isOpen && (
-          <div className="md:hidden" style={{
-            borderTop: "1px solid var(--border)",
-            background: theme === "dark" ? "var(--bg-base)" : "#fff",
-            padding: "12px 16px 20px",
-            animation: "fadeIn 0.15s ease",
-          }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {[{ href: "/", label: "Home" }, ...NAV_LINKS].map(({ href, label }) => (
-                <Link key={href} href={href}>
-                  <div onClick={() => setIsOpen(false)} style={{
-                    padding: "10px 14px", borderRadius: 8,
-                    fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
-                    color: isActive(href) ? "var(--brand)" : "var(--text-primary)",
-                    background: isActive(href) ? "var(--brand-subtle)" : "transparent",
-                    cursor: "pointer",
-                  }}>{label}</div>
+        {isOpen ? (
+          <div className="border-t border-[var(--border)] bg-[var(--bg-card)]/95 px-4 pb-5 pt-4 md:hidden">
+            <div className="container-shell space-y-4">
+              <div className="grid gap-2">
+                <Link href="/dashboard">
+                  <span
+                    onClick={() => setIsOpen(false)}
+                    className="inline-flex cursor-pointer items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 text-sm font-medium text-[var(--text-primary)]"
+                  >
+                    <LayoutDashboard size={16} className="text-[var(--brand)]" />
+                    Dashboard
+                  </span>
                 </Link>
-              ))}
-              <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                {NAV_LINKS.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <span
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "inline-flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition",
+                        activeRoute(item.href)
+                          ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-dark)]"
+                          : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)]",
+                      )}
+                    >
+                      <BookOpen size={16} className="text-[var(--brand)]" />
+                      {item.label}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                      {user ? `Welcome back, ${displayName}` : "Practice with momentum"}
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {user
+                        ? "Your dashboard, streaks, and profile are one tap away."
+                        : "Sign in to save progress, keep streaks, and unlock smarter review."}
+                    </p>
+                  </div>
+                  <ShieldCheck size={16} className="mt-1 text-[var(--accent)]" />
+                </div>
+
                 {user ? (
-                  <>
-                    <Link href="/profile"><div onClick={() => setIsOpen(false)} style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--text-primary)", cursor: "pointer", textAlign: "center" }}>My Profile</div></Link>
-                    <div onClick={() => { signOut(); setIsOpen(false); }} style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid var(--red)", fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--red)", cursor: "pointer", textAlign: "center" }}>Sign out</div>
-                  </>
+                  <div className="grid gap-2">
+                    <Link href="/profile">
+                      <span
+                        onClick={() => setIsOpen(false)}
+                        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-sm font-medium text-[var(--text-primary)]"
+                      >
+                        <User size={14} />
+                        Profile
+                      </span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsOpen(false);
+                        signOut();
+                      }}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--red)]/30 bg-[var(--red-bg)] px-4 py-2 text-sm font-medium text-[var(--red)]"
+                    >
+                      <LogOut size={14} />
+                      Sign out
+                    </button>
+                  </div>
                 ) : (
-                  <>
-                    <div onClick={openLogin} style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--text-primary)", cursor: "pointer", textAlign: "center" }}>Log in</div>
-                    <div onClick={openSignup} style={{ padding: "10px 14px", borderRadius: 8, background: "var(--brand)", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)", color: "#fff", cursor: "pointer", textAlign: "center" }}>Start free</div>
-                  </>
+                  <div className="grid gap-2">
+                    <button type="button" onClick={openSignup} className="btn-primary rounded-full">
+                      <ArrowRight size={14} />
+                      Start free
+                    </button>
+                    <button type="button" onClick={openLogin} className="btn-secondary rounded-full">
+                      Log in
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </nav>
 
-      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultTab={authTab}/>
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultTab={authTab} />
     </>
   );
 }
