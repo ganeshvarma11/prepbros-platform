@@ -420,16 +420,6 @@ export default function Practice() {
                 </div>
               ) : !activeQ ? (
                 <div className="glass-panel overflow-hidden rounded-[20px]">
-                  <div className="hidden grid-cols-[56px_1fr_90px_140px_92px_70px_64px] gap-3 border-b border-[var(--border)] bg-[var(--bg-subtle)] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] md:grid">
-                    <span>#</span>
-                    <span>Question</span>
-                    <span>Exam</span>
-                    <span>Topic</span>
-                    <span>Difficulty</span>
-                    <span>Year</span>
-                    <span>Solved</span>
-                  </div>
-
                   {paginated.length === 0 ? (
                     <div className="p-10 text-center">
                       <p className="text-lg font-semibold text-[var(--text-primary)]">
@@ -451,42 +441,49 @@ export default function Practice() {
                             key={question.id}
                             type="button"
                             onClick={() => openQuestion(question)}
-                            className="table-row grid w-full gap-3 px-5 py-4 text-left md:grid-cols-[56px_1fr_90px_140px_92px_70px_64px]"
+                            className="table-row w-full px-5 py-4 text-left"
                           >
-                            <span className="text-xs text-[var(--text-faint)] md:flex md:items-center">
-                              {(page - 1) * PER_PAGE + index + 1}
-                            </span>
-                            <div>
-                              <p className="text-sm font-medium text-[var(--text-primary)]">
-                                {question.question.length > 120
-                                  ? `${question.question.slice(0, 120)}...`
-                                  : question.question}
-                              </p>
-                              <div className="mt-2 flex flex-wrap gap-2 md:hidden">
-                                <span className={`badge ${EXAM_COLORS[question.exam]}`}>{question.exam}</span>
-                                <span className={`badge ${DIFF_COLORS[question.difficulty]}`}>{question.difficulty}</span>
-                                <span className="badge badge-gray">{question.topic}</span>
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-3">
+                                  <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-[8px] bg-[var(--bg-subtle)] px-2 text-xs font-semibold text-[var(--text-muted)]">
+                                    {(page - 1) * PER_PAGE + index + 1}
+                                  </span>
+                                  <p className="text-base font-medium leading-7 text-[var(--text-primary)]">
+                                    {question.question.length > 140
+                                      ? `${question.question.slice(0, 140)}...`
+                                      : question.question}
+                                  </p>
+                                </div>
+
+                                <div className="mt-3 flex flex-wrap items-center gap-2">
+                                  <span className={`badge ${EXAM_COLORS[question.exam]}`}>{question.exam}</span>
+                                  <span className="badge badge-gray">{question.topic}</span>
+                                  <span className={`badge ${DIFF_COLORS[question.difficulty]}`}>{question.difficulty}</span>
+                                  {question.year ? (
+                                    <span className="badge badge-gray">PYQ {question.year}</span>
+                                  ) : null}
+                                  <span className="badge badge-blue">{question.type}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 md:ml-6 md:pt-1">
+                                <span
+                                  className={`inline-flex items-center gap-2 rounded-[10px] border px-3 py-2 text-xs font-medium ${
+                                    solved.includes(question.id)
+                                      ? "border-[var(--accent-muted)] bg-[var(--accent-subtle)] text-[var(--accent)]"
+                                      : "border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-muted)]"
+                                  }`}
+                                >
+                                  {solved.includes(question.id) ? (
+                                    <BookmarkCheck size={14} />
+                                  ) : (
+                                    <Circle size={14} />
+                                  )}
+                                  {solved.includes(question.id) ? "Solved" : "Unsolved"}
+                                </span>
                               </div>
                             </div>
-                            <span className={`hidden md:inline-flex badge ${EXAM_COLORS[question.exam]}`}>
-                              {question.exam}
-                            </span>
-                            <span className="hidden text-sm text-[var(--text-secondary)] md:flex md:items-center">
-                              {question.topic}
-                            </span>
-                            <span className={`hidden md:inline-flex badge ${DIFF_COLORS[question.difficulty]}`}>
-                              {question.difficulty}
-                            </span>
-                            <span className="hidden text-sm text-[var(--text-muted)] md:flex md:items-center">
-                              {question.year ?? "—"}
-                            </span>
-                            <span className="hidden md:flex md:items-center">
-                              {solved.includes(question.id) ? (
-                                <BookmarkCheck size={16} className="text-[var(--accent)]" />
-                              ) : (
-                                <Circle size={16} className="text-[var(--text-faint)]" />
-                              )}
-                            </span>
                           </button>
                         ))}
                       </div>
