@@ -1,150 +1,228 @@
-import { useState } from "react";
-import { Link } from "wouter";
-import { Menu, X, Moon, Sun, User, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "wouter";
+import { Menu, X, Moon, Sun, User, LogOut, ChevronDown } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import AuthModal from "@/components/AuthModal";
 
+const NAV_LINKS = [
+  { href: "/practice",    label: "Practice" },
+  { href: "/aptitude",    label: "Aptitude" },
+  { href: "/explore",     label: "Explore" },
+  { href: "/contests",    label: "Contests" },
+  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/resources",   label: "Resources" },
+];
+
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen]     = useState(false);
   const [showAuth, setShowAuth] = useState(false);
-  const [authTab, setAuthTab] = useState<"login" | "signup">("login");
-  const { theme, toggleTheme } = useTheme();
-  const { user, signOut } = useAuth();
+  const [authTab, setAuthTab]   = useState<"login"|"signup">("login");
+  const [scrolled, setScrolled] = useState(false);
+  const { theme, toggleTheme }  = useTheme();
+  const { user, signOut }       = useAuth();
+  const [location]              = useLocation();
 
-  const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/practice", label: "Practice" },
-    { href: "/aptitude", label: "Aptitude" },
-    { href: "/explore", label: "Explore" },
-    { href: "/contests", label: "Contests" },
-    { href: "/leaderboard", label: "Leaderboard" },
-    { href: "/resources", label: "Resources" },
-    { href: "/premium", label: "Premium" },
-  ];
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  const openLogin = () => { setAuthTab("login"); setShowAuth(true); setIsOpen(false); };
+  const openLogin  = () => { setAuthTab("login");  setShowAuth(true); setIsOpen(false); };
   const openSignup = () => { setAuthTab("signup"); setShowAuth(true); setIsOpen(false); };
+
+  const isActive = (href: string) => location === href;
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
-            <Link href="/">
-              <a className="flex items-center gap-2.5 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-110">
-                  P
-                </div>
-                <span className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white hidden sm:inline tracking-tight">
-                  PrepBros
-                </span>
-              </a>
-            </Link>
+      <nav style={{
+        position: "sticky", top: 0, zIndex: 50,
+        height: 60,
+        background: scrolled
+          ? theme === "dark" ? "rgba(10,10,15,0.92)" : "rgba(255,255,255,0.92)"
+          : theme === "dark" ? "rgba(10,10,15,0.75)" : "rgba(255,255,255,0.75)",
+        backdropFilter: "blur(20px) saturate(180%)",
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+        borderBottom: `1px solid ${scrolled ? "var(--border)" : "transparent"}`,
+        transition: "all 0.2s ease",
+      }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <Link key={link.href} href={link.href}>
-                  <a className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 font-medium transition-colors duration-200 relative group">
-                    {link.label}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 group-hover:w-full transition-all duration-300" />
-                  </a>
-                </Link>
-              ))}
+          {/* Logo */}
+          <Link href="/">
+            <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", flexShrink: 0 }}>
+              <div style={{
+                width: 34, height: 34,
+                background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
+                borderRadius: 10,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 2px 8px rgba(99,102,241,0.4)",
+                fontFamily: "var(--font-sans)",
+                fontWeight: 800, fontSize: 16, color: "#fff",
+                letterSpacing: "-0.02em",
+              }}>P</div>
+              <span style={{
+                fontFamily: "var(--font-sans)",
+                fontWeight: 800, fontSize: 17,
+                color: "var(--text-primary)",
+                letterSpacing: "-0.03em",
+              }}>PrepBros</span>
+            </div>
+          </Link>
+
+          {/* Desktop nav */}
+          <div style={{ display: "flex", alignItems: "center", gap: 2, flex: 1, justifyContent: "center" }} className="hidden md:flex">
+            {NAV_LINKS.map(({ href, label }) => (
+              <Link key={href} href={href}>
+                <div style={{
+                  padding: "6px 13px",
+                  borderRadius: 8,
+                  fontSize: 13.5,
+                  fontWeight: isActive(href) ? 600 : 500,
+                  fontFamily: "var(--font-sans)",
+                  color: isActive(href) ? "var(--brand)" : "var(--text-secondary)",
+                  background: isActive(href) ? "var(--brand-subtle)" : "transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  whiteSpace: "nowrap",
+                }}
+                  onMouseEnter={e => { if (!isActive(href)) { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; (e.currentTarget as HTMLElement).style.background = "var(--bg-muted)"; }}}
+                  onMouseLeave={e => { if (!isActive(href)) { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}}
+                >{label}</div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Right section */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              style={{
+                width: 34, height: 34, borderRadius: 8,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "transparent", border: "1px solid var(--border)",
+                color: "var(--text-secondary)", cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--bg-muted)"; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+            >
+              {theme === "dark" ? <Sun size={15}/> : <Moon size={15}/>}
+            </button>
+
+            {/* Auth */}
+            <div className="hidden md:flex" style={{ alignItems: "center", gap: 8 }}>
+              {user ? (
+                <>
+                  <Link href="/profile">
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 7,
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      border: "1px solid var(--border)",
+                      fontSize: 13, fontWeight: 500,
+                      fontFamily: "var(--font-sans)",
+                      color: "var(--text-primary)",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      maxWidth: 140,
+                    }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--bg-muted)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
+                    >
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--brand-subtle)", border: "1px solid var(--brand-muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "var(--brand)", flexShrink: 0 }}>
+                        {(user.user_metadata?.full_name || user.email || "U")[0].toUpperCase()}
+                      </div>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0]}
+                      </span>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => signOut()}
+                    style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", transition: "all 0.15s ease" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--red-bg)"; (e.currentTarget as HTMLElement).style.color = "var(--red)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--red)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
+                  >
+                    <LogOut size={14}/>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={openLogin} style={{
+                    padding: "7px 16px", borderRadius: 8,
+                    background: "transparent", border: "1px solid var(--border)",
+                    fontSize: 13, fontWeight: 500, fontFamily: "var(--font-sans)",
+                    color: "var(--text-primary)", cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--bg-muted)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
+                  >Log in</button>
+                  <button onClick={openSignup} style={{
+                    padding: "7px 16px", borderRadius: 8,
+                    background: "var(--brand)", border: "none",
+                    fontSize: 13, fontWeight: 600, fontFamily: "var(--font-sans)",
+                    color: "#fff", cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    boxShadow: "0 1px 3px rgba(99,102,241,0.3)",
+                  }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--brand-dark)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 12px rgba(99,102,241,0.4)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--brand)"; (e.currentTarget as HTMLElement).style.transform = "none"; (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(99,102,241,0.3)"; }}
+                  >Start free</button>
+                </>
+              )}
             </div>
 
-            {/* Right Section */}
-            <div className="flex items-center gap-2 md:gap-3">
-              <button onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-all duration-200"
-                aria-label="Toggle theme">
-                {theme === "light"
-                  ? <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                  : <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" />}
-              </button>
+            {/* Mobile menu toggle */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden"
+              style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer" }}
+            >
+              {isOpen ? <X size={16}/> : <Menu size={16}/>}
+            </button>
+          </div>
+        </div>
 
-              {/* Auth buttons */}
-              <div className="hidden md:flex items-center gap-2">
+        {/* Mobile drawer */}
+        {isOpen && (
+          <div className="md:hidden" style={{
+            borderTop: "1px solid var(--border)",
+            background: theme === "dark" ? "var(--bg-base)" : "#fff",
+            padding: "12px 16px 20px",
+            animation: "fadeIn 0.15s ease",
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {[{ href: "/", label: "Home" }, ...NAV_LINKS].map(({ href, label }) => (
+                <Link key={href} href={href}>
+                  <div onClick={() => setIsOpen(false)} style={{
+                    padding: "10px 14px", borderRadius: 8,
+                    fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
+                    color: isActive(href) ? "var(--brand)" : "var(--text-primary)",
+                    background: isActive(href) ? "var(--brand-subtle)" : "transparent",
+                    cursor: "pointer",
+                  }}>{label}</div>
+                </Link>
+              ))}
+              <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                 {user ? (
                   <>
-                    <Link href="/profile">
-                      <a className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-                        <User size={14}/>
-                        <span className="max-w-[100px] truncate">{user.user_metadata?.full_name || user.email?.split("@")[0]}</span>
-                      </a>
-                    </Link>
-                    <button onClick={() => signOut()}
-                      className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors">
-                      <LogOut size={15}/>
-                    </button>
+                    <Link href="/profile"><div onClick={() => setIsOpen(false)} style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--text-primary)", cursor: "pointer", textAlign: "center" }}>My Profile</div></Link>
+                    <div onClick={() => { signOut(); setIsOpen(false); }} style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid var(--red)", fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--red)", cursor: "pointer", textAlign: "center" }}>Sign out</div>
                   </>
                 ) : (
                   <>
-                    <Button variant="outline" onClick={openLogin}
-                      className="border-gray-300 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 font-medium transition-all duration-200">
-                      Login
-                    </Button>
-                    <Button onClick={openSignup}
-                      className="bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200">
-                      Start Free
-                    </Button>
+                    <div onClick={openLogin} style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--text-primary)", cursor: "pointer", textAlign: "center" }}>Log in</div>
+                    <div onClick={openSignup} style={{ padding: "10px 14px", borderRadius: 8, background: "var(--brand)", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)", color: "#fff", cursor: "pointer", textAlign: "center" }}>Start free</div>
                   </>
                 )}
               </div>
-
-              {/* Mobile menu button */}
-              <button onClick={() => setIsOpen(!isOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-all duration-200"
-                aria-label="Toggle menu">
-                {isOpen
-                  ? <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-                  : <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />}
-              </button>
             </div>
           </div>
-
-          {/* Mobile Navigation */}
-          {isOpen && (
-            <div className="md:hidden pb-4 border-t border-gray-200 dark:border-slate-800">
-              <div className="space-y-1 pt-4">
-                {navLinks.map((link) => (
-                  <Link key={link.href} href={link.href}>
-                    <a onClick={() => setIsOpen(false)}
-                      className="block px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800 hover:text-orange-600 dark:hover:text-orange-400 rounded-lg font-medium transition-all duration-200">
-                      {link.label}
-                    </a>
-                  </Link>
-                ))}
-                <div className="pt-2 space-y-2 px-1">
-                  {user ? (
-                    <>
-                      <Link href="/profile">
-                        <a onClick={() => setIsOpen(false)}>
-                          <Button variant="outline" className="w-full">My Profile</Button>
-                        </a>
-                      </Link>
-                      <Button onClick={() => { signOut(); setIsOpen(false); }} variant="outline" className="w-full text-red-500 border-red-200">
-                        Sign out
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button variant="outline" onClick={openLogin} className="w-full border-gray-300 dark:border-slate-700 text-gray-700 dark:text-gray-300">
-                        Login
-                      </Button>
-                      <Button onClick={openSignup} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold">
-                        Start Free
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </nav>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultTab={authTab}/>
