@@ -1,14 +1,4 @@
-import {
-  ArrowRight,
-  BarChart3,
-  BookOpenText,
-  Bookmark,
-  CheckCircle2,
-  Clock3,
-  Flame,
-  LayoutGrid,
-  Target,
-} from "lucide-react";
+import { ArrowRight, BarChart3, BookOpenText, Check, Clock3, Flame, Target } from "lucide-react";
 import { Link } from "wouter";
 
 import Footer from "@/components/Footer";
@@ -16,372 +6,224 @@ import Navbar from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
 
-const focusTracks = ["UPSC", "SSC", "State Exams"];
-
-const heroSignals = [
-  "Daily MCQs",
-  "PYQs",
-  "Progress tracking",
-  "Weak-topic review",
-];
-
 const workflowCards = [
   {
     icon: BookOpenText,
-    title: "Practice Daily MCQs",
-    description: "Solve fresh questions every day and build useful momentum instead of random bursts.",
-    meta: "Daily practice loop",
+    title: "Practice",
+    description: "Daily questions that keep your prep active without adding noise to the routine.",
   },
   {
     icon: BarChart3,
-    title: "Track Your Progress",
-    description: "See accuracy, streaks, and solved counts clearly enough to know whether the week is moving well.",
-    meta: "Progress visibility",
+    title: "Track",
+    description: "Clear accuracy and progress signals so you always know how the week is going.",
   },
   {
-    icon: Bookmark,
-    title: "Review Weak Areas",
-    description: "Bookmark important questions, revisit mistakes, and keep weak topics in view before they pile up.",
-    meta: "Bookmark-first review",
+    icon: Target,
+    title: "Improve",
+    description: "Revisit weak topics, correct mistakes, and keep consistency working in your favor.",
   },
 ];
 
-const supportBlocks = [
-  {
-    title: "Daily goals that stay realistic",
-    description:
-      "The product keeps the first action obvious: open practice, finish your target, and keep the day moving.",
-  },
-  {
-    title: "Review without losing context",
-    description:
-      "Bookmarks, weak-topic cues, and recent sessions make it easier to know what deserves another pass.",
-  },
-  {
-    title: "Simple enough to repeat tomorrow",
-    description:
-      "The interface stays focused so consistency comes from clarity, not pressure or coaching-site noise.",
-  },
-];
-
-const weakTopics = [
-  { topic: "History", solved: "64%", target: "72%", widthA: "43%", widthB: "70%" },
-  { topic: "Polity", solved: "58%", target: "69%", widthA: "36%", widthB: "64%" },
-];
-
-const recentStats = [
-  { label: "Today Stats", value: "88%" },
-  { label: "16 mins remaining", value: "Goal Focus" },
+const proofPoints = [
+  "No distractions",
+  "Focused question solving",
+  "Clear progress tracking",
 ];
 
 export default function Home() {
   const { user } = useAuth();
   const primaryHref = user ? "/dashboard" : "/practice";
-  const primaryLabel = user ? "Open Dashboard" : "Start Practicing Free";
+  const primaryLabel = user ? "Continue Practice" : "Start Free Today";
+
+  const handlePrimaryClick = (source: "hero" | "cta") => {
+    trackEvent("home_primary_cta_clicked", {
+      source,
+      destination: user ? "dashboard" : "practice",
+    });
+  };
 
   return (
-    <div className="page-container home-reference-page">
-      <Navbar />
+    <div className="page-container landing-minimal-page">
+      <Navbar variant="landing" />
 
-      <main className="px-4 pb-14 pt-3 md:pb-18 md:pt-4">
+      <main className="relative px-4 pb-20 pt-4 md:pb-24 md:pt-6">
         <div className="container-shell">
-          <section className="home-reference-hero relative overflow-hidden rounded-[36px] px-6 pb-10 pt-7 md:px-10 md:pb-12 md:pt-8 lg:px-12 lg:pb-14 lg:pt-9">
-            <div className="home-reference-glow home-reference-glow-left" />
-            <div className="home-reference-glow home-reference-glow-right" />
-            <div className="home-reference-noise" />
+          <section className="landing-hero-shell overflow-hidden px-6 pb-10 pt-8 md:px-10 md:pb-14 md:pt-9 lg:px-12 lg:pb-16">
+            <div className="landing-hero-glow landing-hero-glow-left" />
+            <div className="landing-hero-glow landing-hero-glow-right" />
 
-            <div className="relative grid gap-8 lg:grid-cols-[0.98fr_0.9fr] lg:items-start lg:gap-8">
-              <div className="max-w-2xl lg:pt-2">
-                <p className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
-                  <CheckCircle2 size={13} />
-                  Daily question-solving for serious aspirants
+            <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(320px,390px)] lg:items-center lg:gap-12">
+              <div className="max-w-2xl">
+                <p className="text-lg font-medium text-[var(--text-secondary)] md:text-xl">
+                  Prep for UPSC, SSC &amp; State Exams
                 </p>
 
-                <h1 className="mt-5 max-w-[11ch] text-balance text-5xl font-semibold leading-[1.03] tracking-[-0.07em] text-[var(--text-primary)] md:text-6xl lg:text-[4.1rem]">
-                  Daily exam practice
-                  <br />
-                  that actually helps
-                  <br />
-                  <span className="text-[var(--brand-light)]">you improve.</span>
+                <h1 className="mt-5 max-w-[10ch] text-balance text-5xl font-semibold leading-[0.98] tracking-[-0.08em] text-[var(--text-primary)] md:text-6xl lg:text-[4.6rem]">
+                  Daily practice that actually improves your score.
                 </h1>
 
-                <p className="mt-5 max-w-[34rem] text-lg leading-8 text-[var(--text-secondary)]">
-                  PrepBros is a focused exam preparation platform for aspirants who want one clear
-                  loop: practice every day, track progress, review weak topics, and stay consistent.
+                <p className="mt-6 max-w-[34rem] text-lg leading-8 text-[var(--text-secondary)] md:text-[1.45rem]">
+                  Prep with a simple system: Practice. Track. Improve.
                 </p>
 
-                <div className="mt-5 flex flex-wrap gap-2.5">
-                  {heroSignals.map((item) => (
-                    <span
-                      key={item}
-                      className="rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-1.5 text-sm font-medium text-[var(--text-primary)]"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
+                <p className="mt-3 text-lg leading-8 text-[var(--text-secondary)] md:text-[1.45rem]">
+                  Start today. Stay consistent. See results.
+                </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link href={primaryHref}>
                     <span
-                      onClick={() =>
-                        trackEvent("home_primary_cta_clicked", {
-                          destination: user ? "dashboard" : "practice",
-                        })
-                      }
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-[14px] bg-[linear-gradient(180deg,#ff9838_0%,#ff7a12_100%)] px-6 py-3.5 text-lg font-medium text-white shadow-[0_22px_45px_-28px_rgba(255,122,18,0.95)] transition hover:brightness-105"
+                      onClick={() => handlePrimaryClick("hero")}
+                      className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[18px] bg-[linear-gradient(180deg,#ff9a3d_0%,#ff7d17_100%)] px-7 py-4 text-lg font-medium text-white shadow-[0_22px_48px_-26px_rgba(255,125,23,0.95)] transition hover:brightness-105"
                     >
                       {primaryLabel}
-                      <ArrowRight size={17} />
+                      <ArrowRight size={18} />
                     </span>
                   </Link>
 
-                  <Link href="/resources">
-                    <span
-                      onClick={() =>
-                        trackEvent("home_secondary_cta_clicked", { destination: "resources" })
-                      }
-                      className="inline-flex cursor-pointer items-center rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] px-6 py-3.5 text-lg font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)]"
-                    >
-                      Explore Resources
-                    </span>
-                  </Link>
+                  <a
+                    href="#review-system"
+                    className="inline-flex items-center justify-center rounded-[18px] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-6 py-4 text-lg font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)]"
+                  >
+                    How it works
+                  </a>
                 </div>
 
-                <div className="mt-6 flex flex-wrap gap-3">
-                  {focusTracks.map((item) => (
-                    <span
-                      key={item}
-                      className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] px-5 py-2.5 text-lg font-medium text-[var(--text-primary)]"
-                    >
-                      {item}
-                    </span>
-                  ))}
+                <div className="mt-8 inline-flex flex-wrap items-center gap-3 rounded-full border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-5 py-3 text-base text-[var(--text-secondary)]">
+                  <span>Daily MCQs</span>
+                  <span className="text-[var(--text-muted)]">•</span>
+                  <span>PYQs</span>
+                  <span className="text-[var(--text-muted)]">•</span>
+                  <span>Weak Topic Tracking</span>
                 </div>
               </div>
 
-              <div className="relative lg:pt-1">
-                <div className="home-app-board mx-auto w-full max-w-[640px] rounded-[28px] p-3 md:p-4">
-                  <div className="rounded-[22px] border border-[var(--border)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow-md)]">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <h2 className="text-[1.85rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                          Daily Goal
-                        </h2>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-sm text-[var(--text-primary)]">
-                        <Flame size={14} className="text-[var(--brand)]" />
-                        16 min remaining
-                      </div>
-                    </div>
-
-                    <div className="mt-4 h-3 overflow-hidden rounded-full bg-[var(--bg-muted)]">
-                      <div className="h-full w-[72%] rounded-full bg-[linear-gradient(90deg,#78d2ff_0%,#93e7ff_100%)] shadow-[0_0_20px_rgba(120,210,255,0.35)]" />
-                    </div>
-
-                    <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_0.88fr]">
-                      <div className="space-y-3">
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {recentStats.map((item) => (
-                            <div
-                              key={item.label}
-                              className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5"
-                            >
-                              <p className="text-sm text-[var(--text-secondary)]">{item.label}</p>
-                              <p className="mt-2 text-[1.75rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                                {item.value}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-[var(--text-secondary)]">Today</p>
-                            <Clock3 size={16} className="text-[var(--blue)]" />
-                          </div>
-                          <div className="mt-3 flex items-end justify-between gap-4">
-                            <div>
-                              <p className="text-[2.8rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                                88%
-                              </p>
-                              <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                                Accuracy across today&apos;s attempts
-                              </p>
-                            </div>
-                            <div className="flex h-16 items-end gap-1.5">
-                              {[20, 24, 26, 28, 34, 31, 36, 40].map((height, index) => (
-                                <span
-                                  key={height + index}
-                                  className="w-2 rounded-full bg-[linear-gradient(180deg,#5ca9ff_0%,rgba(92,169,255,0.18)_100%)]"
-                                  style={{ height: `${height}px` }}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="grid gap-3 md:grid-cols-[1.15fr_0.85fr]">
-                          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                                Weak Topics
-                              </h3>
-                              <Target size={16} className="text-[var(--brand)]" />
-                            </div>
-                            <div className="mt-4 space-y-4">
-                              {weakTopics.map((item) => (
-                                <div key={item.topic}>
-                                  <div className="flex items-center justify-between text-sm">
-                                    <span className="text-[var(--text-primary)]">{item.topic}</span>
-                                    <div className="flex items-center gap-5">
-                                      <span className="text-[var(--text-secondary)]">{item.solved}</span>
-                                      <span className="text-[#9ae6b4]">{item.target}</span>
-                                    </div>
-                                  </div>
-                                  <div className="mt-2 flex gap-2">
-                                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--bg-muted)]">
-                                      <div
-                                        className="h-full rounded-full bg-[linear-gradient(90deg,#8ad6b3_0%,#b2efc9_100%)]"
-                                        style={{ width: item.widthA }}
-                                      />
-                                    </div>
-                                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--bg-muted)]">
-                                      <div
-                                        className="h-full rounded-full bg-[linear-gradient(90deg,#c3a96b_0%,#f1dc96_100%)]"
-                                        style={{ width: item.widthB }}
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
-                            <p className="text-sm font-medium text-[var(--text-secondary)]">Bookmarks</p>
-                            <p className="mt-3 text-[2.8rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                              24
-                            </p>
-                            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                              Saved for quick revision
-                            </p>
-                            <div className="mt-5 space-y-2.5">
-                              {["Polity PYQs", "Economy mistakes", "History revision"].map((item) => (
-                                <div
-                                  key={item}
-                                  className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2.5 text-sm text-[var(--text-primary)]"
-                                >
-                                  {item}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="relative flex items-center justify-center lg:justify-end">
-                        <div className="home-question-rail hidden xl:block" />
-                        <div className="home-question-card relative z-10 w-full max-w-[290px] rounded-[20px] border border-[rgba(255,255,255,0.16)] bg-[linear-gradient(180deg,#f8f1e9_0%,#f3eee6_100%)] p-3.5 text-[#201913] shadow-[0_28px_60px_-28px_rgba(0,0,0,0.95)]">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-[#5b4b3f]">Answer Questions</p>
-                            <LayoutGrid size={16} className="text-[#8f8076]" />
-                          </div>
-                          <div className="mt-4 rounded-[16px] border border-[rgba(34,25,19,0.08)] bg-white/45 p-4">
-                            <p className="text-[15px] leading-7 text-[#2b2118]">
-                              Who founded the Indian National Congress in 1885?
-                            </p>
-                          </div>
-                          <div className="mt-4 space-y-2.5">
-                            {[
-                              "A. Mahatma Gandhi",
-                              "B. Bal Gangadhar Tilak",
-                              "C. Allan Octavian Hume",
-                              "D. Jawaharlal Nehru",
-                            ].map((option, index) => (
-                              <div
-                                key={option}
-                                className={`rounded-[14px] border px-4 py-3 text-base ${
-                                  index === 2
-                                    ? "border-[#25524b] bg-[#2e5750] text-white"
-                                    : "border-[rgba(34,25,19,0.1)] bg-white/60 text-[#2c2117]"
-                                }`}
-                              >
-                                {option}
-                              </div>
-                            ))}
-                          </div>
-                          <button
-                            type="button"
-                            className="mt-4 w-full rounded-[14px] bg-[linear-gradient(180deg,#3d67ea_0%,#274ecb_100%)] px-4 py-3 text-lg font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
-                          >
-                            Submit
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+              <div className="landing-panel mx-auto w-full max-w-[390px] p-5 md:p-7">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                      Daily Goal
+                    </p>
+                    <h2 className="mt-2 text-[2.2rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                      Keep the streak moving
+                    </h2>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[rgba(255,255,255,0.03)] text-[var(--brand)]">
+                    <Flame size={18} />
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div id="review-system" className="relative mt-20 md:mt-24">
-              <div className="mx-auto max-w-3xl text-center">
-                <h2 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-5xl">
-                  How PrepBros Works
-                </h2>
-                <p className="mt-4 text-lg leading-8 text-[var(--text-secondary)]">
-                  Simple habit-building steps that help you practice, review, and improve without
-                  getting pulled into noise.
-                </p>
-              </div>
+                <div className="mt-6 h-3 overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
+                  <div className="landing-progress-fill h-full w-[72%] rounded-full" />
+                </div>
 
-              <div className="mt-10 grid gap-5 lg:grid-cols-3">
-                {workflowCards.map((item) => {
-                  const Icon = item.icon;
-
-                  return (
-                    <div
-                      key={item.title}
-                      className="home-workflow-card rounded-[24px] p-6 md:p-7"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--brand)]">
-                          <Icon size={24} />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                            {item.title}
-                          </h3>
-                          <p className="mt-3 text-base leading-8 text-[var(--text-secondary)]">
-                            {item.description}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-6 border-t border-[var(--border)] pt-4 text-sm font-medium text-[var(--brand-light)]">
-                        {item.meta}
-                      </div>
+                <div className="mt-5 space-y-3">
+                  <div className="landing-panel-soft flex items-center justify-between gap-4 px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <Target size={18} className="text-[var(--brand-light)]" />
+                      <span className="text-lg text-[var(--text-secondary)]">Accuracy</span>
                     </div>
-                  );
-                })}
+                    <span className="text-[2.3rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                      82%
+                    </span>
+                  </div>
+
+                  <div className="landing-panel-soft flex items-center justify-between gap-4 px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <Clock3 size={18} className="text-[#7ed8f7]" />
+                      <span className="text-lg text-[var(--text-secondary)]">Time</span>
+                    </div>
+                    <span className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                      16 min left
+                    </span>
+                  </div>
+                </div>
+
+                <Link href={primaryHref}>
+                  <span
+                    onClick={() => handlePrimaryClick("cta")}
+                    className="mt-6 inline-flex w-full cursor-pointer items-center justify-center rounded-[18px] bg-[linear-gradient(180deg,#ff9a3d_0%,#ff7d17_100%)] px-6 py-4 text-xl font-medium text-white shadow-[0_24px_48px_-28px_rgba(255,125,23,0.9)] transition hover:brightness-105"
+                  >
+                    {primaryLabel}
+                  </span>
+                </Link>
               </div>
             </div>
           </section>
 
-          <section className="mt-8 grid gap-5 lg:grid-cols-3">
-            {supportBlocks.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-md)]"
+          <section id="review-system" className="mt-20 md:mt-24">
+            <div className="text-center">
+              <h2 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-5xl">
+                How it works
+              </h2>
+            </div>
+
+            <div className="mt-10 grid gap-4 lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-center">
+              {workflowCards.map((item, index) => {
+                const Icon = item.icon;
+
+                return (
+                  <div key={item.title} className="contents">
+                    <div className="landing-step-card px-6 py-6 md:px-7 md:py-7">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] border border-[var(--border)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)]">
+                          <Icon size={22} />
+                        </div>
+                        <div>
+                          <h3 className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                            {item.title}
+                          </h3>
+                          <p className="mt-2 text-lg leading-8 text-[var(--text-secondary)]">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {index < workflowCards.length - 1 ? (
+                      <div className="hidden text-center text-4xl text-[var(--text-muted)] lg:block">
+                        ›
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="mt-20 md:mt-24">
+            <div className="text-center">
+              <h2 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-5xl">
+                Built for serious aspirants
+              </h2>
+            </div>
+
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {proofPoints.map((item) => (
+                <div
+                  key={item}
+                  className="landing-proof-pill flex items-center justify-center gap-3 px-5 py-5 text-center"
+                >
+                  <Check size={24} className="shrink-0 text-[var(--text-primary)]" />
+                  <span className="text-xl font-medium text-[var(--text-secondary)]">{item}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-20 pb-4 pt-4 text-center md:mt-24">
+            <p className="text-4xl font-medium tracking-[-0.06em] text-[var(--text-primary)] md:text-[3.4rem]">
+              Stop consuming. Start solving.
+            </p>
+
+            <Link href={primaryHref}>
+              <span
+                onClick={() => handlePrimaryClick("cta")}
+                className="mt-8 inline-flex cursor-pointer items-center justify-center rounded-[20px] bg-[linear-gradient(180deg,#ff9a3d_0%,#ff7d17_100%)] px-10 py-5 text-[1.95rem] font-medium text-white shadow-[0_28px_60px_-34px_rgba(255,125,23,0.95)] transition hover:brightness-105"
               >
-                <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                  {item.title}
-                </h3>
-                <p className="mt-3 text-base leading-8 text-[var(--text-secondary)]">
-                  {item.description}
-                </p>
-              </div>
-            ))}
+                {primaryLabel}
+              </span>
+            </Link>
           </section>
         </div>
       </main>
