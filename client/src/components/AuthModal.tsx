@@ -111,12 +111,12 @@ export default function AuthModal({
   };
 
   const fieldClasses =
-    "w-full rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--brand)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)]";
+    "w-full rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--brand)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)] md:px-4 md:py-3";
 
   const lightMode = resolvedTheme === "light";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 md:p-4">
       <button
         type="button"
         className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
@@ -124,11 +124,11 @@ export default function AuthModal({
         aria-label="Close authentication modal"
       />
 
-      <div className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--bg-card-strong)] shadow-[0_40px_120px_-32px_rgba(0,0,0,0.82)]">
+      <div className="relative max-h-[92svh] w-full max-w-4xl overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--bg-card-strong)] shadow-[0_40px_120px_-32px_rgba(0,0,0,0.82)] md:max-h-[90vh] md:rounded-[24px]">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] md:right-4 md:top-4 md:h-10 md:w-10"
         >
           <X size={16} />
         </button>
@@ -136,7 +136,7 @@ export default function AuthModal({
         <div className="grid md:grid-cols-[1.05fr_0.95fr]">
           <div
             className={cn(
-              "relative overflow-hidden border-r border-[var(--border)] px-6 py-8 md:px-8 md:py-10",
+              "relative hidden overflow-hidden border-r border-[var(--border)] px-6 py-8 md:block md:px-8 md:py-10",
               lightMode
                 ? "bg-[linear-gradient(180deg,#fff7ec_0%,#f6efe8_100%)] text-[var(--text-primary)]"
                 : "bg-[linear-gradient(180deg,#181818_0%,#111111_100%)] text-white",
@@ -183,7 +183,7 @@ export default function AuthModal({
             </div>
           </div>
 
-          <div className="max-h-[90vh] overflow-y-auto bg-[var(--bg-card-strong)] px-6 py-8 md:px-8 md:py-10">
+          <div className="max-h-[92svh] overflow-y-auto bg-[var(--bg-card-strong)] px-5 py-6 md:max-h-[90vh] md:px-8 md:py-10">
             {success ? (
               <div className="flex min-h-full flex-col justify-center text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--green-bg)] text-[var(--green)]">
@@ -207,23 +207,30 @@ export default function AuthModal({
               </div>
             ) : (
               <>
-                <div className="mb-8">
+                <div className="mb-4 md:hidden">
+                  <BrandLogo
+                    textClassName="text-[var(--text-primary)]"
+                    markClassName="border-[rgba(255,161,22,0.28)]"
+                  />
+                </div>
+
+                <div className="mb-6 md:mb-8">
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
                     {tab === "login" ? "Welcome back" : "Create your space"}
                   </p>
-                  <h3 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                  <h3 className="mt-2 text-[1.9rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:mt-3 md:text-3xl">
                     {tab === "login"
                       ? "Log in to continue your preparation."
                       : "Create your account and make practice stick."}
                   </h3>
-                  <p className="mt-3 text-sm text-[var(--text-secondary)]">
+                  <p className="mt-2 text-sm text-[var(--text-secondary)] md:mt-3">
                     {tab === "login"
                       ? "Your dashboard, progress history, and saved question flow are ready."
                       : "Start with a free account so your streaks, bookmarks, and progress stay with you."}
                   </p>
                 </div>
 
-                <div className="mb-6 inline-flex rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] p-1">
+                <div className="mb-5 grid w-full grid-cols-2 rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] p-1 md:mb-6 md:inline-flex md:w-auto">
                   {(["login", "signup"] as const).map((item) => (
                     <button
                       key={item}
@@ -246,7 +253,7 @@ export default function AuthModal({
                 </div>
 
                 {tab === "login" ? (
-                  <form onSubmit={handleLogin} className="space-y-4">
+                  <form onSubmit={handleLogin} className="space-y-3.5 md:space-y-4">
                     <div>
                       <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         Email
@@ -296,7 +303,7 @@ export default function AuthModal({
                     <button
                       type="submit"
                       disabled={loading}
-                      className="btn-primary flex w-full rounded-[12px] py-3"
+                      className="btn-primary flex w-full rounded-[12px] py-2.5 md:py-3"
                     >
                       {loading ? (
                         <>
@@ -323,7 +330,7 @@ export default function AuthModal({
                     </p>
                   </form>
                 ) : (
-                  <form onSubmit={handleSignup} className="space-y-4">
+                  <form onSubmit={handleSignup} className="space-y-3.5 md:space-y-4">
                     <div>
                       <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         Full name
@@ -335,7 +342,7 @@ export default function AuthModal({
                         onChange={(event) =>
                           setSignupForm((current) => ({ ...current, fullName: event.target.value }))
                         }
-                        placeholder="Rakesh Meesa"
+                        placeholder="Priya Sharma"
                         className={fieldClasses}
                       />
                     </div>
@@ -407,7 +414,7 @@ export default function AuthModal({
                     <button
                       type="submit"
                       disabled={loading}
-                      className="btn-primary flex w-full rounded-[12px] py-3"
+                      className="btn-primary flex w-full rounded-[12px] py-2.5 md:py-3"
                     >
                       {loading ? (
                         <>
