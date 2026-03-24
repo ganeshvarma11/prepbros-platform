@@ -5,7 +5,6 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Filter,
   Flag,
   Loader2,
   Search,
@@ -21,7 +20,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { type Question } from "@/data/questions";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
 import { trackEvent } from "@/lib/analytics";
-import { createQuestionIdentityIndex, toQuestionId, type QuestionId } from "@/lib/questionIdentity";
+import {
+  createQuestionIdentityIndex,
+  toQuestionId,
+  type QuestionId,
+} from "@/lib/questionIdentity";
 import {
   type AnswerAttempt,
   buildAnswerStatuses,
@@ -31,44 +34,93 @@ import {
   toggleBookmark,
 } from "@/lib/userProgress";
 
-const EXAM_COLORS: Record<string, string> = {
-  UPSC: "exam-upsc",
-  SSC: "exam-ssc",
-  TSPSC: "exam-tspsc",
-  APPSC: "exam-appsc",
-  RRB: "exam-rrb",
-  IBPS: "exam-ibps",
-};
-
-const DIFF_COLORS: Record<string, string> = {
-  Easy: "diff-easy",
-  Medium: "diff-medium",
-  Hard: "diff-hard",
-};
-
 const EXAMS = ["UPSC", "SSC", "TSPSC", "APPSC", "RRB", "IBPS"];
 const DIFFICULTIES = ["Easy", "Medium", "Hard"];
 const TYPES = ["PYQ", "Conceptual", "CurrentAffairs", "Mock"];
 const PER_PAGE = 15;
+const TODAY_GOAL = 20;
 const TABLE_COLUMNS = [
-  { label: "#", className: "w-[7%]" },
-  { label: "Question", className: "w-[37%]" },
-  { label: "Exam", className: "w-[12%]" },
-  { label: "Topic", className: "w-[19%]" },
-  { label: "Difficulty", className: "w-[12%]" },
-  { label: "Year", className: "w-[6%]" },
-  { label: "Solved", className: "w-[7%]" },
+  { label: "#", className: "w-[6%]" },
+  { label: "Question", className: "w-[39%]" },
+  { label: "Exam", className: "w-[11%]" },
+  { label: "Topic", className: "w-[18%]" },
+  { label: "Difficulty", className: "w-[11%]" },
+  { label: "Year", className: "w-[7%]" },
+  { label: "Status", className: "w-[8%]" },
 ];
 
-const panelClassName = "rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)]";
-const mutedPanelClassName = "rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)]";
+const panelClassName =
+  "rounded-[24px] border border-[rgba(255,255,255,0.07)] bg-[rgba(10,10,12,0.72)]";
 const fieldClassName =
-  "w-full rounded-[12px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--brand)]";
+  "w-full rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[rgba(255,255,255,0.18)]";
+
+function getExamPillClass(exam: string) {
+  switch (exam) {
+    case "UPSC":
+      return "border-[rgba(116,135,255,0.24)] bg-[rgba(116,135,255,0.1)] text-[#b9c4ff]";
+    case "SSC":
+      return "border-[rgba(160,174,192,0.2)] bg-[rgba(160,174,192,0.08)] text-[#d5dbe5]";
+    case "TSPSC":
+      return "border-[rgba(88,195,255,0.24)] bg-[rgba(88,195,255,0.09)] text-[#8fddff]";
+    case "APPSC":
+      return "border-[rgba(140,191,117,0.24)] bg-[rgba(140,191,117,0.1)] text-[#b9d8ac]";
+    case "RRB":
+      return "border-[rgba(199,149,255,0.22)] bg-[rgba(199,149,255,0.09)] text-[#dcc0ff]";
+    case "IBPS":
+      return "border-[rgba(99,225,194,0.22)] bg-[rgba(99,225,194,0.08)] text-[#9cecd7]";
+    default:
+      return "border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]";
+  }
+}
+
+function getDifficultyPillClass(difficulty: string) {
+  switch (difficulty) {
+    case "Easy":
+      return "border-[rgba(71,194,125,0.2)] bg-[rgba(71,194,125,0.1)] text-[#7fdb9e]";
+    case "Medium":
+      return "border-[rgba(148,163,184,0.2)] bg-[rgba(148,163,184,0.09)] text-[#d7dee7]";
+    case "Hard":
+      return "border-[rgba(255,116,116,0.22)] bg-[rgba(255,116,116,0.08)] text-[#ff9a9a]";
+    default:
+      return "border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]";
+  }
+}
+
+function getStatusPill(status?: "correct" | "wrong") {
+  if (status === "correct") {
+    return {
+      label: "Solved",
+      className:
+        "border-[rgba(71,194,125,0.2)] bg-[rgba(71,194,125,0.1)] text-[#7fdb9e]",
+      icon: <Check size={12} />,
+    };
+  }
+
+  if (status === "wrong") {
+    return {
+      label: "Retry",
+      className:
+        "border-[rgba(255,116,116,0.22)] bg-[rgba(255,116,116,0.08)] text-[#ff9a9a]",
+      icon: <X size={12} />,
+    };
+  }
+
+  return {
+    label: "New",
+    className:
+      "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-muted)]",
+    icon: null,
+  };
+}
 
 export default function Practice() {
   const [, navigate] = useLocation();
   const { user, loading: authLoading } = useAuth();
-  const { questions, loading: questionsLoading, syncing: questionsSyncing } = useQuestionBank();
+  const {
+    questions,
+    loading: questionsLoading,
+    syncing: questionsSyncing,
+  } = useQuestionBank();
 
   const [search, setSearch] = useState("");
   const [selExams, setSelExams] = useState<string[]>([]);
@@ -76,8 +128,12 @@ export default function Practice() {
   const [selTypes, setSelTypes] = useState<string[]>([]);
   const [selTopics, setSelTopics] = useState<string[]>([]);
   const [selYears, setSelYears] = useState<number[]>([]);
-  const [reviewMode, setReviewMode] = useState<"" | "bookmarked" | "solved" | "wrong">("");
-  const [sortBy, setSortBy] = useState<"default" | "difficulty" | "year">("default");
+  const [reviewMode, setReviewMode] = useState<
+    "" | "bookmarked" | "solved" | "wrong"
+  >("");
+  const [sortBy, setSortBy] = useState<"default" | "difficulty" | "year">(
+    "default"
+  );
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [activeQ, setActiveQ] = useState<Question | null>(null);
@@ -86,16 +142,19 @@ export default function Practice() {
   const [rawAttempts, setRawAttempts] = useState<AnswerAttempt[]>([]);
   const [answerStart, setAnswerStart] = useState<number>(Date.now());
   const [queryHydrated, setQueryHydrated] = useState(false);
-  const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(null);
+  const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(
+    null
+  );
   const [progressLoading, setProgressLoading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const getList = (key: string, fallbackKey?: string) => {
-      const raw = params.get(key) || (fallbackKey ? params.get(fallbackKey) : "") || "";
+      const raw =
+        params.get(key) || (fallbackKey ? params.get(fallbackKey) : "") || "";
       return raw
         .split(",")
-        .map((item) => item.trim())
+        .map(item => item.trim())
         .filter(Boolean);
     };
 
@@ -106,10 +165,12 @@ export default function Practice() {
     setSelTopics(getList("topics", "topic"));
     setSelYears(
       getList("years", "year")
-        .map((value) => Number.parseInt(value, 10))
-        .filter((value) => Number.isFinite(value)),
+        .map(value => Number.parseInt(value, 10))
+        .filter(value => Number.isFinite(value))
     );
-    setSortBy((params.get("sort") as "default" | "difficulty" | "year") || "default");
+    setSortBy(
+      (params.get("sort") as "default" | "difficulty" | "year") || "default"
+    );
     const questionId = params.get("question")?.trim() || "";
     setPendingQuestionId(questionId || null);
     if (params.get("bookmarked") === "1") {
@@ -127,9 +188,11 @@ export default function Practice() {
   useEffect(() => {
     let cancelled = false;
 
-    if (authLoading) return () => {
-      cancelled = true;
-    };
+    if (authLoading) {
+      return () => {
+        cancelled = true;
+      };
+    }
 
     if (!user) {
       setRawBookmarks([]);
@@ -161,9 +224,15 @@ export default function Practice() {
     };
   }, [authLoading, user]);
 
-  const questionIdentity = useMemo(() => createQuestionIdentityIndex(questions), [questions]);
-  const resolveStoredQuestionId = (rawId: QuestionId) => questionIdentity.resolveQuestionId(rawId);
-  const progressSyncing = Boolean(user) && (questionsSyncing || progressLoading);
+  const questionIdentity = useMemo(
+    () => createQuestionIdentityIndex(questions),
+    [questions]
+  );
+  const resolveStoredQuestionId = (rawId: QuestionId) =>
+    questionIdentity.resolveQuestionId(rawId);
+  const progressSyncing =
+    Boolean(user) && (questionsSyncing || progressLoading);
+
   const bookmarks = useMemo(() => {
     const mapped = rawBookmarks
       .map(resolveStoredQuestionId)
@@ -171,9 +240,10 @@ export default function Practice() {
 
     return Array.from(new Set(mapped));
   }, [rawBookmarks, questionIdentity]);
+
   const answerStatuses = useMemo(() => {
     const mappedAttempts = rawAttempts
-      .map((attempt) => {
+      .map(attempt => {
         const questionId = resolveStoredQuestionId(attempt.question_id);
         if (!questionId) return null;
 
@@ -186,22 +256,27 @@ export default function Practice() {
 
     return buildAnswerStatuses(mappedAttempts);
   }, [rawAttempts, questionIdentity]);
+
   const solvedIds = useMemo(
     () => Object.keys(answerStatuses),
-    [answerStatuses],
+    [answerStatuses]
   );
   const solvedSet = useMemo(() => new Set(solvedIds), [solvedIds]);
   const bookmarkSet = useMemo(() => new Set(bookmarks), [bookmarks]);
   const allTopics = useMemo(
-    () => Array.from(new Set(questions.map((question) => question.topic))).sort(),
-    [questions],
+    () => Array.from(new Set(questions.map(question => question.topic))).sort(),
+    [questions]
   );
   const allYears = useMemo(
     () =>
       Array.from(
-        new Set(questions.filter((question) => question.year).map((question) => question.year as number)),
+        new Set(
+          questions
+            .filter(question => question.year)
+            .map(question => question.year as number)
+        )
       ).sort((a, b) => b - a),
-    [questions],
+    [questions]
   );
 
   const filtered = useMemo(() => {
@@ -209,57 +284,114 @@ export default function Practice() {
 
     if (search) {
       current = current.filter(
-        (item) =>
+        item =>
           item.question.toLowerCase().includes(search.toLowerCase()) ||
-          item.topic.toLowerCase().includes(search.toLowerCase()),
+          item.topic.toLowerCase().includes(search.toLowerCase())
       );
     }
-    if (selExams.length) current = current.filter((item) => selExams.includes(item.exam));
-    if (selDiff) current = current.filter((item) => item.difficulty === selDiff);
-    if (selTypes.length) current = current.filter((item) => selTypes.includes(item.type));
-    if (selTopics.length) current = current.filter((item) => selTopics.includes(item.topic));
-    if (selYears.length) current = current.filter((item) => item.year !== null && selYears.includes(item.year));
+    if (selExams.length)
+      current = current.filter(item => selExams.includes(item.exam));
+    if (selDiff) current = current.filter(item => item.difficulty === selDiff);
+    if (selTypes.length)
+      current = current.filter(item => selTypes.includes(item.type));
+    if (selTopics.length)
+      current = current.filter(item => selTopics.includes(item.topic));
+    if (selYears.length)
+      current = current.filter(
+        item => item.year !== null && selYears.includes(item.year)
+      );
     if (reviewMode === "bookmarked") {
-      current = current.filter((item) => bookmarkSet.has(toQuestionId(item.id)));
+      current = current.filter(item => bookmarkSet.has(toQuestionId(item.id)));
     }
     if (reviewMode === "solved") {
-      current = current.filter((item) => solvedSet.has(toQuestionId(item.id)));
+      current = current.filter(item => solvedSet.has(toQuestionId(item.id)));
     }
     if (reviewMode === "wrong") {
-      current = current.filter((item) => answerStatuses[toQuestionId(item.id)] === "wrong");
+      current = current.filter(
+        item => answerStatuses[toQuestionId(item.id)] === "wrong"
+      );
     }
     if (sortBy === "difficulty") {
       current.sort(
         (a, b) =>
           ["Easy", "Medium", "Hard"].indexOf(a.difficulty) -
-          ["Easy", "Medium", "Hard"].indexOf(b.difficulty),
+          ["Easy", "Medium", "Hard"].indexOf(b.difficulty)
       );
     }
     if (sortBy === "year") {
       current.sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
     }
     return current;
-  }, [questions, search, selExams, selDiff, selTypes, selTopics, selYears, reviewMode, sortBy, bookmarkSet, solvedSet, answerStatuses]);
+  }, [
+    answerStatuses,
+    bookmarkSet,
+    questions,
+    reviewMode,
+    search,
+    selDiff,
+    selExams,
+    selTopics,
+    selTypes,
+    selYears,
+    solvedSet,
+    sortBy,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const reviewModeSyncing = progressSyncing && Boolean(reviewMode);
   const activeIdx = activeQ
-    ? filtered.findIndex((question) => toQuestionId(question.id) === toQuestionId(activeQ.id))
+    ? filtered.findIndex(
+        question => toQuestionId(question.id) === toQuestionId(activeQ.id)
+      )
     : -1;
   const filterCount =
-    selExams.length + (selDiff ? 1 : 0) + selTypes.length + selTopics.length + selYears.length + (reviewMode ? 1 : 0);
+    selExams.length +
+    (selDiff ? 1 : 0) +
+    selTypes.length +
+    selTopics.length +
+    selYears.length +
+    (reviewMode ? 1 : 0) +
+    (sortBy !== "default" ? 1 : 0);
+
   const examCounts = useMemo(
     () =>
       EXAMS.reduce<Record<string, number>>((acc, exam) => {
-        acc[exam] = questions.filter((question) => question.exam === exam).length;
+        acc[exam] = questions.filter(question => question.exam === exam).length;
         return acc;
       }, {}),
-    [questions],
+    [questions]
   );
 
+  const todaySummary = useMemo(() => {
+    const todayKey = new Date().toDateString();
+    const attemptsToday = rawAttempts.filter(attempt => {
+      if (!attempt.answered_at) return false;
+      const attemptDate = new Date(attempt.answered_at);
+      return (
+        !Number.isNaN(attemptDate.valueOf()) &&
+        attemptDate.toDateString() === todayKey
+      );
+    });
+    const correctToday = attemptsToday.filter(
+      attempt => attempt.is_correct
+    ).length;
+    const attempted = attemptsToday.length;
+    const accuracy =
+      attempted > 0 ? Math.round((correctToday / attempted) * 100) : 0;
+    const progress = Math.min(100, Math.round((attempted / TODAY_GOAL) * 100));
+
+    return {
+      attempted,
+      correctToday,
+      accuracy,
+      progress,
+      remaining: Math.max(TODAY_GOAL - attempted, 0),
+    };
+  }, [rawAttempts]);
+
   useEffect(() => {
-    setPage((current) => Math.min(current, totalPages));
+    setPage(current => Math.min(current, totalPages));
   }, [totalPages]);
 
   useEffect(() => {
@@ -279,13 +411,35 @@ export default function Practice() {
     if (pendingQuestionId) params.set("question", String(pendingQuestionId));
 
     const query = params.toString();
-    window.history.replaceState({}, "", query ? `/practice?${query}` : "/practice");
-  }, [pendingQuestionId, queryHydrated, reviewMode, search, selDiff, selExams, selTopics, selTypes, selYears, sortBy]);
+    window.history.replaceState(
+      {},
+      "",
+      query ? `/practice?${query}` : "/practice"
+    );
+  }, [
+    pendingQuestionId,
+    queryHydrated,
+    reviewMode,
+    search,
+    selDiff,
+    selExams,
+    selTopics,
+    selTypes,
+    selYears,
+    sortBy,
+  ]);
 
   useEffect(() => {
-    if (questionsSyncing || questions.length === 0 || pendingQuestionId === null) return;
+    if (
+      questionsSyncing ||
+      questions.length === 0 ||
+      pendingQuestionId === null
+    )
+      return;
 
-    const match = questions.find((question) => toQuestionId(question.id) === pendingQuestionId);
+    const match = questions.find(
+      question => toQuestionId(question.id) === pendingQuestionId
+    );
     if (!match) return;
 
     setActiveQ(match);
@@ -295,7 +449,14 @@ export default function Practice() {
   }, [pendingQuestionId, questions, questionsSyncing]);
 
   const toggle = <T,>(arr: T[], setArr: (value: T[]) => void, value: T) => {
-    setArr(arr.includes(value) ? arr.filter((item) => item !== value) : [...arr, value]);
+    setArr(
+      arr.includes(value) ? arr.filter(item => item !== value) : [...arr, value]
+    );
+  };
+
+  const closeQuestion = () => {
+    setActiveQ(null);
+    setSelected(null);
   };
 
   const clearAll = () => {
@@ -326,25 +487,39 @@ export default function Practice() {
     setAnswerStart(Date.now());
   };
 
+  const openContinueQuestion = () => {
+    const nextUnsolved = filtered.find(
+      question => !solvedSet.has(toQuestionId(question.id))
+    );
+    const fallback = nextUnsolved ?? filtered[0] ?? questions[0];
+    if (fallback) openQuestion(fallback);
+  };
+
   const handleAnswer = (index: number) => {
     if (selected !== null || !activeQ) return;
     if (user && questionsSyncing) return;
+
     const isCorrect = index === activeQ.correct;
-    const questionId = resolveStoredQuestionId(toQuestionId(activeQ.id)) ?? toQuestionId(activeQ.id);
+    const questionId =
+      resolveStoredQuestionId(toQuestionId(activeQ.id)) ??
+      toQuestionId(activeQ.id);
+
     setSelected(index);
-    setRawAttempts((current) => [
+    setRawAttempts(current => [
       {
         question_id: questionId,
         is_correct: isCorrect,
         answered_at: new Date().toISOString(),
       },
-      ...current.filter((attempt) => attempt.question_id !== questionId),
+      ...current.filter(attempt => attempt.question_id !== questionId),
     ]);
+
     trackEvent("practice_answered", {
       exam: activeQ.exam,
       topic: activeQ.topic,
       correct: isCorrect,
     });
+
     if (user) {
       const timeTaken = Math.round((Date.now() - answerStart) / 1000);
       saveAnswer(user.id, questionId, isCorrect, index, timeTaken);
@@ -354,21 +529,30 @@ export default function Practice() {
   const handleBookmark = () => {
     if (!activeQ) return;
     if (user && questionsSyncing) return;
-    const questionId = resolveStoredQuestionId(toQuestionId(activeQ.id)) ?? toQuestionId(activeQ.id);
+
+    const questionId =
+      resolveStoredQuestionId(toQuestionId(activeQ.id)) ??
+      toQuestionId(activeQ.id);
+
     if (user) {
-      toggleBookmark(user.id, questionId).then((isBookmarked) => {
-        trackEvent("bookmark_toggled", { question_id: activeQ.id, bookmarked: isBookmarked });
-        setRawBookmarks((current) =>
-          isBookmarked ? Array.from(new Set([...current, questionId])) : current.filter((item) => item !== questionId),
+      toggleBookmark(user.id, questionId).then(isBookmarked => {
+        trackEvent("bookmark_toggled", {
+          question_id: activeQ.id,
+          bookmarked: isBookmarked,
+        });
+        setRawBookmarks(current =>
+          isBookmarked
+            ? Array.from(new Set([...current, questionId]))
+            : current.filter(item => item !== questionId)
         );
       });
       return;
     }
 
-    setRawBookmarks((current) =>
+    setRawBookmarks(current =>
       current.includes(questionId)
-        ? current.filter((item) => item !== questionId)
-        : [...current, questionId],
+        ? current.filter(item => item !== questionId)
+        : [...current, questionId]
     );
   };
 
@@ -392,16 +576,27 @@ export default function Practice() {
   ] as const;
 
   const activeFilterPills = [
-    ...selExams.map((item) => ({ key: `exam-${item}`, label: item })),
+    ...selExams.map(item => ({ key: `exam-${item}`, label: item })),
     ...(selDiff ? [{ key: `difficulty-${selDiff}`, label: selDiff }] : []),
-    ...selTypes.map((item) => ({ key: `type-${item}`, label: item })),
-    ...selTopics.map((item) => ({ key: `topic-${item}`, label: item })),
-    ...selYears.map((item) => ({ key: `year-${item}`, label: String(item) })),
+    ...selTypes.map(item => ({ key: `type-${item}`, label: item })),
+    ...selTopics.map(item => ({ key: `topic-${item}`, label: item })),
+    ...selYears.map(item => ({ key: `year-${item}`, label: String(item) })),
     ...(reviewMode
       ? [
           {
             key: `review-${reviewMode}`,
-            label: reviewOptions.find((item) => item.value === reviewMode)?.label || reviewMode,
+            label:
+              reviewOptions.find(item => item.value === reviewMode)?.label ||
+              reviewMode,
+          },
+        ]
+      : []),
+    ...(sortBy !== "default"
+      ? [
+          {
+            key: `sort-${sortBy}`,
+            label:
+              sortBy === "year" ? "Sorted by year" : "Sorted by difficulty",
           },
         ]
       : []),
@@ -411,35 +606,56 @@ export default function Practice() {
     ? "Loading question bank..."
     : reviewModeSyncing
       ? "Syncing your saved progress..."
-      : `Showing ${filtered.length} question${filtered.length === 1 ? "" : "s"}${!user ? " · sign in to save progress" : ""}`;
+      : `${filtered.length} questions${!user ? " · sign in to save progress" : ""}`;
 
   const filterPanel = (
-    <div className={`${panelClassName} p-4`}>
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
-            Filters
-          </p>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Refine the library without losing context.
-          </p>
-        </div>
+    <div className="flex h-full flex-col bg-[var(--bg-base)] text-[var(--text-primary)]">
+      <div className="border-b border-[rgba(255,255,255,0.06)] px-1 pb-5">
+        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
+          Filters
+        </p>
+        <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+          Refine the library
+        </h2>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          Keep the table clean and pull in only what you want to solve next.
+        </p>
         {filterCount > 0 ? (
           <button
             type="button"
             onClick={clearAll}
-            className="rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-xs font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)]"
+            className="mt-4 inline-flex h-10 items-center rounded-[12px] border border-[rgba(255,255,255,0.08)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.14)]"
           >
-            Clear
+            Clear all
           </button>
         ) : null}
       </div>
 
-      <div className="mt-5 space-y-5">
+      <div className="space-y-6 overflow-y-auto py-6 pr-1">
         <div>
-          <p className="filter-section-title">Review</p>
-          <div className="flex flex-wrap gap-2">
-            {reviewOptions.map((item) => (
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            Sort
+          </p>
+          <select
+            value={sortBy}
+            onChange={event => {
+              setSortBy(event.target.value as typeof sortBy);
+              setPage(1);
+            }}
+            className={fieldClassName}
+          >
+            <option value="default">Default order</option>
+            <option value="difficulty">Difficulty</option>
+            <option value="year">Latest year</option>
+          </select>
+        </div>
+
+        <div>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            Review
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {reviewOptions.map(item => (
               <button
                 key={item.label}
                 type="button"
@@ -447,10 +663,10 @@ export default function Practice() {
                   setReviewMode(item.value);
                   setPage(1);
                 }}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                className={`rounded-[12px] border px-3 py-2.5 text-left text-sm transition ${
                   reviewMode === item.value
-                    ? "bg-[var(--brand-subtle)] text-[var(--brand-light)]"
-                    : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    ? "border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-[var(--text-primary)]"
+                    : "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 {item.label}
@@ -460,12 +676,14 @@ export default function Practice() {
         </div>
 
         <div>
-          <p className="filter-section-title">Exam</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            Exam
+          </p>
           <div className="space-y-2">
-            {EXAMS.map((exam) => (
+            {EXAMS.map(exam => (
               <label
                 key={exam}
-                className="flex cursor-pointer items-center gap-3 rounded-[12px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[12px] border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] px-3 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(255,255,255,0.1)]"
               >
                 <input
                   type="checkbox"
@@ -474,18 +692,23 @@ export default function Practice() {
                     toggle(selExams, setSelExams, exam);
                     setPage(1);
                   }}
+                  className="h-4 w-4 rounded border-[rgba(255,255,255,0.14)] bg-transparent"
                 />
-                <span className="text-sm text-[var(--text-secondary)]">{exam}</span>
-                <span className={`badge ml-auto ${EXAM_COLORS[exam]}`}>{examCounts[exam] || 0}</span>
+                <span>{exam}</span>
+                <span className="ml-auto text-xs text-[var(--text-faint)]">
+                  {examCounts[exam] || 0}
+                </span>
               </label>
             ))}
           </div>
         </div>
 
         <div>
-          <p className="filter-section-title">Difficulty</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            Difficulty
+          </p>
           <div className="flex flex-wrap gap-2">
-            {["All", ...DIFFICULTIES].map((difficulty) => {
+            {["All", ...DIFFICULTIES].map(difficulty => {
               const value = difficulty === "All" ? "" : difficulty;
               return (
                 <button
@@ -495,10 +718,10 @@ export default function Practice() {
                     setSelDiff(value);
                     setPage(1);
                   }}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                     selDiff === value
-                      ? "bg-[var(--brand-subtle)] text-[var(--brand-light)]"
-                      : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      ? "border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.07)] text-[var(--text-primary)]"
+                      : "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-secondary)]"
                   }`}
                 >
                   {difficulty}
@@ -509,12 +732,14 @@ export default function Practice() {
         </div>
 
         <div>
-          <p className="filter-section-title">Type</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            Type
+          </p>
           <div className="space-y-2">
-            {TYPES.map((type) => (
+            {TYPES.map(type => (
               <label
                 key={type}
-                className="flex cursor-pointer items-center gap-3 rounded-[12px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[12px] border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] px-3 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(255,255,255,0.1)]"
               >
                 <input
                   type="checkbox"
@@ -523,20 +748,23 @@ export default function Practice() {
                     toggle(selTypes, setSelTypes, type);
                     setPage(1);
                   }}
+                  className="h-4 w-4 rounded border-[rgba(255,255,255,0.14)] bg-transparent"
                 />
-                <span className="text-sm text-[var(--text-secondary)]">{type}</span>
+                <span>{type}</span>
               </label>
             ))}
           </div>
         </div>
 
         <div>
-          <p className="filter-section-title">Topic</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            Topic
+          </p>
           <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
-            {allTopics.map((topic) => (
+            {allTopics.map(topic => (
               <label
                 key={topic}
-                className="flex cursor-pointer items-center gap-3 rounded-[12px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[12px] border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] px-3 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(255,255,255,0.1)]"
               >
                 <input
                   type="checkbox"
@@ -545,20 +773,23 @@ export default function Practice() {
                     toggle(selTopics, setSelTopics, topic);
                     setPage(1);
                   }}
+                  className="h-4 w-4 rounded border-[rgba(255,255,255,0.14)] bg-transparent"
                 />
-                <span className="text-sm text-[var(--text-secondary)]">{topic}</span>
+                <span className="line-clamp-1">{topic}</span>
               </label>
             ))}
           </div>
         </div>
 
         <div>
-          <p className="filter-section-title">Year</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            Year
+          </p>
           <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
-            {allYears.map((year) => (
+            {allYears.map(year => (
               <label
                 key={year}
-                className="flex cursor-pointer items-center gap-3 rounded-[12px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[12px] border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] px-3 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(255,255,255,0.1)]"
               >
                 <input
                   type="checkbox"
@@ -567,8 +798,9 @@ export default function Practice() {
                     toggle(selYears, setSelYears, year);
                     setPage(1);
                   }}
+                  className="h-4 w-4 rounded border-[rgba(255,255,255,0.14)] bg-transparent"
                 />
-                <span className="text-sm text-[var(--text-secondary)]">{year}</span>
+                <span>{year}</span>
               </label>
             ))}
           </div>
@@ -579,352 +811,367 @@ export default function Practice() {
 
   return (
     <AppShell>
-      <div className="space-y-4">
+      <div className="space-y-6">
         {!activeQ ? (
           <>
-            <section className={`${panelClassName} p-5 md:p-6`}>
-              <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
-                    Practice
-                  </p>
-                  <h1 className="mt-2 text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-[2rem]">
-                    Question bank
-                  </h1>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
-                    A focused workspace for filtering, scanning, and opening questions without the extra dashboard noise.
-                  </p>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-3 xl:min-w-[360px]">
-                  {[
-                    { label: "Available", value: filtered.length, mode: "" as const },
-                    { label: "Bookmarked", value: bookmarks.length, mode: "bookmarked" as const },
-                    { label: "Solved", value: solvedIds.length, mode: "solved" as const },
-                  ].map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={() => {
-                        setReviewMode(item.mode);
-                        setPage(1);
-                      }}
-                      className={`rounded-[16px] border px-4 py-3 text-left transition ${
-                        reviewMode === item.mode
-                          ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)]"
-                          : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border-strong)]"
-                      }`}
-                    >
-                      <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                        {user && item.mode && progressSyncing ? "..." : item.value}
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_250px]">
+              <div className="min-w-0 space-y-5">
+                <section className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                      Practice
+                    </p>
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                      <div>
+                        <h1 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.35rem]">
+                          Question Library
+                        </h1>
+                        <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">
+                          A fast, distraction-free list built for finding the
+                          next question and getting straight to work.
+                        </p>
+                      </div>
+                      <p className="text-sm text-[var(--text-faint)]">
+                        {questionStateSummary}
                       </p>
-                      <p className="mt-1 text-sm text-[var(--text-secondary)]">{item.label}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="relative min-w-0 flex-1">
+                      <Search
+                        size={16}
+                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)]"
+                      />
+                      <input
+                        value={search}
+                        onChange={event => {
+                          setSearch(event.target.value);
+                          setPage(1);
+                        }}
+                        placeholder="Search questions"
+                        className={`${fieldClassName} h-12 pl-11`}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowFilters(true)}
+                      className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.14)]"
+                    >
+                      <SlidersHorizontal size={16} />
+                      Filters
+                      {filterCount > 0 ? (
+                        <span className="rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">
+                          {filterCount}
+                        </span>
+                      ) : null}
                     </button>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                </section>
 
-              <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
-                <div className="relative min-w-0 flex-1">
-                  <Search
-                    size={15}
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]"
-                  />
-                  <input
-                    value={search}
-                    onChange={(event) => {
-                      setSearch(event.target.value);
-                      setPage(1);
-                    }}
-                    placeholder="Search questions or topics"
-                    className="input rounded-[12px] border-[var(--border)] bg-[var(--bg-elevated)] pl-10"
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={openRandom}
-                    className="btn-secondary px-4 py-2.5 text-sm"
-                  >
-                    <Shuffle size={14} />
-                    Random
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowFilters(true)}
-                    className="btn-secondary px-4 py-2.5 text-sm xl:hidden"
-                  >
-                    <SlidersHorizontal size={14} />
-                    Filters
-                    {filterCount > 0 ? (
-                      <span className="rounded-full bg-[var(--brand-subtle)] px-2 py-0.5 text-xs text-[var(--brand-light)]">
-                        {filterCount}
-                      </span>
-                    ) : null}
-                  </button>
-                  <select
-                    value={sortBy}
-                    onChange={(event) => {
-                      setSortBy(event.target.value as typeof sortBy);
-                      setPage(1);
-                    }}
-                    className={fieldClassName}
-                  >
-                    <option value="default">Default order</option>
-                    <option value="difficulty">Sort by difficulty</option>
-                    <option value="year">Sort by year</option>
-                  </select>
-                </div>
-              </div>
-            </section>
-
-            <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-              <aside className="hidden xl:block xl:sticky xl:top-7 xl:self-start">{filterPanel}</aside>
-
-              <div className="space-y-4">
-                <section className={`${panelClassName} p-4 md:p-5`}>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-[var(--text-primary)]">Question library</p>
-                      <p className="mt-1 text-sm text-[var(--text-secondary)]">{questionStateSummary}</p>
+                <section className={panelClassName}>
+                  <div className="flex flex-col gap-4 border-b border-[rgba(255,255,255,0.06)] px-5 py-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="h-2 w-2 rounded-full bg-[rgba(255,255,255,0.55)]" />
+                      <p className="text-sm text-[var(--text-secondary)]">
+                        {questionsLoading
+                          ? "Preparing the question table."
+                          : reviewModeSyncing
+                            ? "Restoring your saved progress."
+                            : `Showing ${(page - 1) * PER_PAGE + 1}-${Math.min(page * PER_PAGE, filtered.length)} of ${filtered.length}`}
+                      </p>
                     </div>
                     {filterCount > 0 ? (
                       <button
                         type="button"
                         onClick={clearAll}
-                        className="w-fit rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-primary)] transition hover:border-[var(--border-strong)]"
+                        className="inline-flex h-9 items-center rounded-[12px] border border-[rgba(255,255,255,0.08)] px-3 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
                       >
-                        Clear all filters
+                        Clear filters
                       </button>
                     ) : null}
                   </div>
 
                   {activeFilterPills.length > 0 ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {activeFilterPills.map((item) => (
+                    <div className="flex flex-wrap gap-2 border-b border-[rgba(255,255,255,0.06)] px-5 py-3">
+                      {activeFilterPills.map(item => (
                         <span
                           key={item.key}
-                          className="rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]"
+                          className="rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-[11px] font-medium text-[var(--text-secondary)]"
                         >
                           {item.label}
                         </span>
                       ))}
                     </div>
                   ) : null}
-                </section>
 
-                {questionsLoading ? (
-                  <div className={`${panelClassName} flex min-h-[360px] items-center justify-center p-6`}>
-                    <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-3 text-sm text-[var(--text-secondary)]">
-                      <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
-                      Loading questions...
-                    </div>
-                  </div>
-                ) : reviewModeSyncing ? (
-                  <div className={`${panelClassName} flex min-h-[360px] items-center justify-center p-6`}>
-                    <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-3 text-sm text-[var(--text-secondary)]">
-                      <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
-                      Restoring saved progress...
-                    </div>
-                  </div>
-                ) : paginated.length === 0 ? (
-                  <div className={`${panelClassName} p-8 text-center`}>
-                    <p className="text-lg font-semibold text-[var(--text-primary)]">
-                      No questions match those filters.
-                    </p>
-                    <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
-                      Clear a few filters to widen the pool and keep the library useful.
-                    </p>
-                    <button type="button" onClick={clearAll} className="btn-primary mt-5 px-4 py-2.5 text-sm">
-                      Clear filters
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className={`${panelClassName} hidden overflow-hidden xl:block`}>
-                      <table className="w-full table-fixed border-collapse">
-                        <thead className="bg-[var(--bg-elevated)]">
-                          <tr className="border-b border-[var(--border)]">
-                            {TABLE_COLUMNS.map((column) => (
-                              <th
-                                key={column.label}
-                                className={`px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)] ${column.className}`}
-                              >
-                                {column.label}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {paginated.map((question, index) => {
-                            const rowNumber = (page - 1) * PER_PAGE + index + 1;
-                            const status = answerStatuses[toQuestionId(question.id)];
-
-                            return (
-                              <tr
-                                key={question.id}
-                                onClick={() => openQuestion(question)}
-                                className="cursor-pointer border-b border-[var(--border)] transition hover:bg-[rgba(255,161,22,0.05)]"
-                              >
-                                <td className="px-4 py-3 align-middle">
-                                  <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-[9px] bg-[var(--bg-elevated)] px-2 text-xs font-semibold text-[var(--text-muted)]">
-                                    {rowNumber}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 align-middle">
-                                  <p className="line-clamp-1 text-sm font-medium leading-6 text-[var(--text-primary)]">
-                                    {question.question}
-                                  </p>
-                                </td>
-                                <td className="px-4 py-3 align-middle">
-                                  <span className={`badge whitespace-nowrap px-3 py-1 text-xs ${EXAM_COLORS[question.exam]}`}>
-                                    {question.exam}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 align-middle text-sm text-[var(--text-secondary)]">
-                                  <span className="line-clamp-1 block">{question.topic}</span>
-                                </td>
-                                <td className="px-4 py-3 align-middle">
-                                  <span className={`badge whitespace-nowrap px-3 py-1 text-xs ${DIFF_COLORS[question.difficulty]}`}>
-                                    {question.difficulty}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 align-middle text-sm text-[var(--text-secondary)]">
-                                  {question.year ?? "—"}
-                                </td>
-                                <td className="px-4 py-3 align-middle">
-                                  {progressSyncing ? (
-                                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)]">
-                                      <Loader2 size={12} className="animate-spin" />
-                                    </span>
-                                  ) : status === "correct" ? (
-                                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-subtle)] text-[var(--accent)]">
-                                      <Check size={14} />
-                                    </span>
-                                  ) : status === "wrong" ? (
-                                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--red-bg)] text-[var(--red)]">
-                                      <X size={14} />
-                                    </span>
-                                  ) : (
-                                    <span className="text-sm text-[var(--text-muted)]">—</span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="space-y-3 xl:hidden">
-                      {paginated.map((question, index) => {
-                        const rowNumber = (page - 1) * PER_PAGE + index + 1;
-                        const status = answerStatuses[toQuestionId(question.id)];
-
-                        return (
-                          <button
-                            key={question.id}
-                            type="button"
-                            onClick={() => openQuestion(question)}
-                            className={`${panelClassName} block w-full px-4 py-4 text-left transition hover:border-[var(--border-strong)]`}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-[8px] bg-[var(--bg-elevated)] px-2 text-[11px] font-semibold text-[var(--text-muted)]">
-                                    {rowNumber}
-                                  </span>
-                                  <span className={`badge px-2.5 py-1 text-[10px] ${EXAM_COLORS[question.exam]}`}>
-                                    {question.exam}
-                                  </span>
-                                  <span className={`badge px-2.5 py-1 text-[10px] ${DIFF_COLORS[question.difficulty]}`}>
-                                    {question.difficulty}
-                                  </span>
-                                </div>
-                                <p className="mt-3 line-clamp-2 text-sm font-medium leading-6 text-[var(--text-primary)]">
-                                  {question.question}
-                                </p>
-                                <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                                  {question.topic}
-                                  {question.year ? ` · ${question.year}` : ""}
-                                </p>
-                              </div>
-                              <div className="shrink-0">
-                                {progressSyncing ? (
-                                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)]">
-                                    <Loader2 size={13} className="animate-spin" />
-                                  </span>
-                                ) : status === "correct" ? (
-                                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent-subtle)] text-[var(--accent)]">
-                                    <Check size={14} />
-                                  </span>
-                                ) : status === "wrong" ? (
-                                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--red-bg)] text-[var(--red)]">
-                                    <X size={14} />
-                                  </span>
-                                ) : null}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {totalPages > 1 ? (
-                      <div className={`${panelClassName} flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between`}>
-                        <p className="text-sm text-[var(--text-secondary)]">
-                          {(page - 1) * PER_PAGE + 1}-{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setPage((current) => Math.max(1, current - 1))}
-                            disabled={page === 1}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] disabled:opacity-40"
-                          >
-                            <ChevronLeft size={14} />
-                          </button>
-                          {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
-                            const currentPage = page <= 3 ? index + 1 : page + index - 2;
-                            if (currentPage < 1 || currentPage > totalPages) return null;
-                            const isActive = currentPage === page;
-
-                            return (
-                              <button
-                                key={currentPage}
-                                type="button"
-                                onClick={() => setPage(currentPage)}
-                                className={
-                                  isActive
-                                    ? "inline-flex h-10 min-w-10 items-center justify-center rounded-[10px] bg-[var(--brand)] px-3 text-sm font-medium text-white"
-                                    : "inline-flex h-10 min-w-10 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-sm font-medium text-[var(--text-primary)]"
-                                }
-                              >
-                                {currentPage}
-                              </button>
-                            );
-                          })}
-                          <button
-                            type="button"
-                            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                            disabled={page === totalPages}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] disabled:opacity-40"
-                          >
-                            <ChevronRight size={14} />
-                          </button>
-                        </div>
+                  {questionsLoading ? (
+                    <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
+                      <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+                        <Loader2
+                          size={16}
+                          className="animate-spin text-[var(--text-muted)]"
+                        />
+                        Loading questions...
                       </div>
-                    ) : null}
-                  </>
-                )}
+                    </div>
+                  ) : reviewModeSyncing ? (
+                    <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
+                      <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+                        <Loader2
+                          size={16}
+                          className="animate-spin text-[var(--text-muted)]"
+                        />
+                        Restoring saved progress...
+                      </div>
+                    </div>
+                  ) : paginated.length === 0 ? (
+                    <div className="flex min-h-[360px] flex-col items-center justify-center px-6 py-10 text-center">
+                      <p className="text-lg font-semibold text-[var(--text-primary)]">
+                        No questions match those filters.
+                      </p>
+                      <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">
+                        Clear a few filters to widen the list and get back into
+                        solving mode.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={clearAll}
+                        className="btn-primary mt-5 px-4 py-2.5 text-sm"
+                      >
+                        Clear filters
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-[900px] w-full table-fixed border-collapse">
+                          <thead>
+                            <tr className="border-b border-[rgba(255,255,255,0.06)]">
+                              {TABLE_COLUMNS.map(column => (
+                                <th
+                                  key={column.label}
+                                  className={`px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)] ${column.className}`}
+                                >
+                                  {column.label}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {paginated.map((question, index) => {
+                              const rowNumber =
+                                (page - 1) * PER_PAGE + index + 1;
+                              const status =
+                                answerStatuses[toQuestionId(question.id)];
+                              const statusPill = getStatusPill(status);
+
+                              return (
+                                <tr
+                                  key={question.id}
+                                  onClick={() => openQuestion(question)}
+                                  className="cursor-pointer border-b border-[rgba(255,255,255,0.05)] transition hover:bg-[rgba(255,255,255,0.03)]"
+                                >
+                                  <td className="px-5 py-4 align-middle text-sm text-[var(--text-muted)]">
+                                    {rowNumber}
+                                  </td>
+                                  <td className="px-5 py-4 align-middle">
+                                    <p className="line-clamp-2 text-sm font-medium leading-6 text-[var(--text-primary)]">
+                                      {question.question}
+                                    </p>
+                                  </td>
+                                  <td className="px-5 py-4 align-middle">
+                                    <span
+                                      className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getExamPillClass(question.exam)}`}
+                                    >
+                                      {question.exam}
+                                    </span>
+                                  </td>
+                                  <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
+                                    <span className="line-clamp-1 block">
+                                      {question.topic}
+                                    </span>
+                                  </td>
+                                  <td className="px-5 py-4 align-middle">
+                                    <span
+                                      className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getDifficultyPillClass(question.difficulty)}`}
+                                    >
+                                      {question.difficulty}
+                                    </span>
+                                  </td>
+                                  <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
+                                    {question.year ?? "—"}
+                                  </td>
+                                  <td className="px-5 py-4 align-middle">
+                                    {progressSyncing ? (
+                                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-muted)]">
+                                        <Loader2
+                                          size={12}
+                                          className="animate-spin"
+                                        />
+                                      </span>
+                                    ) : (
+                                      <span
+                                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusPill.className}`}
+                                      >
+                                        {statusPill.icon}
+                                        {statusPill.label}
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {totalPages > 1 ? (
+                        <div className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between">
+                          <p className="text-sm text-[var(--text-secondary)]">
+                            {(page - 1) * PER_PAGE + 1}-
+                            {Math.min(page * PER_PAGE, filtered.length)} of{" "}
+                            {filtered.length}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPage(current => Math.max(1, current - 1))
+                              }
+                              disabled={page === 1}
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)] transition disabled:opacity-40"
+                            >
+                              <ChevronLeft size={14} />
+                            </button>
+                            {Array.from(
+                              { length: Math.min(5, totalPages) },
+                              (_, index) => {
+                                const currentPage =
+                                  page <= 3 ? index + 1 : page + index - 2;
+                                if (currentPage < 1 || currentPage > totalPages)
+                                  return null;
+                                const isActive = currentPage === page;
+
+                                return (
+                                  <button
+                                    key={currentPage}
+                                    type="button"
+                                    onClick={() => setPage(currentPage)}
+                                    className={
+                                      isActive
+                                        ? "inline-flex h-10 min-w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.16)] bg-[rgba(255,255,255,0.08)] px-3 text-sm font-medium text-[var(--text-primary)]"
+                                        : "inline-flex h-10 min-w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3 text-sm font-medium text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+                                    }
+                                  >
+                                    {currentPage}
+                                  </button>
+                                );
+                              }
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPage(current =>
+                                  Math.min(totalPages, current + 1)
+                                )
+                              }
+                              disabled={page === totalPages}
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)] transition disabled:opacity-40"
+                            >
+                              <ChevronRight size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                </section>
               </div>
+
+              <aside className="xl:sticky xl:top-24 xl:self-start">
+                <section className={`${panelClassName} px-5 py-5`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
+                        Today Progress
+                      </p>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        A small daily snapshot to keep momentum visible.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="flex items-end justify-between gap-4">
+                      <div>
+                        <p className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                          {todaySummary.attempted}
+                          <span className="text-lg text-[var(--text-faint)]">
+                            /{TODAY_GOAL}
+                          </span>
+                        </p>
+                        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                          Questions attempted
+                        </p>
+                      </div>
+                      <p className="text-sm text-[var(--text-faint)]">
+                        {todaySummary.remaining > 0
+                          ? `${todaySummary.remaining} to goal`
+                          : "Goal complete"}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+                      <div
+                        className="h-full rounded-full bg-[rgba(255,255,255,0.72)] transition-[width]"
+                        style={{ width: `${todaySummary.progress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 space-y-3 border-t border-[rgba(255,255,255,0.06)] pt-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-[var(--text-secondary)]">
+                        Accuracy
+                      </span>
+                      <span className="font-medium text-[var(--text-primary)]">
+                        {todaySummary.accuracy}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-[var(--text-secondary)]">
+                        Solved today
+                      </span>
+                      <span className="font-medium text-[var(--text-primary)]">
+                        {todaySummary.correctToday}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-[var(--text-secondary)]">
+                        Bookmarked
+                      </span>
+                      <span className="font-medium text-[var(--text-primary)]">
+                        {bookmarks.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={openContinueQuestion}
+                    className="btn-primary mt-6 w-full justify-center py-3"
+                  >
+                    Continue
+                  </button>
+                </section>
+              </aside>
             </div>
 
             <Sheet open={showFilters} onOpenChange={setShowFilters}>
               <SheetContent
-                side="left"
-                className="w-[86vw] max-w-[340px] border-r border-[var(--border)] bg-[var(--bg-base)] p-4 text-[var(--text-primary)]"
+                side="right"
+                className="w-[92vw] max-w-[380px] border-l border-[rgba(255,255,255,0.08)] bg-[var(--bg-base)] p-5 text-[var(--text-primary)]"
               >
                 {filterPanel}
               </SheetContent>
@@ -935,11 +1182,8 @@ export default function Practice() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  setActiveQ(null);
-                  setSelected(null);
-                }}
-                className="btn-secondary px-4 py-2.5 text-sm"
+                onClick={closeQuestion}
+                className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.14)]"
               >
                 <ChevronLeft size={14} />
                 Back to library
@@ -953,10 +1197,13 @@ export default function Practice() {
                   type="button"
                   onClick={handleBookmark}
                   disabled={Boolean(user) && questionsSyncing}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)]"
                 >
                   {Boolean(user) && questionsSyncing ? (
-                    <Loader2 size={14} className="animate-spin text-[var(--text-muted)]" />
+                    <Loader2
+                      size={14}
+                      className="animate-spin text-[var(--text-muted)]"
+                    />
                   ) : bookmarkSet.has(toQuestionId(activeQ.id)) ? (
                     <BookmarkCheck size={14} className="text-[var(--brand)]" />
                   ) : (
@@ -966,17 +1213,14 @@ export default function Practice() {
                 <button
                   type="button"
                   onClick={handleReportQuestion}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)]"
                 >
                   <Flag size={14} />
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setActiveQ(null);
-                    setSelected(null);
-                  }}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
+                  onClick={closeQuestion}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)]"
                 >
                   <X size={14} />
                 </button>
@@ -984,11 +1228,27 @@ export default function Practice() {
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <span className={`badge ${EXAM_COLORS[activeQ.exam]}`}>{activeQ.exam}</span>
-              <span className={`badge ${DIFF_COLORS[activeQ.difficulty]}`}>{activeQ.difficulty}</span>
-              <span className="badge badge-gray">{activeQ.topic}</span>
-              <span className="badge badge-blue">{activeQ.type}</span>
-              {activeQ.year ? <span className="badge badge-gray">{activeQ.year}</span> : null}
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getExamPillClass(activeQ.exam)}`}
+              >
+                {activeQ.exam}
+              </span>
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getDifficultyPillClass(activeQ.difficulty)}`}
+              >
+                {activeQ.difficulty}
+              </span>
+              <span className="inline-flex rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                {activeQ.topic}
+              </span>
+              <span className="inline-flex rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                {activeQ.type}
+              </span>
+              {activeQ.year ? (
+                <span className="inline-flex rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                  {activeQ.year}
+                </span>
+              ) : null}
             </div>
 
             <h1 className="mt-5 text-[1.6rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-[1.9rem]">
@@ -1000,7 +1260,8 @@ export default function Practice() {
                 let optionClass =
                   "option-btn border-[var(--border)] bg-[var(--bg-elevated)]";
                 if (selected !== null) {
-                  if (index === activeQ.correct) optionClass = "option-btn correct";
+                  if (index === activeQ.correct)
+                    optionClass = "option-btn correct";
                   else if (index === selected) optionClass = "option-btn wrong";
                   else optionClass = "option-btn dimmed";
                 }
@@ -1025,7 +1286,9 @@ export default function Practice() {
                       >
                         {["A", "B", "C", "D"][index]}
                       </span>
-                      <span className="text-sm leading-7 text-[var(--text-primary)]">{option}</span>
+                      <span className="text-sm leading-7 text-[var(--text-primary)]">
+                        {option}
+                      </span>
                     </span>
                   </button>
                 );
@@ -1034,7 +1297,8 @@ export default function Practice() {
 
             {user && questionsSyncing ? (
               <p className="mt-4 text-xs text-[var(--brand)]">
-                Syncing the live question bank before answers and bookmarks are written to your account.
+                Syncing the live question bank before answers and bookmarks are
+                written to your account.
               </p>
             ) : null}
 
@@ -1051,14 +1315,18 @@ export default function Practice() {
                     ? "Correct. Keep the rhythm going."
                     : `Not quite. The correct answer is ${activeQ.options[activeQ.correct]}.`}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{activeQ.explanation}</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                  {activeQ.explanation}
+                </p>
                 {!user ? (
                   <p className="mt-3 text-xs text-[var(--brand)]">
-                    Sign in to save progress, accuracy, and streaks across sessions.
+                    Sign in to save progress, accuracy, and streaks across
+                    sessions.
                   </p>
                 ) : questionsSyncing ? (
                   <p className="mt-3 text-xs text-[var(--brand)]">
-                    Hold for a moment while PrepBros syncs the live question bank before saving progress.
+                    Hold for a moment while PrepBros syncs the live question
+                    bank before saving progress.
                   </p>
                 ) : null}
               </div>
@@ -1066,8 +1334,11 @@ export default function Practice() {
 
             {activeQ.tags.length > 0 ? (
               <div className="mt-5 flex flex-wrap gap-2">
-                {activeQ.tags.map((tag) => (
-                  <span key={tag} className="badge badge-gray">
+                {activeQ.tags.map(tag => (
+                  <span
+                    key={tag}
+                    className="inline-flex rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]"
+                  >
                     #{tag}
                   </span>
                 ))}
@@ -1085,12 +1356,16 @@ export default function Practice() {
                   }
                 }}
                 disabled={activeIdx === 0}
-                className="btn-secondary px-4 py-2.5 text-sm disabled:opacity-40"
+                className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 text-sm font-medium text-[var(--text-primary)] transition disabled:opacity-40"
               >
                 <ChevronLeft size={14} />
                 Previous
               </button>
-              <button type="button" onClick={openRandom} className="btn-secondary px-4 py-2.5 text-sm">
+              <button
+                type="button"
+                onClick={openRandom}
+                className="inline-flex h-10 items-center gap-2 rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.14)]"
+              >
                 <Shuffle size={14} />
                 Random
               </button>
