@@ -50,6 +50,15 @@ const EXAMS = ["UPSC", "SSC", "TSPSC", "APPSC", "RRB", "IBPS"];
 const DIFFICULTIES = ["Easy", "Medium", "Hard"];
 const TYPES = ["PYQ", "Conceptual", "CurrentAffairs", "Mock"];
 const PER_PAGE = 15;
+const TABLE_COLUMNS = [
+  { label: "#", className: "w-[7%]" },
+  { label: "Question", className: "w-[38%]" },
+  { label: "Exam", className: "w-[11%]" },
+  { label: "Topic", className: "w-[18%]" },
+  { label: "Difficulty", className: "w-[12%]" },
+  { label: "Year", className: "w-[7%]" },
+  { label: "Solved", className: "w-[7%]" },
+];
 
 const shellClassName =
   "rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(21,20,31,0.94)_0%,rgba(14,14,22,0.98)_100%)] shadow-[0_30px_80px_-52px_rgba(0,0,0,0.96)]";
@@ -484,7 +493,7 @@ export default function Practice() {
 
                           <div className="flex items-center gap-3">
                             <p className="hidden text-xs uppercase tracking-[0.18em] text-[var(--text-muted)] xl:block">
-                              Drag the divider to resize filters
+                              Resize filters
                             </p>
                             <select
                               value={sortBy}
@@ -527,22 +536,17 @@ export default function Practice() {
                         </div>
                       ) : (
                         <div className={`${shellClassName} overflow-hidden rounded-[26px]`}>
-                          <div className="overflow-x-auto">
-                            <table className="min-w-[980px] w-full border-collapse">
+                            <table className="w-full table-fixed border-collapse">
                               <thead className="bg-[rgba(255,255,255,0.03)]">
                                 <tr className="border-b border-[rgba(255,255,255,0.08)]">
-                                  {["#", "Question", "Exam", "Topic", "Difficulty", "Year", "Solved"].map(
-                                    (label, index) => (
+                                  {TABLE_COLUMNS.map((column) => (
                                       <th
-                                        key={label}
-                                        className={`px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] ${
-                                          index === 0 ? "w-[68px]" : ""
-                                        }`}
+                                        key={column.label}
+                                        className={`px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)] ${column.className}`}
                                       >
-                                        {label}
+                                        {column.label}
                                       </th>
-                                    ),
-                                  )}
+                                    ))}
                                 </tr>
                               </thead>
                               <tbody>
@@ -556,45 +560,45 @@ export default function Practice() {
                                       onClick={() => openQuestion(question)}
                                       className="cursor-pointer border-b border-[rgba(255,255,255,0.06)] transition hover:bg-[rgba(255,161,22,0.04)]"
                                     >
-                                      <td className="px-5 py-4 align-middle">
-                                        <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-[12px] bg-[rgba(255,255,255,0.05)] px-2 text-sm font-semibold text-[var(--text-muted)]">
+                                      <td className="px-4 py-3.5 align-middle">
+                                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-[rgba(255,255,255,0.05)] px-2 text-sm font-semibold text-[var(--text-muted)]">
                                           {rowNumber}
                                         </span>
                                       </td>
-                                      <td className="px-5 py-4 align-middle">
-                                        <div className="max-w-[430px]">
-                                          <p className="line-clamp-1 text-base font-medium leading-7 text-[var(--text-primary)]">
+                                      <td className="px-4 py-3.5 align-middle">
+                                        <div className="pr-2">
+                                          <p className="line-clamp-1 text-[15px] font-medium leading-6 text-[var(--text-primary)]">
                                             {question.question}
                                           </p>
                                         </div>
                                       </td>
-                                      <td className="px-5 py-4 align-middle">
-                                        <span className={`badge ${EXAM_COLORS[question.exam]}`}>
+                                      <td className="px-4 py-3.5 align-middle">
+                                        <span className={`badge whitespace-nowrap px-3 py-1 text-xs ${EXAM_COLORS[question.exam]}`}>
                                           {question.exam}
                                         </span>
                                       </td>
-                                      <td className="px-5 py-4 align-middle text-sm leading-7 text-[var(--text-secondary)]">
-                                        {question.topic}
+                                      <td className="px-4 py-3.5 align-middle text-sm leading-6 text-[var(--text-secondary)]">
+                                        <span className="line-clamp-1 block">{question.topic}</span>
                                       </td>
-                                      <td className="px-5 py-4 align-middle">
-                                        <span className={`badge ${DIFF_COLORS[question.difficulty]}`}>
+                                      <td className="px-4 py-3.5 align-middle">
+                                        <span className={`badge whitespace-nowrap px-3 py-1 text-xs ${DIFF_COLORS[question.difficulty]}`}>
                                           {question.difficulty}
                                         </span>
                                       </td>
-                                      <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
+                                      <td className="px-4 py-3.5 align-middle text-sm text-[var(--text-secondary)]">
                                         {question.year ?? "—"}
                                       </td>
-                                      <td className="px-5 py-4 align-middle">
+                                      <td className="px-4 py-3.5 align-middle">
                                         {status === "correct" ? (
-                                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--accent-muted)] bg-[var(--accent-subtle)] text-[var(--accent)]">
-                                            <Check size={16} />
+                                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--accent-muted)] bg-[var(--accent-subtle)] text-[var(--accent)]">
+                                            <Check size={15} />
                                           </span>
                                         ) : status === "wrong" ? (
-                                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--red)]/30 bg-[var(--red-bg)] text-[var(--red)]">
-                                            <X size={16} />
+                                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--red)]/30 bg-[var(--red-bg)] text-[var(--red)]">
+                                            <X size={15} />
                                           </span>
                                         ) : (
-                                          <span className="text-lg text-[var(--text-muted)]">-</span>
+                                          <span className="text-base text-[var(--text-muted)]">-</span>
                                         )}
                                       </td>
                                     </tr>
@@ -602,7 +606,6 @@ export default function Practice() {
                                 })}
                               </tbody>
                             </table>
-                          </div>
 
                           {totalPages > 1 ? (
                             <div className="flex flex-col gap-3 border-t border-[rgba(255,255,255,0.08)] px-5 py-4 md:flex-row md:items-center md:justify-between">
