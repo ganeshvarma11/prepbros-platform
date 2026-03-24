@@ -36,6 +36,9 @@ const NAV_LINKS = [
   { href: "/support", label: "Support" },
 ];
 
+const navSurfaceClassName =
+  "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]";
+
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -120,7 +123,7 @@ export default function Navbar() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] px-3.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.16)]"
+                  className={`inline-flex h-12 items-center justify-center gap-2 rounded-[14px] px-3.5 text-sm font-medium transition hover:border-[var(--border-strong)] ${navSurfaceClassName}`}
                   aria-label="Theme settings"
                 >
                   {resolvedTheme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
@@ -129,12 +132,12 @@ export default function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-44 rounded-[16px] border-[rgba(255,255,255,0.08)] bg-[rgba(18,18,26,0.98)] p-2 text-[var(--text-primary)] backdrop-blur-xl"
+                className="w-44 rounded-[16px] border-[var(--border)] bg-[var(--bg-card)] p-2 text-[var(--text-primary)] backdrop-blur-xl"
               >
                 <DropdownMenuLabel className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
                   Theme
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-[rgba(255,255,255,0.08)]" />
+                <DropdownMenuSeparator className="bg-[var(--border)]" />
                 <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(value as Theme)}>
                   {themeOptions.map((option) => {
                     const Icon = option.icon;
@@ -156,8 +159,8 @@ export default function Navbar() {
             {user ? (
               <>
                 <Link href="/profile">
-                  <span className="inline-flex cursor-pointer items-center gap-3 rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] px-3 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.16)]">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[rgba(255,255,255,0.06)] text-sm font-semibold text-[var(--text-primary)]">
+                  <span className={`inline-flex cursor-pointer items-center gap-3 rounded-[14px] px-3 py-2.5 text-sm font-medium transition hover:border-[var(--border-strong)] ${navSurfaceClassName}`}>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[var(--bg-muted)] text-sm font-semibold text-[var(--text-primary)]">
                       {displayName.charAt(0).toUpperCase()}
                     </span>
                     <span className="max-w-28 truncate">{displayName}</span>
@@ -166,7 +169,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => signOut()}
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] text-[var(--text-secondary)] transition hover:border-[rgba(255,255,255,0.16)] hover:text-[var(--text-primary)]"
+                  className={`inline-flex h-12 w-12 items-center justify-center rounded-[14px] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] ${navSurfaceClassName}`}
                   aria-label="Sign out"
                 >
                   <LogOut size={18} />
@@ -177,7 +180,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={openLogin}
-                  className="inline-flex items-center justify-center rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(33,31,47,0.78)] px-7 py-3 text-lg font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.16)]"
+                  className={`inline-flex items-center justify-center rounded-[14px] px-7 py-3 text-lg font-medium transition hover:border-[var(--border-strong)] ${navSurfaceClassName}`}
                 >
                   Login
                 </button>
@@ -196,7 +199,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setIsOpen((value) => !value)}
-              className="flex h-11 w-11 items-center justify-center rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.78)] text-[var(--text-primary)]"
+              className={`flex h-11 w-11 items-center justify-center rounded-[14px] ${navSurfaceClassName}`}
               aria-label="Open menu"
             >
               {isOpen ? <X size={18} /> : <Menu size={18} />}
@@ -205,7 +208,7 @@ export default function Navbar() {
         </div>
 
         {isOpen ? (
-          <div className="border-t border-[rgba(255,255,255,0.06)] bg-[rgba(14,14,24,0.96)] px-4 pb-5 pt-4 md:hidden">
+          <div className="border-t border-[var(--border)] bg-[var(--bg-base)] px-4 pb-5 pt-4 md:hidden">
             <div className="container-shell space-y-4">
               <div className="grid gap-2">
                 {NAV_LINKS.map((item) =>
@@ -214,7 +217,7 @@ export default function Navbar() {
                       key={item.label}
                       href={item.href}
                       onClick={() => setIsOpen(false)}
-                      className="inline-flex items-center gap-3 rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.74)] px-4 py-3 text-sm font-medium text-[var(--text-primary)]"
+                      className={`inline-flex items-center gap-3 rounded-[14px] px-4 py-3 text-sm font-medium ${navSurfaceClassName}`}
                     >
                       <LayoutDashboard size={16} className="text-[var(--brand)]" />
                       {item.label}
@@ -227,7 +230,7 @@ export default function Navbar() {
                           "inline-flex cursor-pointer items-center gap-3 rounded-[14px] border px-4 py-3 text-sm font-medium transition",
                           activeRoute(item.href)
                             ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-light)]"
-                            : "border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.74)] text-[var(--text-primary)]",
+                            : `${navSurfaceClassName}`,
                         )}
                       >
                         <LayoutDashboard size={16} className="text-[var(--brand)]" />
@@ -238,7 +241,7 @@ export default function Navbar() {
                 )}
               </div>
 
-              <div className="rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-4">
+              <div className={`rounded-[18px] p-4 ${navSurfaceClassName}`}>
                 <div className="mb-3">
                   <p className="text-sm font-semibold text-[var(--text-primary)]">
                     {user ? `Welcome back, ${displayName}` : "Start your daily practice loop"}
@@ -268,7 +271,7 @@ export default function Navbar() {
                             "inline-flex items-center justify-center gap-1.5 rounded-[12px] border px-3 py-2 text-xs font-medium transition",
                             selected
                               ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-light)]"
-                              : "border-[rgba(255,255,255,0.08)] bg-[rgba(17,17,27,0.82)] text-[var(--text-secondary)]",
+                              : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)]",
                           )}
                         >
                           <Icon size={13} />
@@ -285,7 +288,7 @@ export default function Navbar() {
                     <Link href="/profile">
                       <span
                         onClick={() => setIsOpen(false)}
-                        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(17,17,27,0.82)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)]"
+                        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)]"
                       >
                         <User size={14} />
                         Profile
@@ -316,7 +319,7 @@ export default function Navbar() {
                     <button
                       type="button"
                       onClick={openLogin}
-                      className="inline-flex items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(17,17,27,0.82)] px-4 py-3 text-sm font-medium text-[var(--text-primary)]"
+                      className="inline-flex items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3 text-sm font-medium text-[var(--text-primary)]"
                     >
                       Login
                     </button>

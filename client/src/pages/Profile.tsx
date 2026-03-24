@@ -48,13 +48,13 @@ const EXAM_OPTIONS = [
 ];
 
 const sectionCardClassName =
-  "rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(18,18,25,0.94)] shadow-[0_18px_48px_-36px_rgba(0,0,0,0.88)]";
+  "rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-md)]";
 
 const subtleCardClassName =
-  "rounded-[18px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)]";
+  "rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)]";
 
 const fieldClassName =
-  "h-11 rounded-[14px] border-white/8 bg-[rgba(255,255,255,0.02)] text-[var(--text-primary)]";
+  "h-11 rounded-[14px] border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]";
 
 type AnswerRow = {
   question_id: QuestionId;
@@ -296,7 +296,7 @@ function SectionShell({
 }) {
   return (
     <section id={id} className={sectionCardClassName}>
-      <div className="flex flex-col gap-3 border-b border-[rgba(255,255,255,0.06)] px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+      <div className="flex flex-col gap-3 border-b border-[var(--border)] px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6">
         <div>
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>
@@ -583,7 +583,7 @@ export default function Profile() {
 
       <main className="px-4 py-8 md:py-10">
         <div className="mx-auto w-full max-w-[1180px]">
-          <div className="flex flex-col gap-5 border-b border-[rgba(255,255,255,0.06)] pb-6 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-5 border-b border-[var(--border)] pb-6 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
                 Settings
@@ -625,9 +625,9 @@ export default function Profile() {
             <aside className="xl:sticky xl:top-28 xl:self-start">
               <div className={`${sectionCardClassName} p-5`}>
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16 rounded-[18px] border border-[rgba(255,255,255,0.08)]">
+                  <Avatar className="h-16 w-16 rounded-[18px] border border-[var(--border)]">
                     <AvatarImage src={settings.avatarUrl} alt={settings.fullName} className="object-cover" />
-                    <AvatarFallback className="rounded-[18px] bg-[rgba(255,161,22,0.14)] text-[var(--brand)]">
+                    <AvatarFallback className="rounded-[18px] bg-[var(--brand-subtle)] text-[var(--brand)]">
                       <UserCircle2 size={28} />
                     </AvatarFallback>
                   </Avatar>
@@ -641,7 +641,7 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-[18px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                <div className="mt-4 rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm font-medium text-[var(--text-primary)]">Profile completion</span>
                     <span className="text-sm font-semibold text-[var(--brand-light)]">{completionPercent}%</span>
@@ -658,7 +658,7 @@ export default function Profile() {
                     <a
                       key={item.href}
                       href={item.href}
-                      className="rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(255,255,255,0.12)] hover:text-[var(--text-primary)]"
+                      className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                     >
                       {item.label}
                     </a>
@@ -692,13 +692,13 @@ export default function Profile() {
 
                 <div className="mt-4 grid gap-2">
                   <Link href="/dashboard">
-                    <span className="flex cursor-pointer items-center justify-between rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5 text-sm text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.12)]">
+                    <span className="flex cursor-pointer items-center justify-between rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-primary)] transition hover:border-[var(--border-strong)]">
                       View dashboard
                       <ArrowRight size={14} className="text-[var(--text-muted)]" />
                     </span>
                   </Link>
                   <Link href="/practice?bookmarked=1">
-                    <span className="flex cursor-pointer items-center justify-between rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5 text-sm text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.12)]">
+                    <span className="flex cursor-pointer items-center justify-between rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-primary)] transition hover:border-[var(--border-strong)]">
                       Review bookmarks
                       <ArrowRight size={14} className="text-[var(--text-muted)]" />
                     </span>
@@ -762,7 +762,7 @@ export default function Profile() {
                       className={`${fieldClassName} w-full px-3 text-sm outline-none transition focus:border-[var(--brand)]`}
                     >
                       {EXAM_OPTIONS.map((exam) => (
-                        <option key={exam} value={exam} className="bg-[#15151d] text-white">
+                        <option key={exam} value={exam} className="bg-[var(--bg-card-strong)] text-[var(--text-primary)]">
                           {exam}
                         </option>
                       ))}
@@ -809,7 +809,7 @@ export default function Profile() {
                         setSettings((current) => ({ ...current, bio: event.target.value }))
                       }
                       placeholder="UPSC aspirant focused on consistent daily revision and topic-wise practice."
-                      className="min-h-28 rounded-[16px] border-white/8 bg-[rgba(255,255,255,0.02)] text-[var(--text-primary)]"
+                      className="min-h-28 rounded-[16px] border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
                     />
                   </Field>
                 </div>
@@ -901,7 +901,7 @@ export default function Profile() {
                         setSettings((current) => ({ ...current, readme: event.target.value }))
                       }
                       placeholder="What are you working on this month? Which topics need extra attention?"
-                      className="min-h-28 rounded-[16px] border-white/8 bg-[rgba(255,255,255,0.02)] text-[var(--text-primary)]"
+                      className="min-h-28 rounded-[16px] border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
                     />
                   </Field>
                 </div>
@@ -914,7 +914,7 @@ export default function Profile() {
                         href={item.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-3 py-2 text-xs font-medium text-[var(--text-primary)]"
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-xs font-medium text-[var(--text-primary)]"
                       >
                         {item.label}
                         <SquareArrowOutUpRight size={12} className="text-[var(--text-muted)]" />
@@ -979,7 +979,7 @@ export default function Profile() {
                           }))
                         }
                         inputMode="numeric"
-                        className="h-10 w-20 rounded-[14px] border-white/8 bg-[rgba(255,255,255,0.02)] text-center text-[var(--text-primary)]"
+                        className="h-10 w-20 rounded-[14px] border-[var(--border)] bg-[var(--bg-elevated)] text-center text-[var(--text-primary)]"
                       />
                     </div>
 
@@ -1037,7 +1037,7 @@ export default function Profile() {
 
               <div className="grid gap-5 lg:grid-cols-2">
                 <section className={sectionCardClassName}>
-                  <div className="border-b border-[rgba(255,255,255,0.06)] px-5 py-4 md:px-6">
+                  <div className="border-b border-[var(--border)] px-5 py-4 md:px-6">
                     <h2 className="text-lg font-semibold text-[var(--text-primary)]">Recent activity</h2>
                     <p className="mt-1 text-sm text-[var(--text-muted)]">A compact view of your latest attempts.</p>
                   </div>
@@ -1075,7 +1075,7 @@ export default function Profile() {
                 </section>
 
                 <section className={sectionCardClassName}>
-                  <div className="border-b border-[rgba(255,255,255,0.06)] px-5 py-4 md:px-6">
+                  <div className="border-b border-[var(--border)] px-5 py-4 md:px-6">
                     <h2 className="text-lg font-semibold text-[var(--text-primary)]">Insights</h2>
                     <p className="mt-1 text-sm text-[var(--text-muted)]">Quick signals from your current progress.</p>
                   </div>

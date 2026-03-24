@@ -43,6 +43,12 @@
   --blue: #4da3ff;
   --blue-bg: rgba(77, 163, 255, 0.12);
 
+  --page-background:
+    linear-gradient(180deg, #090910 0%, #0b0a12 22%, #09090f 100%);
+  --navbar-bg:
+    linear-gradient(180deg, rgba(11, 10, 18, 0.96) 0%, rgba(11, 10, 18, 0.82) 100%);
+  --navbar-border: rgba(255,255,255,0.06);
+
   --shadow-sm: 0 8px 24px -18px rgba(0, 0, 0, 0.55);
   --shadow-md: 0 18px 50px -26px rgba(0, 0, 0, 0.65);
   --shadow-lg: 0 28px 70px -30px rgba(0, 0, 0, 0.75);
@@ -98,6 +104,12 @@
   --red-bg: rgba(220, 76, 63, 0.12);
   --blue: #267dff;
   --blue-bg: rgba(38, 125, 255, 0.12);
+
+  --page-background:
+    linear-gradient(180deg, #fbfcfe 0%, #f4f6f9 28%, #eef2f6 100%);
+  --navbar-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(252, 252, 253, 0.88) 100%);
+  --navbar-border: rgba(17,17,17,0.08);
 }
 
 *, *::before, *::after {
@@ -116,13 +128,12 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    linear-gradient(180deg, #090910 0%, #0b0a12 22%, #09090f 100%);
+  background: var(--page-background);
   color: var(--text-primary);
   font-size: 14px;
   line-height: 1.55;
   font-weight: 400;
-  transition: background-color var(--t-slow), color var(--t-slow);
+  transition: background var(--t-slow), color var(--t-slow);
 }
 
 h1, h2, h3, h4, h5, h6, p {
@@ -380,11 +391,10 @@ code, pre {
   top: 0;
   z-index: 50;
   min-height: 68px;
-  background:
-    linear-gradient(180deg, rgba(11, 10, 18, 0.96) 0%, rgba(11, 10, 18, 0.82) 100%);
+  background: var(--navbar-bg);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--navbar-border);
 }
 
 .brand-mark-stem,
@@ -544,7 +554,6 @@ code, pre {
   all: unset;
 }
 
-.light .navbar,
 .light .home-reference-page,
 .light .home-reference-hero,
 .light .home-app-board,
