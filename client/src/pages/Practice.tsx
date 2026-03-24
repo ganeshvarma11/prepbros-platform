@@ -38,7 +38,6 @@ const EXAMS = ["UPSC", "SSC", "TSPSC", "APPSC", "RRB", "IBPS"];
 const DIFFICULTIES = ["Easy", "Medium", "Hard"];
 const TYPES = ["PYQ", "Conceptual", "CurrentAffairs", "Mock"];
 const PER_PAGE = 15;
-const TODAY_GOAL = 20;
 const TABLE_COLUMNS = [
   { label: "#", className: "w-[6%]" },
   { label: "Question", className: "w-[39%]" },
@@ -363,33 +362,6 @@ export default function Practice() {
     [questions]
   );
 
-  const todaySummary = useMemo(() => {
-    const todayKey = new Date().toDateString();
-    const attemptsToday = rawAttempts.filter(attempt => {
-      if (!attempt.answered_at) return false;
-      const attemptDate = new Date(attempt.answered_at);
-      return (
-        !Number.isNaN(attemptDate.valueOf()) &&
-        attemptDate.toDateString() === todayKey
-      );
-    });
-    const correctToday = attemptsToday.filter(
-      attempt => attempt.is_correct
-    ).length;
-    const attempted = attemptsToday.length;
-    const accuracy =
-      attempted > 0 ? Math.round((correctToday / attempted) * 100) : 0;
-    const progress = Math.min(100, Math.round((attempted / TODAY_GOAL) * 100));
-
-    return {
-      attempted,
-      correctToday,
-      accuracy,
-      progress,
-      remaining: Math.max(TODAY_GOAL - attempted, 0),
-    };
-  }, [rawAttempts]);
-
   useEffect(() => {
     setPage(current => Math.min(current, totalPages));
   }, [totalPages]);
@@ -485,14 +457,6 @@ export default function Practice() {
     setActiveQ(question);
     setSelected(null);
     setAnswerStart(Date.now());
-  };
-
-  const openContinueQuestion = () => {
-    const nextUnsolved = filtered.find(
-      question => !solvedSet.has(toQuestionId(question.id))
-    );
-    const fallback = nextUnsolved ?? filtered[0] ?? questions[0];
-    if (fallback) openQuestion(fallback);
   };
 
   const handleAnswer = (index: number) => {
@@ -814,358 +778,277 @@ export default function Practice() {
       <div className="space-y-6">
         {!activeQ ? (
           <>
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_250px]">
-              <div className="min-w-0 space-y-5">
-                <section className="space-y-4">
-                  <div className="space-y-2">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
-                      Practice
-                    </p>
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                      <div>
-                        <h1 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.35rem]">
-                          Question Library
-                        </h1>
-                        <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">
-                          A fast, distraction-free list built for finding the
-                          next question and getting straight to work.
-                        </p>
-                      </div>
-                      <p className="text-sm text-[var(--text-faint)]">
-                        {questionStateSummary}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <div className="relative min-w-0 flex-1">
-                      <Search
-                        size={16}
-                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)]"
-                      />
-                      <input
-                        value={search}
-                        onChange={event => {
-                          setSearch(event.target.value);
-                          setPage(1);
-                        }}
-                        placeholder="Search questions"
-                        className={`${fieldClassName} h-12 pl-11`}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowFilters(true)}
-                      className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.14)]"
-                    >
-                      <SlidersHorizontal size={16} />
-                      Filters
-                      {filterCount > 0 ? (
-                        <span className="rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">
-                          {filterCount}
-                        </span>
-                      ) : null}
-                    </button>
-                  </div>
-                </section>
-
-                <section className={panelClassName}>
-                  <div className="flex flex-col gap-4 border-b border-[rgba(255,255,255,0.06)] px-5 py-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="h-2 w-2 rounded-full bg-[rgba(255,255,255,0.55)]" />
-                      <p className="text-sm text-[var(--text-secondary)]">
-                        {questionsLoading
-                          ? "Preparing the question table."
-                          : reviewModeSyncing
-                            ? "Restoring your saved progress."
-                            : `Showing ${(page - 1) * PER_PAGE + 1}-${Math.min(page * PER_PAGE, filtered.length)} of ${filtered.length}`}
-                      </p>
-                    </div>
-                    {filterCount > 0 ? (
-                      <button
-                        type="button"
-                        onClick={clearAll}
-                        className="inline-flex h-9 items-center rounded-[12px] border border-[rgba(255,255,255,0.08)] px-3 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
-                      >
-                        Clear filters
-                      </button>
-                    ) : null}
-                  </div>
-
-                  {activeFilterPills.length > 0 ? (
-                    <div className="flex flex-wrap gap-2 border-b border-[rgba(255,255,255,0.06)] px-5 py-3">
-                      {activeFilterPills.map(item => (
-                        <span
-                          key={item.key}
-                          className="rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-[11px] font-medium text-[var(--text-secondary)]"
-                        >
-                          {item.label}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {questionsLoading ? (
-                    <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
-                      <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-5 py-3 text-sm text-[var(--text-secondary)]">
-                        <Loader2
-                          size={16}
-                          className="animate-spin text-[var(--text-muted)]"
-                        />
-                        Loading questions...
-                      </div>
-                    </div>
-                  ) : reviewModeSyncing ? (
-                    <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
-                      <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-5 py-3 text-sm text-[var(--text-secondary)]">
-                        <Loader2
-                          size={16}
-                          className="animate-spin text-[var(--text-muted)]"
-                        />
-                        Restoring saved progress...
-                      </div>
-                    </div>
-                  ) : paginated.length === 0 ? (
-                    <div className="flex min-h-[360px] flex-col items-center justify-center px-6 py-10 text-center">
-                      <p className="text-lg font-semibold text-[var(--text-primary)]">
-                        No questions match those filters.
-                      </p>
-                      <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">
-                        Clear a few filters to widen the list and get back into
-                        solving mode.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={clearAll}
-                        className="btn-primary mt-5 px-4 py-2.5 text-sm"
-                      >
-                        Clear filters
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-[900px] w-full table-fixed border-collapse">
-                          <thead>
-                            <tr className="border-b border-[rgba(255,255,255,0.06)]">
-                              {TABLE_COLUMNS.map(column => (
-                                <th
-                                  key={column.label}
-                                  className={`px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)] ${column.className}`}
-                                >
-                                  {column.label}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {paginated.map((question, index) => {
-                              const rowNumber =
-                                (page - 1) * PER_PAGE + index + 1;
-                              const status =
-                                answerStatuses[toQuestionId(question.id)];
-                              const statusPill = getStatusPill(status);
-
-                              return (
-                                <tr
-                                  key={question.id}
-                                  onClick={() => openQuestion(question)}
-                                  className="cursor-pointer border-b border-[rgba(255,255,255,0.05)] transition hover:bg-[rgba(255,255,255,0.03)]"
-                                >
-                                  <td className="px-5 py-4 align-middle text-sm text-[var(--text-muted)]">
-                                    {rowNumber}
-                                  </td>
-                                  <td className="px-5 py-4 align-middle">
-                                    <p className="line-clamp-2 text-sm font-medium leading-6 text-[var(--text-primary)]">
-                                      {question.question}
-                                    </p>
-                                  </td>
-                                  <td className="px-5 py-4 align-middle">
-                                    <span
-                                      className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getExamPillClass(question.exam)}`}
-                                    >
-                                      {question.exam}
-                                    </span>
-                                  </td>
-                                  <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
-                                    <span className="line-clamp-1 block">
-                                      {question.topic}
-                                    </span>
-                                  </td>
-                                  <td className="px-5 py-4 align-middle">
-                                    <span
-                                      className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getDifficultyPillClass(question.difficulty)}`}
-                                    >
-                                      {question.difficulty}
-                                    </span>
-                                  </td>
-                                  <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
-                                    {question.year ?? "—"}
-                                  </td>
-                                  <td className="px-5 py-4 align-middle">
-                                    {progressSyncing ? (
-                                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-muted)]">
-                                        <Loader2
-                                          size={12}
-                                          className="animate-spin"
-                                        />
-                                      </span>
-                                    ) : (
-                                      <span
-                                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusPill.className}`}
-                                      >
-                                        {statusPill.icon}
-                                        {statusPill.label}
-                                      </span>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {totalPages > 1 ? (
-                        <div className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between">
-                          <p className="text-sm text-[var(--text-secondary)]">
-                            {(page - 1) * PER_PAGE + 1}-
-                            {Math.min(page * PER_PAGE, filtered.length)} of{" "}
-                            {filtered.length}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setPage(current => Math.max(1, current - 1))
-                              }
-                              disabled={page === 1}
-                              className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)] transition disabled:opacity-40"
-                            >
-                              <ChevronLeft size={14} />
-                            </button>
-                            {Array.from(
-                              { length: Math.min(5, totalPages) },
-                              (_, index) => {
-                                const currentPage =
-                                  page <= 3 ? index + 1 : page + index - 2;
-                                if (currentPage < 1 || currentPage > totalPages)
-                                  return null;
-                                const isActive = currentPage === page;
-
-                                return (
-                                  <button
-                                    key={currentPage}
-                                    type="button"
-                                    onClick={() => setPage(currentPage)}
-                                    className={
-                                      isActive
-                                        ? "inline-flex h-10 min-w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.16)] bg-[rgba(255,255,255,0.08)] px-3 text-sm font-medium text-[var(--text-primary)]"
-                                        : "inline-flex h-10 min-w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3 text-sm font-medium text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
-                                    }
-                                  >
-                                    {currentPage}
-                                  </button>
-                                );
-                              }
-                            )}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setPage(current =>
-                                  Math.min(totalPages, current + 1)
-                                )
-                              }
-                              disabled={page === totalPages}
-                              className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)] transition disabled:opacity-40"
-                            >
-                              <ChevronRight size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      ) : null}
-                    </>
-                  )}
-                </section>
-              </div>
-
-              <aside className="xl:sticky xl:top-24 xl:self-start">
-                <section className={`${panelClassName} px-5 py-5`}>
-                  <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 space-y-5">
+              <section className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                    Practice
+                  </p>
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
-                        Today Progress
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                        A small daily snapshot to keep momentum visible.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    <div className="flex items-end justify-between gap-4">
-                      <div>
-                        <p className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
-                          {todaySummary.attempted}
-                          <span className="text-lg text-[var(--text-faint)]">
-                            /{TODAY_GOAL}
-                          </span>
-                        </p>
-                        <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                          Questions attempted
-                        </p>
-                      </div>
-                      <p className="text-sm text-[var(--text-faint)]">
-                        {todaySummary.remaining > 0
-                          ? `${todaySummary.remaining} to goal`
-                          : "Goal complete"}
+                      <h1 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.35rem]">
+                        Question Library
+                      </h1>
+                      <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">
+                        A fast, distraction-free list built for finding the next
+                        question and getting straight to work.
                       </p>
                     </div>
-
-                    <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
-                      <div
-                        className="h-full rounded-full bg-[rgba(255,255,255,0.72)] transition-[width]"
-                        style={{ width: `${todaySummary.progress}%` }}
-                      />
-                    </div>
+                    <p className="text-sm text-[var(--text-faint)]">
+                      {questionStateSummary}
+                    </p>
                   </div>
+                </div>
 
-                  <div className="mt-6 space-y-3 border-t border-[rgba(255,255,255,0.06)] pt-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--text-secondary)]">
-                        Accuracy
-                      </span>
-                      <span className="font-medium text-[var(--text-primary)]">
-                        {todaySummary.accuracy}%
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--text-secondary)]">
-                        Solved today
-                      </span>
-                      <span className="font-medium text-[var(--text-primary)]">
-                        {todaySummary.correctToday}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--text-secondary)]">
-                        Bookmarked
-                      </span>
-                      <span className="font-medium text-[var(--text-primary)]">
-                        {bookmarks.length}
-                      </span>
-                    </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <div className="relative min-w-0 flex-1">
+                    <Search
+                      size={16}
+                      className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)]"
+                    />
+                    <input
+                      value={search}
+                      onChange={event => {
+                        setSearch(event.target.value);
+                        setPage(1);
+                      }}
+                      placeholder="Search questions"
+                      className={`${fieldClassName} h-12 pl-11`}
+                    />
                   </div>
-
                   <button
                     type="button"
-                    onClick={openContinueQuestion}
-                    className="btn-primary mt-6 w-full justify-center py-3"
+                    onClick={() => setShowFilters(true)}
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.14)]"
                   >
-                    Continue
+                    <SlidersHorizontal size={16} />
+                    Filters
+                    {filterCount > 0 ? (
+                      <span className="rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)]">
+                        {filterCount}
+                      </span>
+                    ) : null}
                   </button>
-                </section>
-              </aside>
+                </div>
+              </section>
+
+              <section className={panelClassName}>
+                <div className="flex flex-col gap-4 border-b border-[rgba(255,255,255,0.06)] px-5 py-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-[rgba(255,255,255,0.55)]" />
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      {questionsLoading
+                        ? "Preparing the question table."
+                        : reviewModeSyncing
+                          ? "Restoring your saved progress."
+                          : `Showing ${(page - 1) * PER_PAGE + 1}-${Math.min(page * PER_PAGE, filtered.length)} of ${filtered.length}`}
+                    </p>
+                  </div>
+                  {filterCount > 0 ? (
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="inline-flex h-9 items-center rounded-[12px] border border-[rgba(255,255,255,0.08)] px-3 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+                    >
+                      Clear filters
+                    </button>
+                  ) : null}
+                </div>
+
+                {activeFilterPills.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 border-b border-[rgba(255,255,255,0.06)] px-5 py-3">
+                    {activeFilterPills.map(item => (
+                      <span
+                        key={item.key}
+                        className="rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-[11px] font-medium text-[var(--text-secondary)]"
+                      >
+                        {item.label}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                {questionsLoading ? (
+                  <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
+                    <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+                      <Loader2
+                        size={16}
+                        className="animate-spin text-[var(--text-muted)]"
+                      />
+                      Loading questions...
+                    </div>
+                  </div>
+                ) : reviewModeSyncing ? (
+                  <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
+                    <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+                      <Loader2
+                        size={16}
+                        className="animate-spin text-[var(--text-muted)]"
+                      />
+                      Restoring saved progress...
+                    </div>
+                  </div>
+                ) : paginated.length === 0 ? (
+                  <div className="flex min-h-[360px] flex-col items-center justify-center px-6 py-10 text-center">
+                    <p className="text-lg font-semibold text-[var(--text-primary)]">
+                      No questions match those filters.
+                    </p>
+                    <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">
+                      Clear a few filters to widen the list and get back into
+                      solving mode.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="btn-primary mt-5 px-4 py-2.5 text-sm"
+                    >
+                      Clear filters
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-[900px] w-full table-fixed border-collapse">
+                        <thead>
+                          <tr className="border-b border-[rgba(255,255,255,0.06)]">
+                            {TABLE_COLUMNS.map(column => (
+                              <th
+                                key={column.label}
+                                className={`px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)] ${column.className}`}
+                              >
+                                {column.label}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginated.map((question, index) => {
+                            const rowNumber = (page - 1) * PER_PAGE + index + 1;
+                            const status =
+                              answerStatuses[toQuestionId(question.id)];
+                            const statusPill = getStatusPill(status);
+
+                            return (
+                              <tr
+                                key={question.id}
+                                onClick={() => openQuestion(question)}
+                                className="cursor-pointer border-b border-[rgba(255,255,255,0.05)] transition hover:bg-[rgba(255,255,255,0.03)]"
+                              >
+                                <td className="px-5 py-4 align-middle text-sm text-[var(--text-muted)]">
+                                  {rowNumber}
+                                </td>
+                                <td className="px-5 py-4 align-middle">
+                                  <p className="line-clamp-2 text-sm font-medium leading-6 text-[var(--text-primary)]">
+                                    {question.question}
+                                  </p>
+                                </td>
+                                <td className="px-5 py-4 align-middle">
+                                  <span
+                                    className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getExamPillClass(question.exam)}`}
+                                  >
+                                    {question.exam}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
+                                  <span className="line-clamp-1 block">
+                                    {question.topic}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-4 align-middle">
+                                  <span
+                                    className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getDifficultyPillClass(question.difficulty)}`}
+                                  >
+                                    {question.difficulty}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
+                                  {question.year ?? "—"}
+                                </td>
+                                <td className="px-5 py-4 align-middle">
+                                  {progressSyncing ? (
+                                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-muted)]">
+                                      <Loader2
+                                        size={12}
+                                        className="animate-spin"
+                                      />
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusPill.className}`}
+                                    >
+                                      {statusPill.icon}
+                                      {statusPill.label}
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {totalPages > 1 ? (
+                      <div className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between">
+                        <p className="text-sm text-[var(--text-secondary)]">
+                          {(page - 1) * PER_PAGE + 1}-
+                          {Math.min(page * PER_PAGE, filtered.length)} of{" "}
+                          {filtered.length}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPage(current => Math.max(1, current - 1))
+                            }
+                            disabled={page === 1}
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)] transition disabled:opacity-40"
+                          >
+                            <ChevronLeft size={14} />
+                          </button>
+                          {Array.from(
+                            { length: Math.min(5, totalPages) },
+                            (_, index) => {
+                              const currentPage =
+                                page <= 3 ? index + 1 : page + index - 2;
+                              if (currentPage < 1 || currentPage > totalPages)
+                                return null;
+                              const isActive = currentPage === page;
+
+                              return (
+                                <button
+                                  key={currentPage}
+                                  type="button"
+                                  onClick={() => setPage(currentPage)}
+                                  className={
+                                    isActive
+                                      ? "inline-flex h-10 min-w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.16)] bg-[rgba(255,255,255,0.08)] px-3 text-sm font-medium text-[var(--text-primary)]"
+                                      : "inline-flex h-10 min-w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3 text-sm font-medium text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+                                  }
+                                >
+                                  {currentPage}
+                                </button>
+                              );
+                            }
+                          )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPage(current =>
+                                Math.min(totalPages, current + 1)
+                              )
+                            }
+                            disabled={page === totalPages}
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)] transition disabled:opacity-40"
+                          >
+                            <ChevronRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </section>
             </div>
 
             <Sheet open={showFilters} onOpenChange={setShowFilters}>
