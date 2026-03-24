@@ -3,10 +3,11 @@ import { Link, useLocation } from "wouter";
 import {
   Plus, Trash2, Edit2, Save, X, CheckCircle2,
   BookOpen, Link as LinkIcon, FileText, LogOut,
-  ChevronDown, Loader2, AlertCircle, Trophy
+  ChevronDown, Loader2, AlertCircle, Trophy, Upload
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
+import { chunkQuestions, parseBulkQuestionInput } from "../lib/questionImport";
 
 const ADMIN_EMAIL = "rakeshmeesa631@gmail.com";
 
@@ -21,6 +22,8 @@ const CONTEST_STATUSES = ["upcoming", "past"];
 const EMPTY_Q = { question:"", option_a:"", option_b:"", option_c:"", option_d:"", correct_option:0, explanation:"", exam:"UPSC", topic:"Polity", subtopic:"", difficulty:"Easy", type:"PYQ", year:"", tags:"" };
 const EMPTY_R = { title:"", description:"", type:"PDF", url:"", exam:"All", category:"Syllabus" };
 const EMPTY_C = { name:"", date:"", duration:"60 minutes", topics:"", prize:"", status:"upcoming", winner:"", your_rank:"" };
+const BULK_IMPORT_TEMPLATE = `question,option_a,option_b,option_c,option_d,correct_option,explanation,exam,topic,subtopic,difficulty,type,year,tags
+Which Article of the Indian Constitution deals with the Right to Education?,Article 19,Article 21A,Article 24,Article 32,1,Article 21A makes free and compulsory education a fundamental right for children aged 6-14.,UPSC,Polity,Fundamental Rights,Easy,PYQ,2019,constitution|education|article-21a`;
 
 export default function Admin() {
   const [, navigate] = useLocation();
@@ -33,6 +36,8 @@ export default function Admin() {
   const [qForm, setQForm] = useState({ ...EMPTY_Q });
   const [editingQ, setEditingQ] = useState<string | null>(null);
   const [showQForm, setShowQForm] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [bulkInput, setBulkInput] = useState("");
 
   // Resources state
   const [dbResources, setDbResources] = useState<any[]>([]);
@@ -94,6 +99,35 @@ export default function Admin() {
     if (error) { showToast("Error: " + error.message, false); return; }
     showToast(editingQ ? "Question updated!" : "Question added!");
     setQForm({ ...EMPTY_Q }); setEditingQ(null); setShowQForm(false);
+    loadQuestions();
+  };
+
+  const importQuestions = async () => {
+    let parsedQuestions;
+
+    try {
+      parsedQuestions = parseBulkQuestionInput(bulkInput);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Could not parse bulk import.", false);
+      return;
+    }
+
+    setLoading(true);
+
+    for (const batch of chunkQuestions(parsedQuestions)) {
+      const { error } = await supabase.from("questions_db").insert(batch);
+
+      if (error) {
+        setLoading(false);
+        showToast(`Import failed: ${error.message}`, false);
+        return;
+      }
+    }
+
+    setLoading(false);
+    setBulkInput("");
+    setShowBulkImport(false);
+    showToast(`${parsedQuestions.length} questions imported successfully.`);
     loadQuestions();
   };
 
@@ -267,11 +301,84 @@ export default function Admin() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-gray-700 dark:text-gray-200">Question Bank</h2>
-              <button onClick={() => { setQForm({...EMPTY_Q}); setEditingQ(null); setShowQForm(!showQForm); }}
-                className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-sm rounded-xl hover:bg-orange-600 transition-colors">
-                {showQForm ? <><X size={13}/> Cancel</> : <><Plus size={13}/> Add Question</>}
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setShowBulkImport(current => !current); setShowQForm(false); setEditingQ(null); setQForm({...EMPTY_Q}); }}
+                  className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-xl transition-colors ${showBulkImport ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white" : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>
+                  {showBulkImport ? <><X size={13}/> Close Import</> : <><Upload size={13}/> Bulk Import</>}
+                </button>
+                <button onClick={() => { setQForm({...EMPTY_Q}); setEditingQ(null); setShowQForm(!showQForm); setShowBulkImport(false); }}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-sm rounded-xl hover:bg-orange-600 transition-colors">
+                  {showQForm ? <><X size={13}/> Cancel</> : <><Plus size={13}/> Add Question</>}
+                </button>
+              </div>
             </div>
+
+            {showBulkImport && (
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Bulk Import Questions</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-3xl">
+                      Paste a JSON array, CSV, or tab-separated rows from Google Sheets. This is the fastest way to move from 66 questions to a 2000-question v1.
+                    </p>
+                  </div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500">
+                    Supported fields: <span className="font-mono">question, option_a-d, correct_option, explanation, exam, topic, subtopic, difficulty, type, year, tags</span>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 mt-5 lg:grid-cols-[1.3fr_0.7fr]">
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Paste question data</label>
+                    <textarea
+                      value={bulkInput}
+                      onChange={(e) => setBulkInput(e.target.value)}
+                      rows={16}
+                      placeholder="Paste JSON / CSV / TSV here..."
+                      className="w-full px-3 py-3 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-100 dark:border-orange-900 p-4">
+                      <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">Import notes</p>
+                      <ul className="mt-2 space-y-2 text-xs text-orange-700/90 dark:text-orange-200/90">
+                        <li>Use 4 options per question.</li>
+                        <li><span className="font-mono">correct_option</span> accepts <span className="font-mono">0-3</span>, <span className="font-mono">1-4</span>, or <span className="font-mono">A-D</span>.</li>
+                        <li><span className="font-mono">tags</span> can be comma-separated or pipe-separated.</li>
+                        <li>If <span className="font-mono">year</span> is empty, it will be saved as conceptual/null.</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Template</label>
+                      <textarea
+                        readOnly
+                        value={BULK_IMPORT_TEMPLATE}
+                        rows={10}
+                        className="w-full px-3 py-3 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 pt-5">
+                  <button onClick={importQuestions} disabled={loading || !bulkInput.trim()}
+                    className="flex items-center gap-1.5 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors">
+                    {loading ? <Loader2 size={14} className="animate-spin"/> : <Upload size={14}/>}
+                    Import Questions
+                  </button>
+                  <button onClick={() => setBulkInput(BULK_IMPORT_TEMPLATE)}
+                    className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    Fill Example
+                  </button>
+                  <button onClick={() => { setBulkInput(""); setShowBulkImport(false); }}
+                    className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Question Form */}
             {showQForm && (

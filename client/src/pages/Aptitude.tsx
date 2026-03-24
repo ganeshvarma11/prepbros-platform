@@ -3,10 +3,11 @@ import { Link } from "wouter";
 import {
   ChevronLeft, ChevronRight, Shuffle, BookOpen,
   Brain, FileText, BarChart2, Globe, Zap,
-  CheckCircle2, X, Bookmark, BookmarkCheck, Flag, Clock, Sun, Moon
+  CheckCircle2, X, Bookmark, BookmarkCheck, Flag, Clock, Sun, Moon, Loader2
 } from "lucide-react";
+import { useQuestionBank } from "../hooks/useQuestionBank";
 import { useTheme } from "../contexts/ThemeContext";
-import { questions, type Question, type Difficulty } from "../data/questions";
+import { type Question, type Difficulty } from "../data/questions";
 
 const APTITUDE_TOPICS = [
   "Quantitative Aptitude",
@@ -73,6 +74,7 @@ const EXAM_COLORS: Record<string, string> = {
 
 export default function Aptitude() {
   const { theme, toggleTheme } = useTheme();
+  const { questions, loading } = useQuestionBank();
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [activeQ, setActiveQ] = useState<Question | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
@@ -82,7 +84,7 @@ export default function Aptitude() {
   const [examFilter, setExamFilter] = useState<string>("");
 
   const aptitudeQuestions = useMemo(() =>
-    questions.filter(q => APTITUDE_TOPICS.includes(q.topic)), []);
+    questions.filter(q => APTITUDE_TOPICS.includes(q.topic)), [questions]);
 
   const topicQuestions = useMemo(() => {
     if (!activeTopic) return [];
@@ -102,8 +104,14 @@ export default function Aptitude() {
     if (r) { setActiveQ(r); setSelected(null); setActiveTopic(r.topic); }
   };
 
-  const topicCount = (topic: string) =>
-    aptitudeQuestions.filter(q => q.topic === topic).length;
+  const topicCounts = useMemo(
+    () =>
+      aptitudeQuestions.reduce<Record<string, number>>((acc, question) => {
+        acc[question.topic] = (acc[question.topic] || 0) + 1;
+        return acc;
+      }, {}),
+    [aptitudeQuestions],
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
@@ -151,7 +159,9 @@ export default function Aptitude() {
           <p className="text-sm text-gray-400 mt-1">
             {activeTopic
               ? TOPIC_META[activeTopic]?.desc
-              : `${aptitudeQuestions.length} questions across all government exams — UPSC CSAT, SSC, RRB, IBPS, TSPSC, APPSC`}
+              : loading
+                ? "Loading aptitude question bank..."
+                : `${aptitudeQuestions.length} questions across all government exams — UPSC CSAT, SSC, RRB, IBPS, TSPSC, APPSC`}
           </p>
         </div>
 
@@ -161,7 +171,7 @@ export default function Aptitude() {
             {APTITUDE_TOPICS.map(topic => {
               const meta = TOPIC_META[topic];
               const Icon = meta.icon;
-              const count = topicCount(topic);
+              const count = topicCounts[topic] || 0;
               return (
                 <button key={topic} onClick={() => setActiveTopic(topic)}
                   className={`text-left p-5 rounded-2xl border ${meta.bg} hover:shadow-md transition-all group`}>
@@ -186,10 +196,10 @@ export default function Aptitude() {
         {!activeTopic && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             {[
-              { label: "Total questions", value: aptitudeQuestions.length },
+              { label: "Total questions", value: loading ? "..." : aptitudeQuestions.length },
               { label: "Exams covered", value: "6+" },
               { label: "Topics", value: APTITUDE_TOPICS.length },
-              { label: "PYQs included", value: aptitudeQuestions.filter(q=>q.type==="PYQ").length },
+              { label: "PYQs included", value: loading ? "..." : aptitudeQuestions.filter(q=>q.type==="PYQ").length },
             ].map((s,i) => (
               <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 text-center">
                 <p className="text-2xl font-black text-orange-500">{s.value}</p>
@@ -226,7 +236,12 @@ export default function Aptitude() {
 
             {/* Question cards */}
             <div className="space-y-2">
-              {topicQuestions.length === 0 ? (
+              {loading ? (
+                <div className="text-center py-12 text-gray-400">
+                  <Loader2 size={28} className="mx-auto mb-2 opacity-60 animate-spin"/>
+                  <p className="text-sm">Loading questions...</p>
+                </div>
+              ) : topicQuestions.length === 0 ? (
                 <div className="text-center py-12 text-gray-400">
                   <FileText size={28} className="mx-auto mb-2 opacity-40"/>
                   <p className="text-sm">No questions match these filters</p>

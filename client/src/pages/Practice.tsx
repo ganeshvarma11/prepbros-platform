@@ -21,8 +21,8 @@ import Navbar from "@/components/Navbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useAuth } from "@/contexts/AuthContext";
 import { type Question } from "@/data/questions";
+import { useQuestionBank } from "@/hooks/useQuestionBank";
 import { trackEvent } from "@/lib/analytics";
-import { fetchQuestions } from "@/lib/questionsDB";
 import {
   getAnswerStatuses,
   getBookmarks,
@@ -65,11 +65,7 @@ const shellClassName =
 
 export default function Practice() {
   const { user } = useAuth();
-
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [allTopics, setAllTopics] = useState<string[]>([]);
-  const [allYears, setAllYears] = useState<number[]>([]);
-  const [questionsLoading, setQuestionsLoading] = useState(true);
+  const { questions, loading: questionsLoading } = useQuestionBank();
 
   const [search, setSearch] = useState("");
   const [selExams, setSelExams] = useState<string[]>([]);
@@ -124,19 +120,6 @@ export default function Practice() {
   }, []);
 
   useEffect(() => {
-    fetchQuestions().then((records) => {
-      setQuestions(records);
-      setAllTopics(Array.from(new Set(records.map((question) => question.topic))).sort());
-      setAllYears(
-        Array.from(
-          new Set(records.filter((question) => question.year).map((question) => question.year as number)),
-        ).sort((a, b) => b - a),
-      );
-      setQuestionsLoading(false);
-    });
-  }, []);
-
-  useEffect(() => {
     if (!user) {
       setBookmarks([]);
       setSolved([]);
@@ -151,6 +134,17 @@ export default function Practice() {
 
   const solvedSet = useMemo(() => new Set(solved), [solved]);
   const bookmarkSet = useMemo(() => new Set(bookmarks), [bookmarks]);
+  const allTopics = useMemo(
+    () => Array.from(new Set(questions.map((question) => question.topic))).sort(),
+    [questions],
+  );
+  const allYears = useMemo(
+    () =>
+      Array.from(
+        new Set(questions.filter((question) => question.year).map((question) => question.year as number)),
+      ).sort((a, b) => b - a),
+    [questions],
+  );
 
   const filtered = useMemo(() => {
     let current = [...questions];
