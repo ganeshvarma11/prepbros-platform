@@ -61,10 +61,10 @@ type QueueItem = {
 };
 
 const shellClassName =
-  "rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(21,20,31,0.94)_0%,rgba(14,14,22,0.98)_100%)] shadow-[0_30px_80px_-52px_rgba(0,0,0,0.96)]";
+  "rounded-[26px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(21,20,31,0.94)_0%,rgba(14,14,22,0.98)_100%)] shadow-[0_24px_64px_-46px_rgba(0,0,0,0.96)]";
 
 const insetClassName =
-  "rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(24,23,35,0.78)]";
+  "rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(24,23,35,0.78)]";
 
 const toDateKey = (value: Date | string) => new Date(value).toLocaleDateString("en-CA");
 
@@ -619,23 +619,23 @@ export default function Dashboard() {
         }}
       />
 
-      <main className="px-4 pb-14 pt-6 md:pb-16 md:pt-8">
-        <div className="container-shell grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
+      <main className="px-4 pb-12 pt-5 md:pb-14 md:pt-6">
+        <div className="container-shell grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
           <aside className="space-y-6 lg:sticky lg:top-[104px] lg:self-start">
-            <section className={`${shellClassName} p-5 md:p-6`}>
-              <div className="flex items-start gap-4">
-                <Avatar className="h-24 w-24 shrink-0 rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,161,22,0.22)_0%,rgba(77,163,255,0.18)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+            <section className={`${shellClassName} p-4 md:p-5`}>
+              <div className="flex items-start gap-3.5">
+                <Avatar className="h-20 w-20 shrink-0 rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,161,22,0.22)_0%,rgba(77,163,255,0.18)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                   <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
-                  <AvatarFallback className="rounded-[24px] bg-transparent text-3xl font-semibold text-white">
+                  <AvatarFallback className="rounded-[20px] bg-transparent text-2xl font-semibold text-white">
                     {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <p className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                  <p className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                     {displayName}
                   </p>
                   <p className="mt-1 truncate text-sm text-[var(--text-muted)]">@{username}</p>
-                  <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
+                  <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
                     Focused on {targetExam}. Serious prep feels calmer when the next action is
                     visible.
                   </p>
@@ -648,57 +648,57 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {[
                   { label: "Solved", value: totalSolved, tone: "text-[var(--text-primary)]" },
                   { label: "Accuracy", value: `${accuracy}%`, tone: "text-[var(--blue)]" },
                   { label: "Bookmarks", value: bookmarkCount, tone: "text-[var(--brand-light)]" },
                   { label: "Streak", value: `${streak}d`, tone: "text-[var(--accent)]" },
                 ].map((item) => (
-                  <div key={item.label} className={`${insetClassName} p-4`}>
+                  <div key={item.label} className={`${insetClassName} p-3.5`}>
                     <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
                       {item.label}
                     </p>
-                    <p className={`mt-3 text-3xl font-semibold tracking-[-0.05em] ${item.tone}`}>
+                    <p className={`mt-2.5 text-[2rem] font-semibold tracking-[-0.05em] ${item.tone}`}>
                       {item.value}
                     </p>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-6 flex flex-col gap-3">
+              <div className="mt-5 flex flex-col gap-2.5">
                 <Link href="/practice">
-                  <span className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(180deg,#ff9838_0%,#ff7a12_100%)] px-5 py-3 text-sm font-medium text-white shadow-[0_22px_45px_-28px_rgba(255,122,18,0.95)] transition hover:brightness-105">
+                  <span className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(180deg,#ff9838_0%,#ff7a12_100%)] px-4 py-2.5 text-sm font-medium text-white shadow-[0_18px_36px_-28px_rgba(255,122,18,0.95)] transition hover:brightness-105">
                     Continue practice
                     <ArrowRight size={15} />
                   </span>
                 </Link>
                 <Link href="/profile">
-                  <span className="inline-flex w-full cursor-pointer items-center justify-center rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[rgba(255,255,255,0.04)] px-5 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.18)]">
+                  <span className="inline-flex w-full cursor-pointer items-center justify-center rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[rgba(255,255,255,0.04)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.18)]">
                     Open profile
                   </span>
                 </Link>
               </div>
             </section>
 
-            <section className={`${shellClassName} p-5 md:p-6`}>
+            <section className={`${shellClassName} p-4 md:p-5`}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
                 Prep snapshot
               </p>
-              <div className="mt-4 space-y-4">
+              <div className="mt-4 space-y-3">
                 {[
                   { label: "Today", value: `${todayAttempts}/${dailyGoal}`, meta: dailyPercent >= 100 ? "Goal completed" : `${dailyRemaining} left today` },
                   { label: "This week", value: `${weeklyAttempts}`, meta: `${weeklyAccuracy}% weekly accuracy` },
                   { label: "Best streak", value: `${maxStreak}d`, meta: `${heatmap.activeDayCount} active days in ${heatmapRangeLabel}` },
                 ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between gap-3 rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-4 py-3.5">
+                  <div key={item.label} className="flex items-center justify-between gap-3 rounded-[16px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-3.5 py-3">
                     <div>
                       <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         {item.label}
                       </p>
                       <p className="mt-1 text-sm text-[var(--text-secondary)]">{item.meta}</p>
                     </div>
-                    <p className="text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    <p className="text-xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                       {item.value}
                     </p>
                   </div>
@@ -706,7 +706,7 @@ export default function Dashboard() {
               </div>
             </section>
 
-            <section className={`${shellClassName} p-5 md:p-6`}>
+            <section className={`${shellClassName} p-4 md:p-5`}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
                 Review buckets
               </p>
@@ -757,18 +757,18 @@ export default function Dashboard() {
             </section>
           </aside>
 
-          <div className="space-y-6">
-            <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-              <div className={`${shellClassName} p-6 md:p-7`}>
+          <div className="space-y-5">
+            <section className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
+              <div className={`${shellClassName} p-5 md:p-6`}>
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
                       Solved progress
                     </p>
-                    <h1 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-4xl">
+                    <h1 className="mt-2.5 text-[2.1rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-[2.35rem]">
                       Your prep command center
                     </h1>
-                    <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
                       Dense, calm, and useful: real progress, real review signals, and a clearer
                       sense of what to do next.
                     </p>
@@ -779,38 +779,38 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid gap-6 lg:grid-cols-[0.88fr_1.12fr] lg:items-center">
+                <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
                   <div className="flex flex-col items-center">
                     <div
-                      className="flex h-60 w-60 items-center justify-center rounded-full p-[12px] shadow-[0_0_60px_rgba(255,161,22,0.08)]"
+                      className="flex h-44 w-44 items-center justify-center rounded-full p-[10px] shadow-[0_0_48px_rgba(255,161,22,0.08)] md:h-48 md:w-48"
                       style={solvedRingStyle}
                     >
                       <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(17,16,26,0.96)_0%,rgba(10,10,17,0.98)_100%)] text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                        <p className="text-5xl font-semibold tracking-[-0.07em] text-[var(--text-primary)]">
+                        <p className="text-4xl font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-[2.65rem]">
                           {totalSolved}
                         </p>
                         <p className="mt-1 text-sm text-[var(--text-secondary)]">/ {questionCount || 0} solved</p>
-                        <p className="mt-3 text-sm font-medium text-[var(--accent)]">{totalAttempts} attempts logged</p>
+                        <p className="mt-2 text-xs font-medium text-[var(--accent)]">{totalAttempts} attempts logged</p>
                       </div>
                     </div>
-                    <p className="mt-4 text-sm text-[var(--text-secondary)]">
+                    <p className="mt-3 text-xs text-[var(--text-secondary)]">
                       Difficulty mix uses real solved questions from the bank.
                     </p>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {difficultyProgress.map((item) => (
-                      <div key={item.difficulty} className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-4">
+                      <div key={item.difficulty} className="rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-3.5">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                            <p className="text-base font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
                               {item.difficulty}
                             </p>
                             <p className="mt-1 text-sm text-[var(--text-secondary)]">
                               {item.solved}/{item.total} questions solved
                             </p>
                           </div>
-                          <p className="text-2xl font-semibold tracking-[-0.05em]" style={{ color: item.color }}>
+                          <p className="text-xl font-semibold tracking-[-0.05em]" style={{ color: item.color }}>
                             {item.total > 0 ? `${Math.round((item.solved / item.total) * 100)}%` : "0%"}
                           </p>
                         </div>
@@ -826,14 +826,14 @@ export default function Dashboard() {
                       </div>
                     ))}
 
-                    <div className={`${insetClassName} p-4`}>
+                    <div className={`${insetClassName} p-3.5`}>
                       <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         Current read
                       </p>
-                      <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                      <p className="mt-2.5 text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                         {focusCopy.title}
                       </p>
-                      <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                         {focusCopy.description}
                       </p>
                     </div>
@@ -841,14 +841,14 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="grid gap-6">
-                <section className={`${shellClassName} p-6 md:p-7`}>
+              <div className="grid gap-5">
+                <section className={`${shellClassName} p-5 md:p-6`}>
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
                         Today&apos;s goal
                       </p>
-                      <p className="mt-3 text-5xl font-semibold tracking-[-0.07em] text-[var(--text-primary)]">
+                      <p className="mt-2.5 text-4xl font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-[3.1rem]">
                         {todayAttempts}/{dailyGoal}
                       </p>
                       <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -876,40 +876,40 @@ export default function Dashboard() {
                     />
                   </div>
 
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <div className={`${insetClassName} p-4`}>
+                  <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+                    <div className={`${insetClassName} p-3.5`}>
                       <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Today accuracy</p>
-                      <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--blue)]">
+                      <p className="mt-2.5 text-[2rem] font-semibold tracking-[-0.05em] text-[var(--blue)]">
                         {todayAttempts > 0 ? `${todayAccuracy}%` : "n/a"}
                       </p>
                     </div>
-                    <div className={`${insetClassName} p-4`}>
+                    <div className={`${insetClassName} p-3.5`}>
                       <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Target exam</p>
-                      <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                      <p className="mt-2.5 text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                         {targetExam}
                       </p>
                     </div>
                   </div>
                 </section>
 
-                <section className={`${shellClassName} p-6 md:p-7`}>
+                <section className={`${shellClassName} p-5 md:p-6`}>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
                     Focus queue
                   </p>
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-2.5">
                     <Link
                       href={
                         improvementTopics[0]
-                          ? buildPracticeHref({ topic: improvementTopics[0].topic, incorrect: true })
+                          ? buildPracticeHref({ topic: improvementTopics[0].topic })
                           : "/practice"
                       }
                     >
-                      <span className={`block cursor-pointer ${insetClassName} p-4 transition hover:border-[rgba(255,255,255,0.16)]`}>
+                      <span className={`block cursor-pointer ${insetClassName} p-3.5 transition hover:border-[rgba(255,255,255,0.16)]`}>
                         <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Priority review</p>
-                        <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                        <p className="mt-2.5 text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                           {improvementTopics[0] ? improvementTopics[0].topic : "Build activity first"}
                         </p>
-                        <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                           {improvementTopics[0]
                             ? `${improvementTopics[0].incorrect} misses across ${improvementTopics[0].total} recent attempts make this the highest-value topic to revisit.`
                             : "Once you answer more questions, the dashboard will start isolating weak areas here."}
@@ -917,12 +917,12 @@ export default function Dashboard() {
                       </span>
                     </Link>
 
-                    <div className={`${insetClassName} p-4`}>
+                    <div className={`${insetClassName} p-3.5`}>
                       <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Consistency</p>
-                      <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--accent)]">
+                      <p className="mt-2.5 text-[2rem] font-semibold tracking-[-0.05em] text-[var(--accent)]">
                         {activeDays}/7
                       </p>
-                      <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                         Active days this week with a current streak of {streak} day{streak === 1 ? "" : "s"}.
                       </p>
                     </div>
@@ -931,13 +931,13 @@ export default function Dashboard() {
               </div>
             </section>
 
-            <section className={`${shellClassName} p-6 md:p-7`}>
+            <section className={`${shellClassName} p-5 md:p-6`}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
                     Activity heatmap
                   </p>
-                  <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                  <h2 className="mt-2.5 text-[1.9rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                     Attempts over time
                   </h2>
                 </div>
@@ -949,7 +949,7 @@ export default function Dashboard() {
                         key={range}
                         type="button"
                         onClick={() => setHeatmapRange(range)}
-                        className={`rounded-[12px] px-3.5 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition ${
+                        className={`rounded-[10px] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
                           heatmapRange === range
                             ? "bg-[rgba(255,161,22,0.14)] text-[var(--brand-light)]"
                             : "border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -966,12 +966,12 @@ export default function Dashboard() {
                   ].map((item) => (
                     <div
                       key={item.label}
-                      className="rounded-[16px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-4 py-3"
+                      className="rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-3.5 py-2.5"
                     >
                       <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         {item.label}
                       </p>
-                      <p className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                      <p className="mt-1.5 text-xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                         {item.value}
                       </p>
                     </div>
@@ -979,7 +979,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="mt-6 overflow-x-auto">
+              <div className="mt-5 overflow-x-auto">
                 <div className="min-w-[720px]">
                   <div className="mb-3 flex gap-[6px] pl-7">
                     {heatmap.weeks.map((week) => (
@@ -1002,7 +1002,7 @@ export default function Dashboard() {
                           {week.days.map((day) => (
                             <div
                               key={day.dateKey}
-                              className="h-[12px] w-[12px] rounded-[4px] border border-[rgba(255,255,255,0.04)]"
+                            className="h-[11px] w-[11px] rounded-[3px] border border-[rgba(255,255,255,0.04)]"
                               style={{ backgroundColor: getHeatmapColor(day.count, heatmap.maxCount) }}
                               title={`${day.date.toDateString()}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
                             />
@@ -1032,13 +1032,13 @@ export default function Dashboard() {
               </div>
             </section>
 
-            <section className={`${shellClassName} p-6 md:p-7`}>
+            <section className={`${shellClassName} p-5 md:p-6`}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
                     Workspace
                   </p>
-                  <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                  <h2 className="mt-2.5 text-[1.9rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                     Recent activity, review, and next actions
                   </h2>
                 </div>
@@ -1053,7 +1053,7 @@ export default function Dashboard() {
                       key={tab.id}
                       type="button"
                       onClick={() => setActivePanel(tab.id as typeof activePanel)}
-                      className={`rounded-[14px] px-4 py-2.5 text-sm font-medium transition ${
+                      className={`rounded-[12px] px-3.5 py-2 text-sm font-medium transition ${
                         activePanel === tab.id
                           ? "bg-[rgba(255,161,22,0.14)] text-[var(--brand-light)]"
                           : "border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -1065,9 +1065,9 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-5">
                 {activePanel === "activity" ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {recentSessions.length > 0 ? (
                       recentSessions.map((session) => (
                         <Link
@@ -1078,7 +1078,7 @@ export default function Dashboard() {
                             exam: session.exam !== "General" ? session.exam : undefined,
                           })}
                         >
-                          <span className="flex cursor-pointer flex-col gap-4 rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-4 py-4 transition hover:border-[rgba(255,255,255,0.16)] md:flex-row md:items-center md:justify-between">
+                          <span className="flex cursor-pointer flex-col gap-3 rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-3.5 py-3.5 transition hover:border-[rgba(255,255,255,0.16)] md:flex-row md:items-center md:justify-between">
                             <span>
                               <span className="flex flex-wrap items-center gap-2">
                                 <span className="font-semibold text-[var(--text-primary)]">{session.topic}</span>
@@ -1118,7 +1118,7 @@ export default function Dashboard() {
                 ) : null}
 
                 {activePanel === "review" ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {reviewQueue.length > 0 ? (
                       reviewQueue.map((item) => (
                         <Link
@@ -1128,10 +1128,9 @@ export default function Dashboard() {
                             topic: item.topic,
                             exam: item.exam,
                             bookmarked: item.kind === "bookmark",
-                            incorrect: item.kind === "mistake",
                           })}
                         >
-                          <span className="block cursor-pointer rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-4 transition hover:border-[rgba(255,255,255,0.16)]">
+                          <span className="block cursor-pointer rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-3.5 transition hover:border-[rgba(255,255,255,0.16)]">
                             <span className="flex items-start justify-between gap-3">
                               <span>
                                 <span className="line-clamp-2 text-[15px] font-medium leading-6 text-[var(--text-primary)]">
@@ -1163,23 +1162,23 @@ export default function Dashboard() {
                 ) : null}
 
                 {activePanel === "actions" ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {nextActions.map((action) => {
                       const Icon = action.icon;
                       return (
                         <div
                           key={action.title}
-                          className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-4"
+                          className="rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-3.5"
                         >
                           <div className="flex items-start gap-4">
-                            <div className={`rounded-[16px] border p-3 ${action.accent}`}>
+                            <div className={`rounded-[14px] border p-2.5 ${action.accent}`}>
                               <Icon size={18} />
                             </div>
                             <div className="flex-1">
-                              <p className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                              <p className="text-base font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
                                 {action.title}
                               </p>
-                              <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                                 {action.description}
                               </p>
                               <Link href={action.href}>
