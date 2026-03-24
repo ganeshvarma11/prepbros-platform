@@ -73,13 +73,13 @@ const EXAM_COLORS: Record<string, string> = {
 };
 
 export default function Aptitude() {
-  const { theme, toggleTheme } = useTheme();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const { questions, loading } = useQuestionBank();
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [activeQ, setActiveQ] = useState<Question | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
-  const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [solved, setSolved] = useState<number[]>([]);
+  const [bookmarks, setBookmarks] = useState<Array<Question["id"]>>([]);
+  const [solved, setSolved] = useState<Array<Question["id"]>>([]);
   const [diffFilter, setDiffFilter] = useState<Difficulty | "">("");
   const [examFilter, setExamFilter] = useState<string>("");
 
@@ -133,7 +133,7 @@ export default function Aptitude() {
               <Shuffle size={12}/> Random
             </button>
             <button onClick={toggleTheme} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              {theme === "dark" ? <Sun size={15}/> : <Moon size={15}/>}
+              {resolvedTheme === "dark" ? <Sun size={15}/> : <Moon size={15}/>}
             </button>
           </div>
         </div>
