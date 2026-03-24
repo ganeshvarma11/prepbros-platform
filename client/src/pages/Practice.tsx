@@ -20,13 +20,15 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useAuth } from "@/contexts/AuthContext";
-import { type Question } from "@/data/questions";
+import { questions as fallbackQuestions, type Question } from "@/data/questions";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
 import { trackEvent } from "@/lib/analytics";
 import {
+  type AnswerAttempt,
   buildAnswerStatuses,
   getAnswerAttempts,
   getBookmarks,
+  type QuestionId,
   saveAnswer,
   toggleBookmark,
 } from "@/lib/userProgress";
@@ -63,6 +65,17 @@ const TABLE_COLUMNS = [
 const shellClassName =
   "rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(21,20,31,0.94)_0%,rgba(14,14,22,0.98)_100%)] shadow-[0_30px_80px_-52px_rgba(0,0,0,0.96)]";
 
+const normalizeQuestionId = (value: string | number | null | undefined) =>
+  value === null || value === undefined ? "" : String(value);
+
+const normalizeQuestionText = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/['"]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
 export default function Practice() {
   const { user, loading: authLoading } = useAuth();
   const { questions, loading: questionsLoading } = useQuestionBank();
@@ -79,11 +92,11 @@ export default function Practice() {
   const [showFilters, setShowFilters] = useState(false);
   const [activeQ, setActiveQ] = useState<Question | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
-  const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [answerStatuses, setAnswerStatuses] = useState<Record<number, "correct" | "wrong">>({});
+  const [rawBookmarks, setRawBookmarks] = useState<QuestionId[]>([]);
+  const [rawAttempts, setRawAttempts] = useState<AnswerAttempt[]>([]);
   const [answerStart, setAnswerStart] = useState<number>(Date.now());
   const [queryHydrated, setQueryHydrated] = useState(false);
-  const [pendingQuestionId, setPendingQuestionId] = useState<number | null>(null);
+  const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
 
   useEffect(() => {
@@ -107,8 +120,8 @@ export default function Practice() {
         .filter((value) => Number.isFinite(value)),
     );
     setSortBy((params.get("sort") as "default" | "difficulty" | "year") || "default");
-    const questionId = Number.parseInt(params.get("question") || "", 10);
-    setPendingQuestionId(Number.isFinite(questionId) ? questionId : null);
+    const questionId = params.get("question")?.trim() || "";
+    setPendingQuestionId(questionId || null);
     if (params.get("bookmarked") === "1") {
       setReviewMode("bookmarked");
     } else if (params.get("solved") === "1") {
@@ -129,8 +142,8 @@ export default function Practice() {
     };
 
     if (!user) {
-      setBookmarks([]);
-      setAnswerStatuses({});
+      setRawBookmarks([]);
+      setRawAttempts([]);
       setProgressLoading(false);
       return () => {
         cancelled = true;
@@ -146,8 +159,8 @@ export default function Practice() {
 
       if (cancelled) return;
 
-      setBookmarks(bookmarkIds);
-      setAnswerStatuses(buildAnswerStatuses(attempts));
+      setRawBookmarks(bookmarkIds);
+      setRawAttempts(attempts);
       setProgressLoading(false);
     };
 
@@ -158,11 +171,57 @@ export default function Practice() {
     };
   }, [authLoading, user]);
 
+  const questionIdSet = useMemo(
+    () => new Set(questions.map((question) => normalizeQuestionId(question.id))),
+    [questions],
+  );
+  const questionIdByText = useMemo(() => {
+    const map = new Map<string, string>();
+    questions.forEach((question) => {
+      map.set(normalizeQuestionText(question.question), normalizeQuestionId(question.id));
+    });
+    return map;
+  }, [questions]);
+  const legacyQuestionIdMap = useMemo(() => {
+    const map = new Map<string, string>();
+
+    fallbackQuestions.forEach((question) => {
+      const liveId = questionIdByText.get(normalizeQuestionText(question.question));
+      if (liveId) {
+        map.set(normalizeQuestionId(question.id), liveId);
+      }
+    });
+
+    return map;
+  }, [questionIdByText]);
+  const resolveStoredQuestionId = (rawId: QuestionId) => {
+    if (questionIdSet.has(rawId)) return rawId;
+    return legacyQuestionIdMap.get(rawId) ?? null;
+  };
+  const bookmarks = useMemo(() => {
+    const mapped = rawBookmarks
+      .map(resolveStoredQuestionId)
+      .filter((questionId): questionId is string => Boolean(questionId));
+
+    return Array.from(new Set(mapped));
+  }, [rawBookmarks, questionIdSet, legacyQuestionIdMap]);
+  const answerStatuses = useMemo(() => {
+    const mappedAttempts = rawAttempts
+      .map((attempt) => {
+        const questionId = resolveStoredQuestionId(attempt.question_id);
+        if (!questionId) return null;
+
+        return {
+          ...attempt,
+          question_id: questionId,
+        };
+      })
+      .filter((attempt): attempt is AnswerAttempt => Boolean(attempt));
+
+    return buildAnswerStatuses(mappedAttempts);
+  }, [rawAttempts, questionIdSet, legacyQuestionIdMap]);
   const solvedIds = useMemo(
-    () =>
-      Object.keys(answerStatuses)
-        .map((value) => Number.parseInt(value, 10))
-        .filter((value) => Number.isFinite(value)),
+    () => Object.keys(answerStatuses),
     [answerStatuses],
   );
   const solvedSet = useMemo(() => new Set(solvedIds), [solvedIds]);
@@ -195,13 +254,13 @@ export default function Practice() {
     if (selTopics.length) current = current.filter((item) => selTopics.includes(item.topic));
     if (selYears.length) current = current.filter((item) => item.year !== null && selYears.includes(item.year));
     if (reviewMode === "bookmarked") {
-      current = current.filter((item) => bookmarkSet.has(item.id));
+      current = current.filter((item) => bookmarkSet.has(normalizeQuestionId(item.id)));
     }
     if (reviewMode === "solved") {
-      current = current.filter((item) => solvedSet.has(item.id));
+      current = current.filter((item) => solvedSet.has(normalizeQuestionId(item.id)));
     }
     if (reviewMode === "wrong") {
-      current = current.filter((item) => answerStatuses[item.id] === "wrong");
+      current = current.filter((item) => answerStatuses[normalizeQuestionId(item.id)] === "wrong");
     }
     if (sortBy === "difficulty") {
       current.sort(
@@ -218,7 +277,9 @@ export default function Practice() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-  const activeIdx = activeQ ? filtered.findIndex((question) => question.id === activeQ.id) : -1;
+  const activeIdx = activeQ
+    ? filtered.findIndex((question) => normalizeQuestionId(question.id) === normalizeQuestionId(activeQ.id))
+    : -1;
   const filterCount =
     selExams.length + (selDiff ? 1 : 0) + selTypes.length + selTopics.length + selYears.length + (reviewMode ? 1 : 0);
   const examCounts = useMemo(
@@ -257,7 +318,7 @@ export default function Practice() {
   useEffect(() => {
     if (questionsLoading || questions.length === 0 || pendingQuestionId === null) return;
 
-    const match = questions.find((question) => question.id === pendingQuestionId);
+    const match = questions.find((question) => normalizeQuestionId(question.id) === pendingQuestionId);
     if (!match) return;
 
     setActiveQ(match);
@@ -301,11 +362,16 @@ export default function Practice() {
   const handleAnswer = (index: number) => {
     if (selected !== null || !activeQ) return;
     const isCorrect = index === activeQ.correct;
+    const questionId = normalizeQuestionId(activeQ.id);
     setSelected(index);
-    setAnswerStatuses((current) => ({
-      ...current,
-      [activeQ.id]: isCorrect ? "correct" : "wrong",
-    }));
+    setRawAttempts((current) => [
+      {
+        question_id: questionId,
+        is_correct: isCorrect,
+        answered_at: new Date().toISOString(),
+      },
+      ...current.filter((attempt) => attempt.question_id !== questionId),
+    ]);
     trackEvent("practice_answered", {
       exam: activeQ.exam,
       topic: activeQ.topic,
@@ -319,20 +385,21 @@ export default function Practice() {
 
   const handleBookmark = () => {
     if (!activeQ) return;
+    const questionId = normalizeQuestionId(activeQ.id);
     if (user) {
       toggleBookmark(user.id, activeQ.id).then((isBookmarked) => {
         trackEvent("bookmark_toggled", { question_id: activeQ.id, bookmarked: isBookmarked });
-        setBookmarks((current) =>
-          isBookmarked ? [...current, activeQ.id] : current.filter((item) => item !== activeQ.id),
+        setRawBookmarks((current) =>
+          isBookmarked ? Array.from(new Set([...current, questionId])) : current.filter((item) => item !== questionId),
         );
       });
       return;
     }
 
-    setBookmarks((current) =>
-      current.includes(activeQ.id)
-        ? current.filter((item) => item !== activeQ.id)
-        : [...current, activeQ.id],
+    setRawBookmarks((current) =>
+      current.includes(questionId)
+        ? current.filter((item) => item !== questionId)
+        : [...current, questionId],
     );
   };
 
@@ -556,7 +623,7 @@ export default function Practice() {
 
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
-                  { label: "Questions available", value: questionsLoading ? "..." : filtered.length, mode: "" as const },
+                  { label: "Questions available", value: filtered.length, mode: "" as const },
                   { label: "Bookmarked", value: bookmarks.length, mode: "bookmarked" as const },
                   { label: "Solved", value: solvedIds.length, mode: "solved" as const },
                 ].map((item) => (
@@ -701,7 +768,7 @@ export default function Practice() {
                               <tbody>
                                 {paginated.map((question, index) => {
                                   const rowNumber = (page - 1) * PER_PAGE + index + 1;
-                                  const status = answerStatuses[question.id];
+                                  const status = answerStatuses[normalizeQuestionId(question.id)];
 
                                   return (
                                     <tr
@@ -881,7 +948,7 @@ export default function Practice() {
                         <tbody>
                           {paginated.map((question, index) => {
                             const rowNumber = (page - 1) * PER_PAGE + index + 1;
-                            const status = answerStatuses[question.id];
+                            const status = answerStatuses[normalizeQuestionId(question.id)];
 
                             return (
                               <tr
@@ -1005,7 +1072,7 @@ export default function Practice() {
                     onClick={handleBookmark}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-primary)]"
                   >
-                    {bookmarkSet.has(activeQ.id) ? (
+                    {bookmarkSet.has(normalizeQuestionId(activeQ.id)) ? (
                       <BookmarkCheck size={14} className="text-[var(--brand)]" />
                     ) : (
                       <Bookmark size={14} />

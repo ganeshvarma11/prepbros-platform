@@ -1,7 +1,9 @@
 import { supabase } from "./supabase";
 
+export type QuestionId = string;
+
 export type AnswerAttempt = {
-  question_id: number;
+  question_id: QuestionId;
   is_correct: boolean;
   answered_at: string | null;
 };
@@ -14,14 +16,11 @@ type AnswerAttemptRow = {
   created_at?: string | null;
 };
 
-const toQuestionId = (value: number | string) => {
-  const normalized = typeof value === "number" ? value : Number.parseInt(value, 10);
-  return Number.isFinite(normalized) ? normalized : null;
-};
+const toQuestionId = (value: number | string) => String(value).trim();
 
 const normalizeAnswerAttempt = (row: AnswerAttemptRow): AnswerAttempt | null => {
   const questionId = toQuestionId(row.question_id);
-  if (questionId === null) return null;
+  if (!questionId) return null;
 
   return {
     question_id: questionId,
@@ -74,8 +73,8 @@ export async function getAnswerAttempts(userId: string): Promise<AnswerAttempt[]
 
 export function buildAnswerStatuses(
   attempts: AnswerAttempt[],
-): Record<number, "correct" | "wrong"> {
-  const statuses: Record<number, "correct" | "wrong"> = {};
+): Record<QuestionId, "correct" | "wrong"> {
+  const statuses: Record<QuestionId, "correct" | "wrong"> = {};
 
   for (const answer of attempts) {
     if (statuses[answer.question_id]) continue;
@@ -88,14 +87,14 @@ export function buildAnswerStatuses(
 // Save a question answer to Supabase
 export async function saveAnswer(
   userId: string,
-  questionId: number,
+  questionId: string | number,
   isCorrect: boolean,
   selectedOption: number,
   timeTaken: number = 0
 ) {
   const { error } = await supabase.from("user_answers").insert({
     user_id: userId,
-    question_id: questionId,
+    question_id: toQuestionId(questionId),
     is_correct: isCorrect,
     selected_option: selectedOption,
     time_taken: timeTaken,
@@ -109,29 +108,31 @@ export async function saveAnswer(
 }
 
 // Toggle bookmark
-export async function toggleBookmark(userId: string, questionId: number) {
+export async function toggleBookmark(userId: string, questionId: string | number) {
+  const normalizedQuestionId = toQuestionId(questionId);
+
   // Check if already bookmarked
   const { data } = await supabase
     .from("bookmarks")
     .select("id")
     .eq("user_id", userId)
-    .eq("question_id", questionId)
+    .eq("question_id", normalizedQuestionId)
     .single();
 
   if (data) {
     // Remove bookmark
     await supabase.from("bookmarks").delete()
-      .eq("user_id", userId).eq("question_id", questionId);
+      .eq("user_id", userId).eq("question_id", normalizedQuestionId);
     return false;
   } else {
     // Add bookmark
-    await supabase.from("bookmarks").insert({ user_id: userId, question_id: questionId });
+    await supabase.from("bookmarks").insert({ user_id: userId, question_id: normalizedQuestionId });
     return true;
   }
 }
 
 // Get user's bookmarked question IDs
-export async function getBookmarks(userId: string): Promise<number[]> {
+export async function getBookmarks(userId: string): Promise<QuestionId[]> {
   const { data, error } = await supabase
     .from("bookmarks")
     .select("question_id")
@@ -145,19 +146,19 @@ export async function getBookmarks(userId: string): Promise<number[]> {
   return (
     data
       ?.map((bookmark) => toQuestionId(bookmark.question_id))
-      .filter((questionId): questionId is number => questionId !== null) ?? []
+      .filter(Boolean) ?? []
   );
 }
 
 // Get user's solved question IDs
-export async function getSolvedQuestions(userId: string): Promise<number[]> {
+export async function getSolvedQuestions(userId: string): Promise<QuestionId[]> {
   const attempts = await getAnswerAttempts(userId);
   return Array.from(new Set(attempts.map((attempt) => attempt.question_id)));
 }
 
 export async function getAnswerStatuses(
   userId: string,
-): Promise<Record<number, "correct" | "wrong">> {
+): Promise<Record<QuestionId, "correct" | "wrong">> {
   const attempts = await getAnswerAttempts(userId);
   return buildAnswerStatuses(attempts);
 }

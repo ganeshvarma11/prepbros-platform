@@ -5,7 +5,7 @@ import { fetchQuestions } from "@/lib/questionsDB";
 
 export function useQuestionBank() {
   const [questions, setQuestions] = useState<Question[]>(fallbackQuestions);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(fallbackQuestions.length === 0);
 
   useEffect(() => {
     let cancelled = false;
