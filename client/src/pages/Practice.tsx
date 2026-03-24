@@ -14,21 +14,21 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useAuth } from "@/contexts/AuthContext";
-import { questions as fallbackQuestions, type Question } from "@/data/questions";
+import { type Question } from "@/data/questions";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
 import { trackEvent } from "@/lib/analytics";
+import { createQuestionIdentityIndex, toQuestionId, type QuestionId } from "@/lib/questionIdentity";
 import {
   type AnswerAttempt,
   buildAnswerStatuses,
   getAnswerAttempts,
   getBookmarks,
-  type QuestionId,
   saveAnswer,
   toggleBookmark,
 } from "@/lib/userProgress";
@@ -63,22 +63,15 @@ const TABLE_COLUMNS = [
 ];
 
 const shellClassName =
-  "rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(21,20,31,0.94)_0%,rgba(14,14,22,0.98)_100%)] shadow-[0_30px_80px_-52px_rgba(0,0,0,0.96)]";
+  "rounded-[28px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-lg)]";
 
-const normalizeQuestionId = (value: string | number | null | undefined) =>
-  value === null || value === undefined ? "" : String(value);
-
-const normalizeQuestionText = (value: string) =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/['"]/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+const softSurfaceClassName =
+  "border border-[var(--border)] bg-[var(--bg-elevated)]";
 
 export default function Practice() {
+  const [, navigate] = useLocation();
   const { user, loading: authLoading } = useAuth();
-  const { questions, loading: questionsLoading } = useQuestionBank();
+  const { questions, loading: questionsLoading, syncing: questionsSyncing } = useQuestionBank();
 
   const [search, setSearch] = useState("");
   const [selExams, setSelExams] = useState<string[]>([]);
@@ -171,40 +164,16 @@ export default function Practice() {
     };
   }, [authLoading, user]);
 
-  const questionIdSet = useMemo(
-    () => new Set(questions.map((question) => normalizeQuestionId(question.id))),
-    [questions],
-  );
-  const questionIdByText = useMemo(() => {
-    const map = new Map<string, string>();
-    questions.forEach((question) => {
-      map.set(normalizeQuestionText(question.question), normalizeQuestionId(question.id));
-    });
-    return map;
-  }, [questions]);
-  const legacyQuestionIdMap = useMemo(() => {
-    const map = new Map<string, string>();
-
-    fallbackQuestions.forEach((question) => {
-      const liveId = questionIdByText.get(normalizeQuestionText(question.question));
-      if (liveId) {
-        map.set(normalizeQuestionId(question.id), liveId);
-      }
-    });
-
-    return map;
-  }, [questionIdByText]);
-  const resolveStoredQuestionId = (rawId: QuestionId) => {
-    if (questionIdSet.has(rawId)) return rawId;
-    return legacyQuestionIdMap.get(rawId) ?? null;
-  };
+  const questionIdentity = useMemo(() => createQuestionIdentityIndex(questions), [questions]);
+  const resolveStoredQuestionId = (rawId: QuestionId) => questionIdentity.resolveQuestionId(rawId);
+  const progressSyncing = Boolean(user) && (questionsSyncing || progressLoading);
   const bookmarks = useMemo(() => {
     const mapped = rawBookmarks
       .map(resolveStoredQuestionId)
       .filter((questionId): questionId is string => Boolean(questionId));
 
     return Array.from(new Set(mapped));
-  }, [rawBookmarks, questionIdSet, legacyQuestionIdMap]);
+  }, [rawBookmarks, questionIdentity]);
   const answerStatuses = useMemo(() => {
     const mappedAttempts = rawAttempts
       .map((attempt) => {
@@ -219,7 +188,7 @@ export default function Practice() {
       .filter((attempt): attempt is AnswerAttempt => Boolean(attempt));
 
     return buildAnswerStatuses(mappedAttempts);
-  }, [rawAttempts, questionIdSet, legacyQuestionIdMap]);
+  }, [rawAttempts, questionIdentity]);
   const solvedIds = useMemo(
     () => Object.keys(answerStatuses),
     [answerStatuses],
@@ -254,13 +223,13 @@ export default function Practice() {
     if (selTopics.length) current = current.filter((item) => selTopics.includes(item.topic));
     if (selYears.length) current = current.filter((item) => item.year !== null && selYears.includes(item.year));
     if (reviewMode === "bookmarked") {
-      current = current.filter((item) => bookmarkSet.has(normalizeQuestionId(item.id)));
+      current = current.filter((item) => bookmarkSet.has(toQuestionId(item.id)));
     }
     if (reviewMode === "solved") {
-      current = current.filter((item) => solvedSet.has(normalizeQuestionId(item.id)));
+      current = current.filter((item) => solvedSet.has(toQuestionId(item.id)));
     }
     if (reviewMode === "wrong") {
-      current = current.filter((item) => answerStatuses[normalizeQuestionId(item.id)] === "wrong");
+      current = current.filter((item) => answerStatuses[toQuestionId(item.id)] === "wrong");
     }
     if (sortBy === "difficulty") {
       current.sort(
@@ -277,8 +246,9 @@ export default function Practice() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const reviewModeSyncing = progressSyncing && Boolean(reviewMode);
   const activeIdx = activeQ
-    ? filtered.findIndex((question) => normalizeQuestionId(question.id) === normalizeQuestionId(activeQ.id))
+    ? filtered.findIndex((question) => toQuestionId(question.id) === toQuestionId(activeQ.id))
     : -1;
   const filterCount =
     selExams.length + (selDiff ? 1 : 0) + selTypes.length + selTopics.length + selYears.length + (reviewMode ? 1 : 0);
@@ -316,16 +286,16 @@ export default function Practice() {
   }, [pendingQuestionId, queryHydrated, reviewMode, search, selDiff, selExams, selTopics, selTypes, selYears, sortBy]);
 
   useEffect(() => {
-    if (questionsLoading || questions.length === 0 || pendingQuestionId === null) return;
+    if (questionsSyncing || questions.length === 0 || pendingQuestionId === null) return;
 
-    const match = questions.find((question) => normalizeQuestionId(question.id) === pendingQuestionId);
+    const match = questions.find((question) => toQuestionId(question.id) === pendingQuestionId);
     if (!match) return;
 
     setActiveQ(match);
     setSelected(null);
     setAnswerStart(Date.now());
     setPendingQuestionId(null);
-  }, [pendingQuestionId, questions, questionsLoading]);
+  }, [pendingQuestionId, questions, questionsSyncing]);
 
   const toggle = <T,>(arr: T[], setArr: (value: T[]) => void, value: T) => {
     setArr(arr.includes(value) ? arr.filter((item) => item !== value) : [...arr, value]);
@@ -361,8 +331,9 @@ export default function Practice() {
 
   const handleAnswer = (index: number) => {
     if (selected !== null || !activeQ) return;
+    if (user && questionsSyncing) return;
     const isCorrect = index === activeQ.correct;
-    const questionId = normalizeQuestionId(activeQ.id);
+    const questionId = resolveStoredQuestionId(toQuestionId(activeQ.id)) ?? toQuestionId(activeQ.id);
     setSelected(index);
     setRawAttempts((current) => [
       {
@@ -379,15 +350,16 @@ export default function Practice() {
     });
     if (user) {
       const timeTaken = Math.round((Date.now() - answerStart) / 1000);
-      saveAnswer(user.id, activeQ.id, isCorrect, index, timeTaken);
+      saveAnswer(user.id, questionId, isCorrect, index, timeTaken);
     }
   };
 
   const handleBookmark = () => {
     if (!activeQ) return;
-    const questionId = normalizeQuestionId(activeQ.id);
+    if (user && questionsSyncing) return;
+    const questionId = resolveStoredQuestionId(toQuestionId(activeQ.id)) ?? toQuestionId(activeQ.id);
     if (user) {
-      toggleBookmark(user.id, activeQ.id).then((isBookmarked) => {
+      toggleBookmark(user.id, questionId).then((isBookmarked) => {
         trackEvent("bookmark_toggled", { question_id: activeQ.id, bookmarked: isBookmarked });
         setRawBookmarks((current) =>
           isBookmarked ? Array.from(new Set([...current, questionId])) : current.filter((item) => item !== questionId),
@@ -403,6 +375,18 @@ export default function Practice() {
     );
   };
 
+  const handleReportQuestion = () => {
+    if (!activeQ) return;
+
+    const params = new URLSearchParams({
+      category: "Question issue",
+      subject: `Practice question report: ${activeQ.topic}`,
+      message: `Please review this question.\n\nQuestion ID: ${toQuestionId(activeQ.id)}\nExam: ${activeQ.exam}\nTopic: ${activeQ.topic}\nQuestion: ${activeQ.question}`,
+    });
+
+    navigate(`/support?${params.toString()}`);
+  };
+
   const filterPanel = (
     <div className={`${shellClassName} rounded-[26px] p-5 md:p-6`}>
       <div className="flex items-start justify-between gap-3">
@@ -416,7 +400,7 @@ export default function Practice() {
           <button
             type="button"
             onClick={clearAll}
-            className="rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-3 py-1.5 text-xs font-medium text-[var(--brand-light)] transition hover:border-[var(--brand-muted)]"
+            className="rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--brand-light)] transition hover:border-[var(--brand-muted)]"
           >
             Clear all
           </button>
@@ -435,7 +419,7 @@ export default function Practice() {
             setPage(1);
           }}
           placeholder="Search question or topic"
-          className="input rounded-[16px] border-[rgba(255,255,255,0.08)] bg-[rgba(11,11,18,0.88)] pl-10"
+          className="input rounded-[16px] border-[var(--border)] bg-[var(--bg-elevated)] pl-10"
         />
       </div>
 
@@ -614,7 +598,7 @@ export default function Practice() {
                     Random question
                   </button>
                   <Link href="/dashboard">
-                    <span className="inline-flex cursor-pointer items-center rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[rgba(36,34,49,0.78)] px-5 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.18)]">
+                    <span className={`inline-flex cursor-pointer items-center rounded-[14px] px-5 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] ${softSurfaceClassName}`}>
                       View dashboard
                     </span>
                   </Link>
@@ -637,15 +621,15 @@ export default function Practice() {
                     className={`rounded-[22px] border p-5 text-left transition ${
                       reviewMode === item.mode
                         ? "border-[var(--brand-muted)] bg-[rgba(255,161,22,0.08)] shadow-[0_18px_40px_-30px_rgba(255,161,22,0.9)]"
-                        : "border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] hover:border-[rgba(255,255,255,0.18)]"
+                        : "border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border-strong)]"
                     }`}
                     aria-pressed={reviewMode === item.mode}
                   >
                     <p className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                      {item.value}
+                      {user && item.mode && progressSyncing ? "..." : item.value}
                     </p>
                     <p className="mt-2 text-sm text-[var(--text-secondary)]">{item.label}</p>
-                    {user && item.mode && progressLoading ? (
+                    {user && item.mode && progressSyncing ? (
                       <p className="mt-3 text-xs text-[var(--text-muted)]">Loading saved progress...</p>
                     ) : (
                       <p className="mt-3 text-xs text-[var(--brand-light)]">
@@ -664,7 +648,7 @@ export default function Practice() {
                 <button
                   type="button"
                   onClick={() => setShowFilters((current) => !current)}
-                  className="inline-flex items-center gap-2 rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(36,34,49,0.78)] px-4 py-3 text-sm font-medium text-[var(--text-primary)]"
+                  className={`inline-flex items-center gap-2 rounded-[14px] px-4 py-3 text-sm font-medium text-[var(--text-primary)] ${softSurfaceClassName}`}
                 >
                   <SlidersHorizontal size={15} />
                   Filters
@@ -703,6 +687,8 @@ export default function Practice() {
                             <p className="mt-2 text-sm text-[var(--text-secondary)]">
                               {questionsLoading
                                 ? "Loading question bank..."
+                                : reviewModeSyncing
+                                  ? "Syncing your saved progress..."
                                 : `Showing ${filtered.length} question${filtered.length === 1 ? "" : "s"}${!user ? " · sign in to save progress" : ""}`}
                             </p>
                           </div>
@@ -717,7 +703,7 @@ export default function Practice() {
                                 setSortBy(event.target.value as typeof sortBy);
                                 setPage(1);
                               }}
-                              className="rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(11,11,18,0.88)] px-4 py-3 text-sm"
+                              className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm"
                             >
                               <option value="default">Default order</option>
                               <option value="difficulty">Sort by difficulty</option>
@@ -729,9 +715,16 @@ export default function Practice() {
 
                       {questionsLoading ? (
                         <div className={`${shellClassName} flex min-h-[520px] items-center justify-center rounded-[26px] p-6`}>
-                          <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(17,17,27,0.82)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+                          <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-3 text-sm text-[var(--text-secondary)]">
                             <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
                             Loading questions...
+                          </div>
+                        </div>
+                      ) : reviewModeSyncing ? (
+                        <div className={`${shellClassName} flex min-h-[520px] items-center justify-center rounded-[26px] p-6`}>
+                          <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+                            <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
+                            Restoring saved progress...
                           </div>
                         </div>
                       ) : paginated.length === 0 ? (
@@ -753,8 +746,8 @@ export default function Practice() {
                       ) : (
                         <div className={`${shellClassName} overflow-hidden rounded-[26px]`}>
                             <table className="w-full table-fixed border-collapse">
-                              <thead className="bg-[rgba(255,255,255,0.03)]">
-                                <tr className="border-b border-[rgba(255,255,255,0.08)]">
+                              <thead className="bg-[var(--bg-elevated)]">
+                                <tr className="border-b border-[var(--border)]">
                                   {TABLE_COLUMNS.map((column) => (
                                       <th
                                         key={column.label}
@@ -768,16 +761,16 @@ export default function Practice() {
                               <tbody>
                                 {paginated.map((question, index) => {
                                   const rowNumber = (page - 1) * PER_PAGE + index + 1;
-                                  const status = answerStatuses[normalizeQuestionId(question.id)];
+                                  const status = answerStatuses[toQuestionId(question.id)];
 
                                   return (
                                     <tr
                                       key={question.id}
                                       onClick={() => openQuestion(question)}
-                                      className="cursor-pointer border-b border-[rgba(255,255,255,0.06)] transition hover:bg-[rgba(255,161,22,0.04)]"
+                                      className="cursor-pointer border-b border-[var(--border)] transition hover:bg-[var(--brand-subtle)]"
                                     >
                                       <td className="px-4 py-3.5 align-middle">
-                                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-[rgba(255,255,255,0.05)] px-2 text-sm font-semibold text-[var(--text-muted)]">
+                                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[10px] bg-[var(--bg-elevated)] px-2 text-sm font-semibold text-[var(--text-muted)]">
                                           {rowNumber}
                                         </span>
                                       </td>
@@ -805,7 +798,11 @@ export default function Practice() {
                                         {question.year ?? "—"}
                                       </td>
                                       <td className="px-4 py-3.5 align-middle">
-                                        {status === "correct" ? (
+                                        {progressSyncing ? (
+                                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)]">
+                                            <Loader2 size={13} className="animate-spin" />
+                                          </span>
+                                        ) : status === "correct" ? (
                                           <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--accent-muted)] bg-[var(--accent-subtle)] text-[var(--accent)]">
                                             <Check size={15} />
                                           </span>
@@ -824,7 +821,7 @@ export default function Practice() {
                             </table>
 
                           {totalPages > 1 ? (
-                            <div className="flex flex-col gap-3 border-t border-[rgba(255,255,255,0.08)] px-5 py-4 md:flex-row md:items-center md:justify-between">
+                            <div className="flex flex-col gap-3 border-t border-[var(--border)] px-5 py-4 md:flex-row md:items-center md:justify-between">
                               <p className="text-sm text-[var(--text-secondary)]">
                                 {(page - 1) * PER_PAGE + 1}-
                                 {Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}
@@ -834,7 +831,7 @@ export default function Practice() {
                                   type="button"
                                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                                   disabled={page === 1}
-                                  className="inline-flex h-11 w-11 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-primary)] disabled:opacity-40"
+                                  className="inline-flex h-11 w-11 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] disabled:opacity-40"
                                 >
                                   <ChevronLeft size={14} />
                                 </button>
@@ -851,7 +848,7 @@ export default function Practice() {
                                       className={
                                         isActive
                                           ? "inline-flex h-11 min-w-11 items-center justify-center rounded-[12px] bg-[linear-gradient(180deg,#ff9838_0%,#ff7a12_100%)] px-4 text-sm font-medium text-white"
-                                          : "inline-flex h-11 min-w-11 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-4 text-sm font-medium text-[var(--text-primary)]"
+                                          : "inline-flex h-11 min-w-11 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 text-sm font-medium text-[var(--text-primary)]"
                                       }
                                     >
                                       {currentPage}
@@ -862,7 +859,7 @@ export default function Practice() {
                                   type="button"
                                   onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                                   disabled={page === totalPages}
-                                  className="inline-flex h-11 w-11 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-primary)] disabled:opacity-40"
+                                  className="inline-flex h-11 w-11 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] disabled:opacity-40"
                                 >
                                   <ChevronRight size={14} />
                                 </button>
@@ -889,6 +886,8 @@ export default function Practice() {
                       <p className="mt-2 text-sm text-[var(--text-secondary)]">
                         {questionsLoading
                           ? "Loading question bank..."
+                          : reviewModeSyncing
+                            ? "Syncing your saved progress..."
                           : `Showing ${filtered.length} question${filtered.length === 1 ? "" : "s"}${!user ? " · sign in to save progress" : ""}`}
                       </p>
                     </div>
@@ -912,6 +911,13 @@ export default function Practice() {
                     <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(17,17,27,0.82)] px-5 py-3 text-sm text-[var(--text-secondary)]">
                       <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
                       Loading questions...
+                    </div>
+                  </div>
+                ) : reviewModeSyncing ? (
+                  <div className={`${shellClassName} flex min-h-[380px] items-center justify-center rounded-[26px] p-6`}>
+                    <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(17,17,27,0.82)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+                      <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
+                      Restoring saved progress...
                     </div>
                   </div>
                 ) : paginated.length === 0 ? (
@@ -948,7 +954,7 @@ export default function Practice() {
                         <tbody>
                           {paginated.map((question, index) => {
                             const rowNumber = (page - 1) * PER_PAGE + index + 1;
-                            const status = answerStatuses[normalizeQuestionId(question.id)];
+                            const status = answerStatuses[toQuestionId(question.id)];
 
                             return (
                               <tr
@@ -979,7 +985,11 @@ export default function Practice() {
                                   {question.year ?? "—"}
                                 </td>
                                 <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
-                                  {status === "correct" ? (
+                                  {progressSyncing ? (
+                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-muted)]">
+                                      <Loader2 size={13} className="animate-spin" />
+                                    </span>
+                                  ) : status === "correct" ? (
                                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--accent-muted)] bg-[var(--accent-subtle)] text-[var(--accent)]">
                                       <Check size={14} />
                                     </span>
@@ -1070,9 +1080,12 @@ export default function Practice() {
                   <button
                     type="button"
                     onClick={handleBookmark}
+                    disabled={Boolean(user) && questionsSyncing}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-primary)]"
                   >
-                    {bookmarkSet.has(normalizeQuestionId(activeQ.id)) ? (
+                    {Boolean(user) && questionsSyncing ? (
+                      <Loader2 size={14} className="animate-spin text-[var(--text-muted)]" />
+                    ) : bookmarkSet.has(toQuestionId(activeQ.id)) ? (
                       <BookmarkCheck size={14} className="text-[var(--brand)]" />
                     ) : (
                       <Bookmark size={14} />
@@ -1080,6 +1093,7 @@ export default function Practice() {
                   </button>
                   <button
                     type="button"
+                    onClick={handleReportQuestion}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-primary)]"
                   >
                     <Flag size={14} />
@@ -1120,7 +1134,13 @@ export default function Practice() {
                   }
 
                   return (
-                    <button key={option} type="button" onClick={() => handleAnswer(index)} className={optionClass}>
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleAnswer(index)}
+                      disabled={Boolean(user) && questionsSyncing}
+                      className={optionClass}
+                    >
                       <span className="flex items-start gap-3">
                         <span
                           className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold ${
@@ -1140,6 +1160,12 @@ export default function Practice() {
                 })}
               </div>
 
+              {user && questionsSyncing ? (
+                <p className="mt-4 text-xs text-[var(--brand)]">
+                  Syncing the live question bank before answers and bookmarks are written to your account.
+                </p>
+              ) : null}
+
               {selected !== null ? (
                 <div
                   className={`mt-6 rounded-[24px] border p-5 ${
@@ -1157,6 +1183,10 @@ export default function Practice() {
                   {!user ? (
                     <p className="mt-3 text-xs text-[var(--brand)]">
                       Sign in to save progress, accuracy, and streaks across sessions.
+                    </p>
+                  ) : questionsSyncing ? (
+                    <p className="mt-3 text-xs text-[var(--brand)]">
+                      Hold for a moment while PrepBros syncs the live question bank before saving progress.
                     </p>
                   ) : null}
                 </div>

@@ -92,7 +92,7 @@ export default function Home() {
 
             <div className="relative grid gap-8 lg:grid-cols-[0.98fr_0.9fr] lg:items-start lg:gap-8">
               <div className="max-w-2xl lg:pt-2">
-                <p className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(30,29,42,0.7)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                <p className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
                   <CheckCircle2 size={13} />
                   Daily question-solving for serious aspirants
                 </p>
@@ -105,7 +105,7 @@ export default function Home() {
                   <span className="text-[var(--brand-light)]">you improve.</span>
                 </h1>
 
-                <p className="mt-5 max-w-[34rem] text-lg leading-8 text-[rgba(240,236,246,0.82)]">
+                <p className="mt-5 max-w-[34rem] text-lg leading-8 text-[var(--text-secondary)]">
                   PrepBros is a focused exam preparation platform for aspirants who want one clear
                   loop: practice every day, track progress, review weak topics, and stay consistent.
                 </p>
@@ -114,7 +114,7 @@ export default function Home() {
                   {heroSignals.map((item) => (
                     <span
                       key={item}
-                      className="rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(36,34,49,0.66)] px-3.5 py-1.5 text-sm font-medium text-[rgba(240,236,246,0.92)]"
+                      className="rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-1.5 text-sm font-medium text-[var(--text-primary)]"
                     >
                       {item}
                     </span>
@@ -141,7 +141,7 @@ export default function Home() {
                       onClick={() =>
                         trackEvent("home_secondary_cta_clicked", { destination: "resources" })
                       }
-                      className="inline-flex cursor-pointer items-center rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[rgba(36,34,49,0.78)] px-6 py-3.5 text-lg font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.18)]"
+                      className="inline-flex cursor-pointer items-center rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] px-6 py-3.5 text-lg font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)]"
                     >
                       Explore Resources
                     </span>
@@ -152,7 +152,7 @@ export default function Home() {
                   {focusTracks.map((item) => (
                     <span
                       key={item}
-                      className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(37,35,49,0.74)] px-5 py-2.5 text-lg font-medium text-[rgba(240,236,246,0.92)]"
+                      className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] px-5 py-2.5 text-lg font-medium text-[var(--text-primary)]"
                     >
                       {item}
                     </span>
@@ -162,20 +162,20 @@ export default function Home() {
 
               <div className="relative lg:pt-1">
                 <div className="home-app-board mx-auto w-full max-w-[640px] rounded-[28px] p-3 md:p-4">
-                  <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(18,18,28,0.82)] p-4 shadow-[0_22px_45px_-32px_rgba(0,0,0,0.9)]">
+                  <div className="rounded-[22px] border border-[var(--border)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow-md)]">
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <h2 className="text-[1.85rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                           Daily Goal
                         </h2>
                       </div>
-                      <div className="flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(36,35,50,0.72)] px-3 py-1.5 text-sm text-[var(--text-primary)]">
+                      <div className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-sm text-[var(--text-primary)]">
                         <Flame size={14} className="text-[var(--brand)]" />
                         16 min remaining
                       </div>
                     </div>
 
-                    <div className="mt-4 h-3 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+                    <div className="mt-4 h-3 overflow-hidden rounded-full bg-[var(--bg-muted)]">
                       <div className="h-full w-[72%] rounded-full bg-[linear-gradient(90deg,#78d2ff_0%,#93e7ff_100%)] shadow-[0_0_20px_rgba(120,210,255,0.35)]" />
                     </div>
 
@@ -185,7 +185,7 @@ export default function Home() {
                           {recentStats.map((item) => (
                             <div
                               key={item.label}
-                              className="rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-3.5"
+                              className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5"
                             >
                               <p className="text-sm text-[var(--text-secondary)]">{item.label}</p>
                               <p className="mt-2 text-[1.75rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
@@ -195,7 +195,7 @@ export default function Home() {
                           ))}
                         </div>
 
-                        <div className="rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-4">
+                        <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-[var(--text-secondary)]">Today</p>
                             <Clock3 size={16} className="text-[var(--blue)]" />
@@ -222,7 +222,7 @@ export default function Home() {
                         </div>
 
                         <div className="grid gap-3 md:grid-cols-[1.15fr_0.85fr]">
-                          <div className="rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-4">
+                          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
                             <div className="flex items-center justify-between">
                               <h3 className="text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                                 Weak Topics
@@ -240,13 +240,13 @@ export default function Home() {
                                     </div>
                                   </div>
                                   <div className="mt-2 flex gap-2">
-                                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+                                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--bg-muted)]">
                                       <div
                                         className="h-full rounded-full bg-[linear-gradient(90deg,#8ad6b3_0%,#b2efc9_100%)]"
                                         style={{ width: item.widthA }}
                                       />
                                     </div>
-                                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+                                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--bg-muted)]">
                                       <div
                                         className="h-full rounded-full bg-[linear-gradient(90deg,#c3a96b_0%,#f1dc96_100%)]"
                                         style={{ width: item.widthB }}
@@ -258,7 +258,7 @@ export default function Home() {
                             </div>
                           </div>
 
-                          <div className="rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-4">
+                          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
                             <p className="text-sm font-medium text-[var(--text-secondary)]">Bookmarks</p>
                             <p className="mt-3 text-[2.8rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                               24
@@ -270,7 +270,7 @@ export default function Home() {
                               {["Polity PYQs", "Economy mistakes", "History revision"].map((item) => (
                                 <div
                                   key={item}
-                                  className="rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[rgba(17,17,27,0.82)] px-3 py-2.5 text-sm text-[var(--text-primary)]"
+                                  className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2.5 text-sm text-[var(--text-primary)]"
                                 >
                                   {item}
                                 </div>
@@ -330,7 +330,7 @@ export default function Home() {
                 <h2 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-5xl">
                   How PrepBros Works
                 </h2>
-                <p className="mt-4 text-lg leading-8 text-[rgba(240,236,246,0.8)]">
+                <p className="mt-4 text-lg leading-8 text-[var(--text-secondary)]">
                   Simple habit-building steps that help you practice, review, and improve without
                   getting pulled into noise.
                 </p>
@@ -346,7 +346,7 @@ export default function Home() {
                       className="home-workflow-card rounded-[24px] p-6 md:p-7"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(38,36,52,0.8)] text-[var(--brand)]">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--brand)]">
                           <Icon size={24} />
                         </div>
                         <div className="flex-1">
@@ -358,7 +358,7 @@ export default function Home() {
                           </p>
                         </div>
                       </div>
-                      <div className="mt-6 border-t border-[rgba(255,255,255,0.08)] pt-4 text-sm font-medium text-[var(--brand-light)]">
+                      <div className="mt-6 border-t border-[var(--border)] pt-4 text-sm font-medium text-[var(--brand-light)]">
                         {item.meta}
                       </div>
                     </div>
@@ -372,7 +372,7 @@ export default function Home() {
             {supportBlocks.map((item) => (
               <div
                 key={item.title}
-                className="rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(18,17,28,0.82)] p-6 shadow-[0_20px_50px_-40px_rgba(0,0,0,0.95)]"
+                className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-md)]"
               >
                 <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                   {item.title}

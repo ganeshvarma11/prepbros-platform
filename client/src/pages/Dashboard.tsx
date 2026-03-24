@@ -18,16 +18,14 @@ import OnboardingModal from "@/components/OnboardingModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
+import { createQuestionIdentityIndex, toQuestionId, type QuestionId } from "@/lib/questionIdentity";
+import { getAnswerAttempts, getBookmarks } from "@/lib/userProgress";
 import { supabase } from "@/lib/supabase";
 
 type AnswerRow = {
-  question_id: number;
+  question_id: QuestionId;
   is_correct: boolean;
   answered_at: string;
-};
-
-type BookmarkRow = {
-  question_id: number;
 };
 
 type ProfileRow = {
@@ -52,7 +50,7 @@ type TopicPerformance = {
 };
 
 type QueueItem = {
-  id: number;
+  id: QuestionId;
   title: string;
   topic: string;
   exam: string;
@@ -61,10 +59,10 @@ type QueueItem = {
 };
 
 const shellClassName =
-  "rounded-[26px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(21,20,31,0.94)_0%,rgba(14,14,22,0.98)_100%)] shadow-[0_24px_64px_-46px_rgba(0,0,0,0.96)]";
+  "rounded-[26px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-lg)]";
 
 const insetClassName =
-  "rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(24,23,35,0.78)]";
+  "rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)]";
 
 const toDateKey = (value: Date | string) => new Date(value).toLocaleDateString("en-CA");
 
@@ -79,7 +77,7 @@ const formatActivityStamp = (value: string) =>
   });
 
 const getHeatmapColor = (count: number, maxCount: number) => {
-  if (!count) return "rgba(255,255,255,0.06)";
+  if (!count) return "var(--bg-muted)";
   const intensity = count / maxCount;
   if (intensity < 0.34) return "rgba(52, 211, 104, 0.32)";
   if (intensity < 0.67) return "rgba(52, 211, 104, 0.6)";
@@ -97,7 +95,7 @@ const buildPracticeHref = ({
   exam?: string;
   bookmarked?: boolean;
   incorrect?: boolean;
-  questionId?: number;
+  questionId?: string | number;
 }) => {
   const params = new URLSearchParams();
   if (topic) params.set("topic", topic);
@@ -113,13 +111,13 @@ export default function Dashboard() {
   const { user, loading } = useAuth();
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [answers, setAnswers] = useState<AnswerRow[]>([]);
-  const [bookmarkIds, setBookmarkIds] = useState<number[]>([]);
+  const [bookmarkIds, setBookmarkIds] = useState<QuestionId[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [dailyGoalOverride, setDailyGoalOverride] = useState<number | null>(null);
   const [activePanel, setActivePanel] = useState<"activity" | "review" | "actions">("activity");
   const [heatmapRange, setHeatmapRange] = useState<"7D" | "30D" | "26W" | "1Y">("26W");
-  const { questions } = useQuestionBank();
+  const { questions, syncing: questionsSyncing } = useQuestionBank();
 
   useEffect(() => {
     if (loading) return;
@@ -130,19 +128,20 @@ export default function Dashboard() {
 
     const load = async () => {
       setPageLoading(true);
-      const [{ data: profileData }, { data: answersData }, { data: bookmarkData }] = await Promise.all([
+      const [{ data: profileData }, answersData, bookmarkData] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
-        supabase
-          .from("user_answers")
-          .select("question_id, is_correct, answered_at")
-          .eq("user_id", user.id)
-          .order("answered_at", { ascending: false }),
-        supabase.from("bookmarks").select("question_id").eq("user_id", user.id),
+        getAnswerAttempts(user.id),
+        getBookmarks(user.id),
       ]);
 
       setProfile(profileData || null);
-      setAnswers(answersData || []);
-      setBookmarkIds((bookmarkData as BookmarkRow[] | null)?.map((item) => item.question_id) || []);
+      setAnswers(
+        (answersData || []).map((item) => ({
+          ...item,
+          answered_at: item.answered_at ?? new Date(0).toISOString(),
+        })),
+      );
+      setBookmarkIds(bookmarkData || []);
       const metadata = user.user_metadata || {};
       if (!metadata.onboarding_completed_at && (profileData?.total_solved ?? 0) === 0 && (answersData?.length ?? 0) === 0) {
         setShowOnboarding(true);
@@ -153,26 +152,48 @@ export default function Dashboard() {
     load();
   }, [loading, user]);
 
-  const questionLookup = useMemo(
-    () => new Map(questions.map((question) => [question.id, question])),
-    [questions],
+  const questionIdentity = useMemo(() => createQuestionIdentityIndex(questions), [questions]);
+  const questionLookup = questionIdentity.questionLookup;
+
+  const resolvedAnswers = useMemo(
+    () =>
+      answers
+        .map((item) => {
+          const questionId = questionIdentity.resolveQuestionId(item.question_id);
+          if (!questionId) return null;
+          return { ...item, question_id: questionId };
+        })
+        .filter((item): item is AnswerRow => Boolean(item)),
+    [answers, questionIdentity],
+  );
+
+  const resolvedBookmarkIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          bookmarkIds
+            .map((questionId) => questionIdentity.resolveQuestionId(questionId))
+            .filter((questionId): questionId is QuestionId => Boolean(questionId)),
+        ),
+      ),
+    [bookmarkIds, questionIdentity],
   );
 
   const solvedIds = useMemo(
-    () => Array.from(new Set(answers.map((item) => item.question_id))),
-    [answers],
+    () => Array.from(new Set(resolvedAnswers.map((item) => item.question_id))),
+    [resolvedAnswers],
   );
 
-  const totalAttempts = answers.length;
+  const totalAttempts = resolvedAnswers.length;
   const totalSolved = solvedIds.length;
-  const correctAttempts = answers.filter((item) => item.is_correct).length;
+  const correctAttempts = resolvedAnswers.filter((item) => item.is_correct).length;
   const accuracy =
     totalAttempts > 0
       ? Math.round((correctAttempts / totalAttempts) * 100)
       : profile?.accuracy ?? 0;
   const streak = profile?.streak ?? 0;
   const maxStreak = profile?.max_streak ?? 0;
-  const bookmarkCount = bookmarkIds.length;
+  const bookmarkCount = resolvedBookmarkIds.length;
   const targetExam = profile?.target_exam || user?.user_metadata?.target_exam || "UPSC CSE 2026";
   const displayName =
     profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Aspirant";
@@ -189,7 +210,7 @@ export default function Dashboard() {
     dailyGoalOverride ??
     (Number.parseInt(String(user?.user_metadata?.daily_goal || "12"), 10) || 12);
   const todayKey = toDateKey(new Date());
-  const todayAnswers = answers.filter((item) => toDateKey(item.answered_at) === todayKey);
+  const todayAnswers = resolvedAnswers.filter((item) => toDateKey(item.answered_at) === todayKey);
   const todayAttempts = todayAnswers.length;
   const todayCorrect = todayAnswers.filter((item) => item.is_correct).length;
   const todayAccuracy = todayAttempts > 0 ? Math.round((todayCorrect / todayAttempts) * 100) : 0;
@@ -212,7 +233,7 @@ export default function Dashboard() {
 
     const bucketMap = new Map(days.map((day) => [day.dateKey, day]));
 
-    answers.forEach((answer) => {
+    resolvedAnswers.forEach((answer) => {
       const bucket = bucketMap.get(toDateKey(answer.answered_at));
       if (!bucket) return;
       bucket.total += 1;
@@ -223,7 +244,7 @@ export default function Dashboard() {
       ...day,
       accuracy: day.total > 0 ? Math.round((day.correct / day.total) * 100) : 0,
     }));
-  }, [answers]);
+  }, [resolvedAnswers]);
 
   const weeklyAttempts = weekBuckets.reduce((sum, day) => sum + day.total, 0);
   const weeklyCorrect = weekBuckets.reduce((sum, day) => sum + day.correct, 0);
@@ -231,7 +252,7 @@ export default function Dashboard() {
   const activeDays = weekBuckets.filter((day) => day.total > 0).length;
 
   const topicPerformance = useMemo(() => {
-    const grouped = answers.reduce<
+    const grouped = resolvedAnswers.reduce<
       Record<
         string,
         {
@@ -291,12 +312,12 @@ export default function Dashboard() {
         if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
         return b.total - a.total;
       });
-  }, [answers, questionLookup]);
+  }, [resolvedAnswers, questionLookup]);
 
   const improvementTopics: TopicPerformance[] = topicPerformance.slice(0, 3);
 
   const bookmarkTopics = useMemo(() => {
-    const grouped = bookmarkIds.reduce<Record<string, { topic: string; total: number }>>((acc, questionId) => {
+    const grouped = resolvedBookmarkIds.reduce<Record<string, { topic: string; total: number }>>((acc, questionId) => {
       const question = questionLookup.get(questionId);
       if (!question) return acc;
       const current = acc[question.topic] || { topic: question.topic, total: 0 };
@@ -308,11 +329,11 @@ export default function Dashboard() {
     return Object.values(grouped)
       .sort((a, b) => b.total - a.total)
       .slice(0, 3);
-  }, [bookmarkIds, questionLookup]);
+  }, [resolvedBookmarkIds, questionLookup]);
 
   const recentSessions = useMemo(
     () =>
-      answers.slice(0, 5).map((item) => {
+      resolvedAnswers.slice(0, 5).map((item) => {
         const question = questionLookup.get(item.question_id);
         return {
           id: item.question_id,
@@ -323,7 +344,7 @@ export default function Dashboard() {
           date: formatActivityStamp(item.answered_at),
         };
       }),
-    [answers, questionLookup],
+    [resolvedAnswers, questionLookup],
   );
 
   const solvedSet = useMemo(() => new Set(solvedIds), [solvedIds]);
@@ -338,7 +359,7 @@ export default function Dashboard() {
 
     return order.map((difficulty) => {
       const pool = questions.filter((question) => question.difficulty === difficulty);
-      const solved = pool.filter((question) => solvedSet.has(question.id)).length;
+      const solved = pool.filter((question) => solvedSet.has(toQuestionId(question.id))).length;
       return {
         difficulty,
         solved,
@@ -376,7 +397,7 @@ export default function Dashboard() {
   const heatmap = useMemo(() => {
     const rangeDays =
       heatmapRange === "7D" ? 7 : heatmapRange === "30D" ? 35 : heatmapRange === "1Y" ? 364 : 26 * 7;
-    const countByDay = answers.reduce<Record<string, number>>((acc, item) => {
+    const countByDay = resolvedAnswers.reduce<Record<string, number>>((acc, item) => {
       const key = toDateKey(item.answered_at);
       acc[key] = (acc[key] || 0) + 1;
       return acc;
@@ -422,37 +443,37 @@ export default function Dashboard() {
       maxCount,
       activeDayCount,
     };
-  }, [answers, heatmapRange]);
+  }, [resolvedAnswers, heatmapRange]);
 
   const heatmapRangeLabel =
     heatmapRange === "7D" ? "7 days" : heatmapRange === "30D" ? "30 days" : heatmapRange === "1Y" ? "1 year" : "26 weeks";
 
   const reviewQueue = useMemo(() => {
     const queue: QueueItem[] = [];
-    const seen = new Set<number>();
+    const seen = new Set<QuestionId>();
 
-    for (const answer of answers) {
+    for (const answer of resolvedAnswers) {
       if (answer.is_correct || seen.has(answer.question_id)) continue;
       const question = questionLookup.get(answer.question_id);
       if (!question) continue;
       queue.push({
-        id: question.id,
+        id: toQuestionId(question.id),
         title: question.question,
         topic: question.topic,
         exam: question.exam,
         reason: "Recent incorrect answer",
         kind: "mistake",
       });
-      seen.add(question.id);
+      seen.add(toQuestionId(question.id));
       if (queue.length >= 3) break;
     }
 
-    for (const questionId of bookmarkIds) {
+    for (const questionId of resolvedBookmarkIds) {
       if (seen.has(questionId)) continue;
       const question = questionLookup.get(questionId);
       if (!question) continue;
       queue.push({
-        id: question.id,
+        id: toQuestionId(question.id),
         title: question.question,
         topic: question.topic,
         exam: question.exam,
@@ -464,7 +485,7 @@ export default function Dashboard() {
     }
 
     return queue;
-  }, [answers, bookmarkIds, questionLookup]);
+  }, [questionLookup, resolvedAnswers, resolvedBookmarkIds]);
 
   const focusCopy = useMemo(() => {
     if (dailyRemaining > 0) {
@@ -559,7 +580,7 @@ export default function Dashboard() {
     return actions.slice(0, 3);
   }, [bookmarkCount, dailyRemaining, improvementTopics]);
 
-  if (loading || pageLoading) {
+  if (loading || pageLoading || questionsSyncing) {
     return (
       <div className="min-h-screen home-reference-page">
         <Navbar />
@@ -624,7 +645,7 @@ export default function Dashboard() {
           <aside className="space-y-6 lg:sticky lg:top-[104px] lg:self-start">
             <section className={`${shellClassName} p-4 md:p-5`}>
               <div className="flex items-start gap-3.5">
-                <Avatar className="h-20 w-20 shrink-0 rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,161,22,0.22)_0%,rgba(77,163,255,0.18)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                <Avatar className="h-20 w-20 shrink-0 rounded-[20px] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,161,22,0.22)_0%,rgba(77,163,255,0.18)_100%)] shadow-[inset_0_1px_0_var(--border)]">
                   <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
                   <AvatarFallback className="rounded-[20px] bg-transparent text-2xl font-semibold text-white">
                     {displayName.charAt(0).toUpperCase()}
@@ -674,7 +695,7 @@ export default function Dashboard() {
                   </span>
                 </Link>
                 <Link href="/profile">
-                  <span className="inline-flex w-full cursor-pointer items-center justify-center rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[rgba(255,255,255,0.04)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.18)]">
+                  <span className="inline-flex w-full cursor-pointer items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)]">
                     Open profile
                   </span>
                 </Link>
@@ -691,7 +712,7 @@ export default function Dashboard() {
                   { label: "This week", value: `${weeklyAttempts}`, meta: `${weeklyAccuracy}% weekly accuracy` },
                   { label: "Best streak", value: `${maxStreak}d`, meta: `${heatmap.activeDayCount} active days in ${heatmapRangeLabel}` },
                 ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between gap-3 rounded-[16px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-3.5 py-3">
+                  <div key={item.label} className="flex items-center justify-between gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-3">
                     <div>
                       <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         {item.label}
@@ -733,7 +754,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="border-t border-[rgba(255,255,255,0.08)] pt-4">
+                <div className="border-t border-[var(--border)] pt-4">
                   <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
                     Bookmark clusters
                   </p>
@@ -741,7 +762,7 @@ export default function Dashboard() {
                     {bookmarkTopics.length > 0 ? (
                       bookmarkTopics.map((item) => (
                         <Link key={item.topic} href={buildPracticeHref({ topic: item.topic, bookmarked: true })}>
-                          <span className="inline-flex cursor-pointer rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.16)]">
+                          <span className="inline-flex cursor-pointer rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:border-[var(--border-strong)]">
                             {item.topic} - {item.total}
                           </span>
                         </Link>
@@ -785,7 +806,7 @@ export default function Dashboard() {
                       className="flex h-44 w-44 items-center justify-center rounded-full p-[10px] shadow-[0_0_48px_rgba(255,161,22,0.08)] md:h-48 md:w-48"
                       style={solvedRingStyle}
                     >
-                      <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(17,16,26,0.96)_0%,rgba(10,10,17,0.98)_100%)] text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                      <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-[var(--border)] bg-[linear-gradient(180deg,var(--bg-card)_0%,var(--bg-elevated)_100%)] text-center shadow-[inset_0_1px_0_var(--border)]">
                         <p className="text-4xl font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-[2.65rem]">
                           {totalSolved}
                         </p>
@@ -800,7 +821,7 @@ export default function Dashboard() {
 
                   <div className="space-y-2.5">
                     {difficultyProgress.map((item) => (
-                      <div key={item.difficulty} className="rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-3.5">
+                      <div key={item.difficulty} className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5">
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-base font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
@@ -814,7 +835,7 @@ export default function Dashboard() {
                             {item.total > 0 ? `${Math.round((item.solved / item.total) * 100)}%` : "0%"}
                           </p>
                         </div>
-                        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+                        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[var(--bg-muted)]">
                           <div
                             className="h-full rounded-full"
                             style={{
@@ -869,7 +890,7 @@ export default function Dashboard() {
                     </span>
                   </div>
 
-                  <div className="mt-5 h-3 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+                  <div className="mt-5 h-3 overflow-hidden rounded-full bg-[var(--bg-muted)]">
                     <div
                       className="h-full rounded-full bg-[linear-gradient(90deg,#ff9838_0%,#ffb861_45%,#78d2ff_100%)] shadow-[0_0_24px_rgba(120,210,255,0.28)]"
                       style={{ width: `${dailyPercent}%` }}
@@ -952,7 +973,7 @@ export default function Dashboard() {
                         className={`rounded-[10px] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
                           heatmapRange === range
                             ? "bg-[rgba(255,161,22,0.14)] text-[var(--brand-light)]"
-                            : "border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                            : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                         }`}
                       >
                         {range}
@@ -966,7 +987,7 @@ export default function Dashboard() {
                   ].map((item) => (
                     <div
                       key={item.label}
-                      className="rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-3.5 py-2.5"
+                      className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-2.5"
                     >
                       <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         {item.label}
@@ -1056,7 +1077,7 @@ export default function Dashboard() {
                       className={`rounded-[12px] px-3.5 py-2 text-sm font-medium transition ${
                         activePanel === tab.id
                           ? "bg-[rgba(255,161,22,0.14)] text-[var(--brand-light)]"
-                          : "border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                          : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
                       {tab.label}
@@ -1078,11 +1099,11 @@ export default function Dashboard() {
                             exam: session.exam !== "General" ? session.exam : undefined,
                           })}
                         >
-                          <span className="flex cursor-pointer flex-col gap-3 rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-3.5 py-3.5 transition hover:border-[rgba(255,255,255,0.16)] md:flex-row md:items-center md:justify-between">
+                          <span className="flex cursor-pointer flex-col gap-3 rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-3.5 transition hover:border-[var(--border-strong)] md:flex-row md:items-center md:justify-between">
                             <span>
                               <span className="flex flex-wrap items-center gap-2">
                                 <span className="font-semibold text-[var(--text-primary)]">{session.topic}</span>
-                                <span className="rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
                                   {session.type}
                                 </span>
                               </span>
@@ -1105,7 +1126,7 @@ export default function Dashboard() {
                         </Link>
                       ))
                     ) : (
-                      <div className="rounded-[26px] border border-dashed border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.03)] p-8 text-center">
+                      <div className="rounded-[26px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-elevated)] p-8 text-center">
                         <p className="text-xl font-semibold text-[var(--text-primary)]">
                           No answered questions yet
                         </p>
@@ -1130,7 +1151,7 @@ export default function Dashboard() {
                             bookmarked: item.kind === "bookmark",
                           })}
                         >
-                          <span className="block cursor-pointer rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-3.5 transition hover:border-[rgba(255,255,255,0.16)]">
+                          <span className="block cursor-pointer rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5 transition hover:border-[var(--border-strong)]">
                             <span className="flex items-start justify-between gap-3">
                               <span>
                                 <span className="line-clamp-2 text-[15px] font-medium leading-6 text-[var(--text-primary)]">
@@ -1154,7 +1175,7 @@ export default function Dashboard() {
                         </Link>
                       ))
                     ) : (
-                      <div className="rounded-[22px] border border-dashed border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.03)] p-6 text-sm text-[var(--text-secondary)]">
+                      <div className="rounded-[22px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-elevated)] p-6 text-sm text-[var(--text-secondary)]">
                         Missed questions and bookmarks will collect here as your review queue builds up.
                       </div>
                     )}
@@ -1168,7 +1189,7 @@ export default function Dashboard() {
                       return (
                         <div
                           key={action.title}
-                          className="rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-3.5"
+                          className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5"
                         >
                           <div className="flex items-start gap-4">
                             <div className={`rounded-[14px] border p-2.5 ${action.accent}`}>
