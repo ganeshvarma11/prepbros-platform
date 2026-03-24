@@ -14,8 +14,6 @@ import {
   Loader2,
   LogOut,
   MapPin,
-  NotebookPen,
-  ShieldCheck,
   SquareArrowOutUpRight,
   Target,
   TrendingUp,
@@ -49,11 +47,14 @@ const EXAM_OPTIONS = [
   "IBPS PO 2025",
 ];
 
-const settingsCardClassName =
-  "overflow-hidden rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(23,23,31,0.96)_0%,rgba(16,16,23,0.98)_100%)] shadow-[0_26px_72px_-48px_rgba(0,0,0,0.95)]";
+const sectionCardClassName =
+  "rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(18,18,25,0.94)] shadow-[0_18px_48px_-36px_rgba(0,0,0,0.88)]";
 
-const sidebarCardClassName =
-  "rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[rgba(19,19,27,0.92)] shadow-[0_24px_64px_-48px_rgba(0,0,0,0.92)]";
+const subtleCardClassName =
+  "rounded-[18px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)]";
+
+const fieldClassName =
+  "h-11 rounded-[14px] border-white/8 bg-[rgba(255,255,255,0.02)] text-[var(--text-primary)]";
 
 type AnswerRow = {
   question_id: QuestionId;
@@ -118,7 +119,10 @@ const defaultSettings: EditableSettings = {
   weeklyDigest: true,
 };
 
-const compactNumber = new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 });
+const compactNumber = new Intl.NumberFormat("en-IN", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
 
 const clampGoal = (value: string) => {
   const digitsOnly = value.replace(/[^\d]/g, "");
@@ -148,7 +152,10 @@ const sanitizeSettings = (settings: EditableSettings): EditableSettings => ({
   dailyGoal: clampGoal(settings.dailyGoal),
 });
 
-const buildSettings = (profile: ProfileRow | null, user: ReturnType<typeof useAuth>["user"]): EditableSettings => {
+const buildSettings = (
+  profile: ProfileRow | null,
+  user: ReturnType<typeof useAuth>["user"],
+): EditableSettings => {
   const metadata = user?.user_metadata || {};
   return sanitizeSettings({
     fullName:
@@ -203,67 +210,101 @@ const toExternalHref = (type: "website" | "github" | "linkedin" | "x", value: st
   if (!trimmed) return "";
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
   if (type === "website") return `https://${trimmed}`;
-  if (type === "github") return `https://github.com/${trimmed.replace(/^@/, "").replace(/^github\.com\//, "")}`;
+  if (type === "github") {
+    return `https://github.com/${trimmed.replace(/^@/, "").replace(/^github\.com\//, "")}`;
+  }
   if (type === "linkedin") {
     return `https://www.linkedin.com/${trimmed.replace(/^https?:\/\/(www\.)?linkedin\.com\//, "")}`;
   }
   return `https://x.com/${trimmed.replace(/^@/, "").replace(/^https?:\/\/(www\.)?x\.com\//, "")}`;
 };
 
-function StatTile({
+function SummaryStat({
   icon: Icon,
   label,
   value,
-  meta,
 }: {
   icon: LucideIcon;
   label: string;
   value: string;
-  meta: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(14,14,20,0.9)] p-4">
-      <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(255,161,22,0.12)] text-[var(--brand)]">
-        <Icon size={18} />
+    <div className="rounded-[18px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--text-muted)]">
+        <Icon size={14} className="text-[var(--brand)]" />
+        {label}
       </div>
-      <p className="mt-4 text-[1.7rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">{value}</p>
-      <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">{label}</p>
-      <p className="mt-1 text-xs text-[var(--text-muted)]">{meta}</p>
+      <p className="mt-2 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">{value}</p>
     </div>
   );
 }
 
-function SettingsRow({
-  icon: Icon,
+function Field({
   label,
-  description,
+  hint,
   children,
-  noBorder,
+  fullWidth,
 }: {
-  icon: LucideIcon;
   label: string;
-  description: string;
+  hint?: string;
   children: ReactNode;
-  noBorder?: boolean;
+  fullWidth?: boolean;
 }) {
   return (
-    <div
-      className={[
-        "grid gap-4 px-5 py-5 md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 md:px-6",
-        noBorder ? "" : "border-t border-[rgba(255,255,255,0.06)]",
-      ].join(" ")}
-    >
-      <div className="flex gap-3">
-        <div className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]">
-          <Icon size={18} />
-        </div>
+    <div className={fullWidth ? "md:col-span-2" : ""}>
+      <label className="block text-sm font-medium text-[var(--text-primary)]">{label}</label>
+      {hint ? <p className="mt-1 text-xs text-[var(--text-muted)]">{hint}</p> : null}
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+function ToggleRow({
+  title,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  title: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className={`${subtleCardClassName} flex items-start justify-between gap-4 px-4 py-3`}>
+      <div>
+        <p className="text-sm font-medium text-[var(--text-primary)]">{title}</p>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">{description}</p>
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
+
+function SectionShell({
+  id,
+  title,
+  description,
+  children,
+  action,
+}: {
+  id: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <section id={id} className={sectionCardClassName}>
+      <div className="flex flex-col gap-3 border-b border-[rgba(255,255,255,0.06)] px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6">
         <div>
-          <p className="text-base font-semibold text-[var(--text-primary)]">{label}</p>
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">{description}</p>
         </div>
+        {action}
       </div>
-      <div>{children}</div>
-    </div>
+      <div className="px-5 py-5 md:px-6">{children}</div>
+    </section>
   );
 }
 
@@ -404,6 +445,7 @@ export default function Profile() {
     settings.website || settings.github || settings.linkedin || settings.xHandle,
     settings.readme,
   ];
+
   const completionPercent = Math.round(
     (completionItems.filter((value) => value.trim().length > 0).length / completionItems.length) * 100,
   );
@@ -486,10 +528,10 @@ export default function Profile() {
       tone: "success",
       message:
         section === "general"
-          ? "General profile details saved."
+          ? "Profile details saved."
           : section === "links"
             ? "Profile links updated."
-            : "Account preferences saved.",
+            : "Preferences saved.",
     });
     setSavingSection(null);
   };
@@ -513,7 +555,7 @@ export default function Profile() {
       <div className="min-h-screen">
         <Navbar />
         <div className="container-shell py-14">
-          <div className="rounded-[32px] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(20,20,28,0.96)_0%,rgba(12,12,18,0.98)_100%)] p-8 text-center md:p-12">
+          <div className={`${sectionCardClassName} p-8 text-center md:p-12`}>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
               Profile settings
             </p>
@@ -521,8 +563,7 @@ export default function Profile() {
               Sign in to manage your PrepBros profile.
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm text-[var(--text-secondary)] md:text-base">
-              Your account area now combines profile details, study preferences, and performance
-              signals in one focused space.
+              Your account settings live here, along with the study preferences that shape your prep experience.
             </p>
             <Link href="/">
               <span className="btn-primary mt-8 inline-flex cursor-pointer rounded-full px-6 py-3">
@@ -541,705 +582,547 @@ export default function Profile() {
       <Navbar />
 
       <main className="px-4 py-8 md:py-10">
-        <div className="container-shell">
-          <div className="mb-6 rounded-[30px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(135deg,rgba(255,161,22,0.14)_0%,rgba(255,161,22,0.03)_28%,rgba(15,15,22,0.96)_100%)] p-6 shadow-[0_28px_90px_-56px_rgba(0,0,0,0.95)] md:p-8">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
-                  Account settings
-                </p>
-                <h1 className="mt-3 text-[2.2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[3rem]">
-                  A sharper profile page with real study settings.
-                </h1>
-                <p className="mt-3 max-w-2xl text-sm text-[var(--text-secondary)] md:text-base">
-                  Inspired by the clarity of LeetCode’s settings flow, but tuned for exam prep:
-                  keep your identity, targets, links, and study preferences in one cleaner workspace.
-                </p>
-              </div>
+        <div className="mx-auto w-full max-w-[1180px]">
+          <div className="flex flex-col gap-5 border-b border-[rgba(255,255,255,0.06)] pb-6 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
+                Settings
+              </p>
+              <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                Profile
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">
+                Manage your account details, public profile information, and study preferences in one clean place.
+              </p>
+            </div>
 
-              <div className="flex flex-wrap gap-3">
-                <Link href="/practice">
-                  <span className="btn-primary cursor-pointer rounded-full px-5 py-3">
-                    Continue practice
-                    <ArrowRight size={16} />
-                  </span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => signOut()}
-                  className="btn-secondary rounded-full px-5 py-3"
-                >
-                  <LogOut size={16} />
-                  Sign out
-                </button>
-              </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/practice">
+                <span className="btn-primary cursor-pointer rounded-full px-4 py-2.5 text-sm">
+                  Continue practice
+                  <ArrowRight size={15} />
+                </span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="btn-secondary rounded-full px-4 py-2.5 text-sm"
+              >
+                <LogOut size={15} />
+                Sign out
+              </button>
             </div>
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-            <aside className="space-y-6">
-              <div className={`${sidebarCardClassName} p-5`}>
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-20 w-20 rounded-[24px] border border-[rgba(255,255,255,0.1)]">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <SummaryStat icon={Target} label="Solved" value={compactNumber.format(totalSolved)} />
+            <SummaryStat icon={TrendingUp} label="Accuracy" value={`${accuracy}%`} />
+            <SummaryStat icon={Bookmark} label="Bookmarks" value={String(bookmarkCount)} />
+            <SummaryStat icon={Flame} label="Streak" value={`${streak}d`} />
+          </div>
+
+          <div className="mt-6 grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+            <aside className="xl:sticky xl:top-28 xl:self-start">
+              <div className={`${sectionCardClassName} p-5`}>
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16 rounded-[18px] border border-[rgba(255,255,255,0.08)]">
                     <AvatarImage src={settings.avatarUrl} alt={settings.fullName} className="object-cover" />
-                    <AvatarFallback className="rounded-[24px] bg-[rgba(255,161,22,0.14)] text-[var(--brand)]">
-                      <UserCircle2 size={34} />
+                    <AvatarFallback className="rounded-[18px] bg-[rgba(255,161,22,0.14)] text-[var(--brand)]">
+                      <UserCircle2 size={28} />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[1.4rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+
+                  <div className="min-w-0">
+                    <p className="truncate text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                       {settings.fullName}
                     </p>
                     <p className="mt-1 truncate text-sm text-[var(--text-muted)]">@{settings.username}</p>
-                    <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-[rgba(255,161,22,0.2)] bg-[rgba(255,161,22,0.09)] px-3 py-1 text-xs font-semibold text-[var(--brand-light)]">
-                      <GraduationCap size={13} />
-                      {settings.targetExam}
-                    </div>
+                    <p className="mt-1 truncate text-xs text-[var(--text-muted)]">{user.email}</p>
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4">
+                <div className="mt-4 rounded-[18px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
                   <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">Profile completion</p>
-                      <p className="text-xs text-[var(--text-muted)]">
-                        A complete profile feels more credible and easier to return to.
-                      </p>
-                    </div>
+                    <span className="text-sm font-medium text-[var(--text-primary)]">Profile completion</span>
                     <span className="text-sm font-semibold text-[var(--brand-light)]">{completionPercent}%</span>
                   </div>
-                  <Progress value={completionPercent} className="mt-4 h-2 bg-white/6 [&_[data-slot=progress-indicator]]:bg-[var(--brand)]" />
+                  <Progress value={completionPercent} className="mt-3 h-1.5 bg-white/6 [&_[data-slot=progress-indicator]]:bg-[var(--brand)]" />
                 </div>
 
-                <div className="mt-5 grid gap-3">
-                  <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Email</p>
-                    <p className="mt-2 truncate text-sm font-medium text-[var(--text-primary)]">{user.email}</p>
+                <div className="mt-4 grid gap-2">
+                  {[
+                    { href: "#general", label: "General" },
+                    { href: "#links", label: "Links" },
+                    { href: "#preferences", label: "Preferences" },
+                  ].map((item) => (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      className="rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(255,255,255,0.12)] hover:text-[var(--text-primary)]"
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </div>
+
+                <Separator className="my-4 bg-white/6" />
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-[var(--text-muted)]">Target exam</span>
+                    <span className="text-right text-[var(--text-primary)]">{settings.targetExam}</span>
                   </div>
-                  <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Account</p>
-                    <p className="mt-2 text-sm font-medium text-[var(--text-primary)]">
-                      Joined {formatJoinedDate(user.created_at)}
-                    </p>
-                    <p className="mt-1 text-xs text-[var(--text-muted)]">
-                      Sign-in via {toDisplayProvider(String(user.app_metadata?.provider || "email"))}
-                    </p>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-[var(--text-muted)]">Joined</span>
+                    <span className="text-right text-[var(--text-primary)]">{formatJoinedDate(user.created_at)}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-[var(--text-muted)]">Provider</span>
+                    <span className="text-right text-[var(--text-primary)]">
+                      {toDisplayProvider(String(user.app_metadata?.provider || "email"))}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-[var(--text-muted)]">Last active</span>
+                    <span className="text-right text-[var(--text-primary)]">
+                      {profile?.last_active ? formatActivityStamp(profile.last_active) : "Not available"}
+                    </span>
                   </div>
                 </div>
 
-                <Separator className="my-5 bg-white/6" />
-
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <div className="mt-4 grid gap-2">
                   <Link href="/dashboard">
-                    <span className="flex cursor-pointer items-center justify-between rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.14)]">
-                      Dashboard
-                      <ArrowRight size={15} className="text-[var(--text-muted)]" />
+                    <span className="flex cursor-pointer items-center justify-between rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5 text-sm text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.12)]">
+                      View dashboard
+                      <ArrowRight size={14} className="text-[var(--text-muted)]" />
                     </span>
                   </Link>
                   <Link href="/practice?bookmarked=1">
-                    <span className="flex cursor-pointer items-center justify-between rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.14)]">
+                    <span className="flex cursor-pointer items-center justify-between rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5 text-sm text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.12)]">
                       Review bookmarks
-                      <ArrowRight size={15} className="text-[var(--text-muted)]" />
+                      <ArrowRight size={14} className="text-[var(--text-muted)]" />
                     </span>
                   </Link>
-                </div>
-              </div>
-
-              <div className={`${sidebarCardClassName} p-5`}>
-                <div className="grid gap-3">
-                  <StatTile
-                    icon={Target}
-                    label="Solved"
-                    value={compactNumber.format(totalSolved)}
-                    meta={`${totalAttempts} total attempts tracked`}
-                  />
-                  <StatTile
-                    icon={TrendingUp}
-                    label="Accuracy"
-                    value={`${accuracy}%`}
-                    meta={accuracy >= 60 ? "Solid accuracy band" : "Room to tighten your review loop"}
-                  />
-                  <StatTile
-                    icon={Bookmark}
-                    label="Bookmarks"
-                    value={String(bookmarkCount)}
-                    meta="Saved for revision and focused review"
-                  />
-                  <StatTile
-                    icon={Flame}
-                    label="Streak"
-                    value={`${streak}d`}
-                    meta={`Best streak so far: ${maxStreak} days`}
-                  />
                 </div>
               </div>
             </aside>
 
-            <div className="space-y-6">
-              <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
-                <div className="space-y-6">
-                  <section className={settingsCardClassName}>
-                    <div className="px-5 py-5 md:px-6">
-                      <p className="text-lg font-semibold text-[var(--text-primary)]">General</p>
-                      <p className="mt-1 text-sm text-[var(--text-muted)]">
-                        Manage the parts of your profile people notice first.
-                      </p>
-                    </div>
-
-                    <SettingsRow
-                      icon={UserCircle2}
-                      label="Display name"
-                      description="Shown across your profile, dashboard, and other signed-in surfaces."
-                      noBorder
-                    >
-                      <Input
-                        value={settings.fullName}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, fullName: event.target.value }))
-                        }
-                        placeholder="Your full name"
-                        className="h-11 rounded-2xl border-white/8 bg-white/3 text-[var(--text-primary)]"
-                      />
-                    </SettingsRow>
-
-                    <SettingsRow
-                      icon={AtSign}
-                      label="Username"
-                      description="A clean handle for your account and future public profile surfaces."
-                    >
-                      <Input
-                        value={settings.username}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, username: event.target.value }))
-                        }
-                        placeholder="prepbros-user"
-                        className="h-11 rounded-2xl border-white/8 bg-white/3 text-[var(--text-primary)]"
-                      />
-                    </SettingsRow>
-
-                    <SettingsRow
-                      icon={GraduationCap}
-                      label="Target exam"
-                      description="Keeps the rest of the product aligned with the exam you care about most."
-                    >
-                      <select
-                        value={settings.targetExam}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, targetExam: event.target.value }))
-                        }
-                        className="h-11 w-full rounded-2xl border border-white/8 bg-white/3 px-3 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--brand)]"
-                      >
-                        {EXAM_OPTIONS.map((exam) => (
-                          <option key={exam} value={exam} className="bg-[#15151d] text-white">
-                            {exam}
-                          </option>
-                        ))}
-                      </select>
-                    </SettingsRow>
-
-                    <SettingsRow
-                      icon={MapPin}
-                      label="Location"
-                      description="Useful for regional context and leaderboard identity."
-                    >
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <Input
-                          value={settings.location}
-                          onChange={(event) =>
-                            setSettings((current) => ({ ...current, location: event.target.value }))
-                          }
-                          placeholder="Hyderabad, Telangana"
-                          className="h-11 rounded-2xl border-white/8 bg-white/3 text-[var(--text-primary)]"
-                        />
-                        <Input
-                          value={settings.state}
-                          onChange={(event) =>
-                            setSettings((current) => ({ ...current, state: event.target.value }))
-                          }
-                          placeholder="State for leaderboard"
-                          className="h-11 rounded-2xl border-white/8 bg-white/3 text-[var(--text-primary)]"
-                        />
-                      </div>
-                    </SettingsRow>
-
-                    <SettingsRow
-                      icon={BadgeCheck}
-                      label="Avatar"
-                      description="Paste an image URL for a sharper, more personal account card."
-                    >
-                      <Input
-                        value={settings.avatarUrl}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, avatarUrl: event.target.value }))
-                        }
-                        placeholder="https://..."
-                        className="h-11 rounded-2xl border-white/8 bg-white/3 text-[var(--text-primary)]"
-                      />
-                    </SettingsRow>
-
-                    <SettingsRow
-                      icon={NotebookPen}
-                      label="Bio"
-                      description="A short introduction, your goal, or how you are preparing right now."
-                    >
-                      <Textarea
-                        value={settings.bio}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, bio: event.target.value }))
-                        }
-                        placeholder="UPSC aspirant focusing on polity, economy, and disciplined daily revision."
-                        className="min-h-28 rounded-[22px] border-white/8 bg-white/3 text-[var(--text-primary)]"
-                      />
-                    </SettingsRow>
-
-                    <div className="flex flex-col items-start justify-between gap-3 border-t border-[rgba(255,255,255,0.06)] px-5 py-5 md:flex-row md:items-center md:px-6">
-                      <div>
-                        <p
-                          className={`text-sm ${
-                            saveNotice?.section === "general" && saveNotice.tone === "error"
-                              ? "text-[var(--red)]"
-                              : "text-[var(--text-muted)]"
-                          }`}
-                        >
-                          {saveNotice?.section === "general"
-                            ? saveNotice.message
-                            : "These are the identity details learners will feel immediately."}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => saveSettings("general")}
-                        disabled={savingSection === "general"}
-                        className="btn-primary rounded-full px-5 py-3"
-                      >
-                        {savingSection === "general" ? (
-                          <>
-                            <Loader2 size={15} className="animate-spin" />
-                            Saving
-                          </>
-                        ) : (
-                          "Save general settings"
-                        )}
-                      </button>
-                    </div>
-                  </section>
-
-                  <section className={settingsCardClassName}>
-                    <div className="px-5 py-5 md:px-6">
-                      <p className="text-lg font-semibold text-[var(--text-primary)]">Links and showcase</p>
-                      <p className="mt-1 text-sm text-[var(--text-muted)]">
-                        Add the links that make your profile feel complete and credible.
-                      </p>
-                    </div>
-
-                    <SettingsRow
-                      icon={Globe2}
-                      label="Website"
-                      description="Portfolio, personal website, blog, or notes hub."
-                      noBorder
-                    >
-                      <Input
-                        value={settings.website}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, website: event.target.value }))
-                        }
-                        placeholder="yourdomain.com"
-                        className="h-11 rounded-2xl border-white/8 bg-white/3 text-[var(--text-primary)]"
-                      />
-                    </SettingsRow>
-
-                    <SettingsRow
-                      icon={Github}
-                      label="GitHub"
-                      description="Link your code, notes repo, or practice archive."
-                    >
-                      <Input
-                        value={settings.github}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, github: event.target.value }))
-                        }
-                        placeholder="username or full URL"
-                        className="h-11 rounded-2xl border-white/8 bg-white/3 text-[var(--text-primary)]"
-                      />
-                    </SettingsRow>
-
-                    <SettingsRow
-                      icon={Linkedin}
-                      label="LinkedIn"
-                      description="Show your professional identity alongside your prep journey."
-                    >
-                      <Input
-                        value={settings.linkedin}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, linkedin: event.target.value }))
-                        }
-                        placeholder="in/your-handle or full URL"
-                        className="h-11 rounded-2xl border-white/8 bg-white/3 text-[var(--text-primary)]"
-                      />
-                    </SettingsRow>
-
-                    <SettingsRow
-                      icon={AtSign}
-                      label="X"
-                      description="Optional, but useful if you want a lighter public-facing identity."
-                    >
-                      <Input
-                        value={settings.xHandle}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, xHandle: event.target.value }))
-                        }
-                        placeholder="@handle"
-                        className="h-11 rounded-2xl border-white/8 bg-white/3 text-[var(--text-primary)]"
-                      />
-                    </SettingsRow>
-
-                    <SettingsRow
-                      icon={NotebookPen}
-                      label="Readme"
-                      description="Longer-form note about your prep approach, strengths, or current focus."
-                    >
-                      <Textarea
-                        value={settings.readme}
-                        onChange={(event) =>
-                          setSettings((current) => ({ ...current, readme: event.target.value }))
-                        }
-                        placeholder="What are you working on this month? What topics are getting extra attention?"
-                        className="min-h-28 rounded-[22px] border-white/8 bg-white/3 text-[var(--text-primary)]"
-                      />
-                    </SettingsRow>
-
-                    <div className="border-t border-[rgba(255,255,255,0.06)] px-5 py-5 md:px-6">
-                      <div className="flex flex-wrap gap-2">
-                        {socialPreview.length > 0 ? (
-                          socialPreview.map((item) => (
-                            <a
-                              key={item.label}
-                              href={item.href}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3 py-2 text-xs font-medium text-[var(--text-primary)]"
-                            >
-                              {item.label}
-                              <SquareArrowOutUpRight size={13} className="text-[var(--text-muted)]" />
-                            </a>
-                          ))
-                        ) : (
-                          <p className="text-sm text-[var(--text-muted)]">
-                            Add at least one link to make the profile feel more complete.
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mt-4 flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
-                        <p
-                          className={`text-sm ${
-                            saveNotice?.section === "links" && saveNotice.tone === "error"
-                              ? "text-[var(--red)]"
-                              : "text-[var(--text-muted)]"
-                          }`}
-                        >
-                          {saveNotice?.section === "links"
-                            ? saveNotice.message
-                            : "Links are optional, but they make the profile page feel intentional instead of empty."}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => saveSettings("links")}
-                          disabled={savingSection === "links"}
-                          className="btn-primary rounded-full px-5 py-3"
-                        >
-                          {savingSection === "links" ? (
-                            <>
-                              <Loader2 size={15} className="animate-spin" />
-                              Saving
-                            </>
-                          ) : (
-                            "Save links"
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-
-                <div className="space-y-6">
-                  <section className={`${sidebarCardClassName} p-5`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-lg font-semibold text-[var(--text-primary)]">Study preferences</p>
-                        <p className="mt-1 text-sm text-[var(--text-muted)]">
-                          Small settings that make the account feel more alive.
-                        </p>
-                      </div>
-                      <ShieldCheck size={18} className="text-[var(--brand)]" />
-                    </div>
-
-                    <div className="mt-5 space-y-4">
-                      <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-semibold text-[var(--text-primary)]">Daily question goal</p>
-                            <p className="mt-1 text-xs text-[var(--text-muted)]">
-                              Used to measure today’s momentum across the product.
-                            </p>
-                          </div>
-                          <Input
-                            value={settings.dailyGoal}
-                            onChange={(event) =>
-                              setSettings((current) => ({
-                                ...current,
-                                dailyGoal: clampGoal(event.target.value),
-                              }))
-                            }
-                            inputMode="numeric"
-                            className="h-10 w-20 rounded-2xl border-white/8 bg-white/3 text-center text-[var(--text-primary)]"
-                          />
-                        </div>
-                        <div className="mt-4">
-                          <div className="mb-2 flex items-center justify-between gap-3">
-                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Today</p>
-                            <p className="text-xs text-[var(--text-muted)]">
-                              {todayAttempts}/{dailyGoal} attempts
-                            </p>
-                          </div>
-                          <Progress value={dailyProgress} className="h-2 bg-white/6 [&_[data-slot=progress-indicator]]:bg-[var(--accent)]" />
-                        </div>
-                      </div>
-
-                      <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-semibold text-[var(--text-primary)]">Public profile</p>
-                            <p className="mt-1 text-xs text-[var(--text-muted)]">
-                              Keep your account ready for future shareable profile surfaces.
-                            </p>
-                          </div>
-                          <Switch
-                            checked={settings.publicProfile}
-                            onCheckedChange={(checked) =>
-                              setSettings((current) => ({ ...current, publicProfile: checked }))
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-semibold text-[var(--text-primary)]">Email reminders</p>
-                            <p className="mt-1 text-xs text-[var(--text-muted)]">
-                              Light accountability nudges for practice continuity.
-                            </p>
-                          </div>
-                          <Switch
-                            checked={settings.emailReminders}
-                            onCheckedChange={(checked) =>
-                              setSettings((current) => ({ ...current, emailReminders: checked }))
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-semibold text-[var(--text-primary)]">Weekly digest</p>
-                            <p className="mt-1 text-xs text-[var(--text-muted)]">
-                              A recap of solved questions, accuracy, and where to refocus.
-                            </p>
-                          </div>
-                          <Switch
-                            checked={settings.weeklyDigest}
-                            onCheckedChange={(checked) =>
-                              setSettings((current) => ({ ...current, weeklyDigest: checked }))
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 flex flex-col items-start gap-3">
-                      <button
-                        type="button"
-                        onClick={() => saveSettings("preferences")}
-                        disabled={savingSection === "preferences"}
-                        className="btn-primary w-full rounded-full px-5 py-3"
-                      >
-                        {savingSection === "preferences" ? (
-                          <>
-                            <Loader2 size={15} className="animate-spin" />
-                            Saving
-                          </>
-                        ) : (
-                          <>
-                            <BellRing size={15} />
-                            Save preferences
-                          </>
-                        )}
-                      </button>
-                      <p
-                        className={`text-sm ${
-                          saveNotice?.section === "preferences" && saveNotice.tone === "error"
-                            ? "text-[var(--red)]"
-                            : "text-[var(--text-muted)]"
-                        }`}
-                      >
-                        {saveNotice?.section === "preferences"
-                          ? saveNotice.message
-                          : "These settings are lightweight now, but they prepare the account for richer product behavior."}
-                      </p>
-                    </div>
-                  </section>
-
-                  <section className={`${sidebarCardClassName} p-5`}>
-                    <p className="text-lg font-semibold text-[var(--text-primary)]">Performance snapshot</p>
-                    <p className="mt-1 text-sm text-[var(--text-muted)]">
-                      Keep the encouraging signals close to the settings flow.
-                    </p>
-
-                    <div className="mt-5 space-y-3">
-                      <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Best lane</p>
-                        <p className="mt-2 text-lg font-semibold text-[var(--text-primary)]">
-                          {bestTopics[0]?.topic || "Start solving to surface strengths"}
-                        </p>
-                        <p className="mt-1 text-sm text-[var(--text-muted)]">
-                          {bestTopics[0]
-                            ? `${bestTopics[0].accuracy}% accuracy over ${bestTopics[0].total} attempts.`
-                            : "A few more attempts will make this profile feel personalized."}
-                        </p>
-                      </div>
-
-                      <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Focus next</p>
-                        <p className="mt-2 text-lg font-semibold text-[var(--text-primary)]">
-                          {needsWork[0]?.topic || "Review queue will appear here"}
-                        </p>
-                        <p className="mt-1 text-sm text-[var(--text-muted)]">
-                          {needsWork[0]
-                            ? `${needsWork[0].accuracy}% accuracy, so this is the clearest next revision target.`
-                            : "Weak-topic guidance will become more useful as answer history grows."}
-                        </p>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              </div>
-
-              <div className="grid gap-6 lg:grid-cols-2">
-                <section className={`${sidebarCardClassName} p-5`}>
-                  <p className="text-lg font-semibold text-[var(--text-primary)]">Strongest areas</p>
-                  <p className="mt-1 text-sm text-[var(--text-muted)]">
-                    Good profile pages should also remind you where momentum already exists.
-                  </p>
-
-                  <div className="mt-5 space-y-3">
-                    {bestTopics.length > 0 ? (
-                      bestTopics.map((topic) => (
-                        <div
-                          key={topic.topic}
-                          className="flex items-center justify-between gap-4 rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4"
-                        >
-                          <div>
-                            <p className="font-semibold text-[var(--text-primary)]">{topic.topic}</p>
-                            <p className="text-xs text-[var(--text-muted)]">{topic.total} attempts logged</p>
-                          </div>
-                          <span className="rounded-full border border-[rgba(45,181,93,0.24)] bg-[rgba(45,181,93,0.12)] px-3 py-1 text-xs font-semibold text-[#67da8b]">
-                            {topic.accuracy}%
-                          </span>
-                        </div>
-                      ))
+            <div className="space-y-5">
+              <SectionShell
+                id="general"
+                title="General"
+                description="Basic profile details used across PrepBros."
+                action={
+                  <button
+                    type="button"
+                    onClick={() => saveSettings("general")}
+                    disabled={savingSection === "general"}
+                    className="btn-primary rounded-full px-4 py-2.5 text-sm"
+                  >
+                    {savingSection === "general" ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        Saving
+                      </>
                     ) : (
-                      <div className="rounded-[22px] border border-dashed border-[rgba(255,255,255,0.12)] bg-[rgba(13,13,18,0.72)] p-5 text-sm text-[var(--text-muted)]">
-                        Solve a few questions and your strongest topics will appear here.
-                      </div>
+                      "Save changes"
                     )}
+                  </button>
+                }
+              >
+                <div className="grid gap-5 md:grid-cols-2">
+                  <Field label="Display name">
+                    <Input
+                      value={settings.fullName}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, fullName: event.target.value }))
+                      }
+                      placeholder="Your full name"
+                      className={fieldClassName}
+                    />
+                  </Field>
+
+                  <Field label="Username">
+                    <Input
+                      value={settings.username}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, username: event.target.value }))
+                      }
+                      placeholder="prepbros-user"
+                      className={fieldClassName}
+                    />
+                  </Field>
+
+                  <Field label="Target exam">
+                    <select
+                      value={settings.targetExam}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, targetExam: event.target.value }))
+                      }
+                      className={`${fieldClassName} w-full px-3 text-sm outline-none transition focus:border-[var(--brand)]`}
+                    >
+                      {EXAM_OPTIONS.map((exam) => (
+                        <option key={exam} value={exam} className="bg-[#15151d] text-white">
+                          {exam}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+
+                  <Field label="Avatar URL">
+                    <Input
+                      value={settings.avatarUrl}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, avatarUrl: event.target.value }))
+                      }
+                      placeholder="https://..."
+                      className={fieldClassName}
+                    />
+                  </Field>
+
+                  <Field label="Location">
+                    <Input
+                      value={settings.location}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, location: event.target.value }))
+                      }
+                      placeholder="Hyderabad, Telangana"
+                      className={fieldClassName}
+                    />
+                  </Field>
+
+                  <Field label="State">
+                    <Input
+                      value={settings.state}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, state: event.target.value }))
+                      }
+                      placeholder="State"
+                      className={fieldClassName}
+                    />
+                  </Field>
+
+                  <Field label="Bio" hint="Short introduction or your current prep focus." fullWidth>
+                    <Textarea
+                      value={settings.bio}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, bio: event.target.value }))
+                      }
+                      placeholder="UPSC aspirant focused on consistent daily revision and topic-wise practice."
+                      className="min-h-28 rounded-[16px] border-white/8 bg-[rgba(255,255,255,0.02)] text-[var(--text-primary)]"
+                    />
+                  </Field>
+                </div>
+
+                <p
+                  className={`mt-4 text-sm ${
+                    saveNotice?.section === "general" && saveNotice.tone === "error"
+                      ? "text-[var(--red)]"
+                      : "text-[var(--text-muted)]"
+                  }`}
+                >
+                  {saveNotice?.section === "general"
+                    ? saveNotice.message
+                    : "These details show up anywhere your account identity is used."}
+                </p>
+              </SectionShell>
+
+              <SectionShell
+                id="links"
+                title="Links and showcase"
+                description="Optional links that make your profile feel complete and professional."
+                action={
+                  <button
+                    type="button"
+                    onClick={() => saveSettings("links")}
+                    disabled={savingSection === "links"}
+                    className="btn-primary rounded-full px-4 py-2.5 text-sm"
+                  >
+                    {savingSection === "links" ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        Saving
+                      </>
+                    ) : (
+                      "Save links"
+                    )}
+                  </button>
+                }
+              >
+                <div className="grid gap-5 md:grid-cols-2">
+                  <Field label="Website">
+                    <Input
+                      value={settings.website}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, website: event.target.value }))
+                      }
+                      placeholder="yourdomain.com"
+                      className={fieldClassName}
+                    />
+                  </Field>
+
+                  <Field label="GitHub">
+                    <Input
+                      value={settings.github}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, github: event.target.value }))
+                      }
+                      placeholder="username or full URL"
+                      className={fieldClassName}
+                    />
+                  </Field>
+
+                  <Field label="LinkedIn">
+                    <Input
+                      value={settings.linkedin}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, linkedin: event.target.value }))
+                      }
+                      placeholder="in/your-handle or full URL"
+                      className={fieldClassName}
+                    />
+                  </Field>
+
+                  <Field label="X">
+                    <Input
+                      value={settings.xHandle}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, xHandle: event.target.value }))
+                      }
+                      placeholder="@handle"
+                      className={fieldClassName}
+                    />
+                  </Field>
+
+                  <Field label="Readme" hint="A longer note about your current prep journey." fullWidth>
+                    <Textarea
+                      value={settings.readme}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, readme: event.target.value }))
+                      }
+                      placeholder="What are you working on this month? Which topics need extra attention?"
+                      className="min-h-28 rounded-[16px] border-white/8 bg-[rgba(255,255,255,0.02)] text-[var(--text-primary)]"
+                    />
+                  </Field>
+                </div>
+
+                {socialPreview.length > 0 ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {socialPreview.map((item) => (
+                      <a
+                        key={item.label}
+                        href={item.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-3 py-2 text-xs font-medium text-[var(--text-primary)]"
+                      >
+                        {item.label}
+                        <SquareArrowOutUpRight size={12} className="text-[var(--text-muted)]" />
+                      </a>
+                    ))}
                   </div>
-                </section>
+                ) : null}
 
-                <section className={`${sidebarCardClassName} p-5`}>
-                  <p className="text-lg font-semibold text-[var(--text-primary)]">Recent activity</p>
-                  <p className="mt-1 text-sm text-[var(--text-muted)]">
-                    A lightweight feed makes the profile feel active instead of static.
-                  </p>
+                <p
+                  className={`mt-4 text-sm ${
+                    saveNotice?.section === "links" && saveNotice.tone === "error"
+                      ? "text-[var(--red)]"
+                      : "text-[var(--text-muted)]"
+                  }`}
+                >
+                  {saveNotice?.section === "links"
+                    ? saveNotice.message
+                    : "Links are optional, but they help the profile feel intentional instead of empty."}
+                </p>
+              </SectionShell>
 
-                  <div className="mt-5 space-y-3">
+              <SectionShell
+                id="preferences"
+                title="Preferences"
+                description="Lightweight settings that shape how the account behaves."
+                action={
+                  <button
+                    type="button"
+                    onClick={() => saveSettings("preferences")}
+                    disabled={savingSection === "preferences"}
+                    className="btn-primary rounded-full px-4 py-2.5 text-sm"
+                  >
+                    {savingSection === "preferences" ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        Saving
+                      </>
+                    ) : (
+                      <>
+                        <BellRing size={14} />
+                        Save preferences
+                      </>
+                    )}
+                  </button>
+                }
+              >
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                  <div className={`${subtleCardClassName} p-4`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-[var(--text-primary)]">Daily question goal</p>
+                        <p className="mt-1 text-xs text-[var(--text-muted)]">
+                          Measure today&apos;s momentum against a target you can actually maintain.
+                        </p>
+                      </div>
+                      <Input
+                        value={settings.dailyGoal}
+                        onChange={(event) =>
+                          setSettings((current) => ({
+                            ...current,
+                            dailyGoal: clampGoal(event.target.value),
+                          }))
+                        }
+                        inputMode="numeric"
+                        className="h-10 w-20 rounded-[14px] border-white/8 bg-[rgba(255,255,255,0.02)] text-center text-[var(--text-primary)]"
+                      />
+                    </div>
+
+                    <div className="mt-4">
+                      <div className="mb-2 flex items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
+                        <span>Today</span>
+                        <span>
+                          {todayAttempts}/{dailyGoal} attempts
+                        </span>
+                      </div>
+                      <Progress value={dailyProgress} className="h-1.5 bg-white/6 [&_[data-slot=progress-indicator]]:bg-[var(--accent)]" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <ToggleRow
+                      title="Public profile"
+                      description="Keep the account ready for future shareable profile surfaces."
+                      checked={settings.publicProfile}
+                      onCheckedChange={(checked) =>
+                        setSettings((current) => ({ ...current, publicProfile: checked }))
+                      }
+                    />
+                    <ToggleRow
+                      title="Email reminders"
+                      description="Light accountability nudges for practice continuity."
+                      checked={settings.emailReminders}
+                      onCheckedChange={(checked) =>
+                        setSettings((current) => ({ ...current, emailReminders: checked }))
+                      }
+                    />
+                    <ToggleRow
+                      title="Weekly digest"
+                      description="A recap of solved questions, accuracy, and what needs attention."
+                      checked={settings.weeklyDigest}
+                      onCheckedChange={(checked) =>
+                        setSettings((current) => ({ ...current, weeklyDigest: checked }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                <p
+                  className={`mt-4 text-sm ${
+                    saveNotice?.section === "preferences" && saveNotice.tone === "error"
+                      ? "text-[var(--red)]"
+                      : "text-[var(--text-muted)]"
+                  }`}
+                >
+                  {saveNotice?.section === "preferences"
+                    ? saveNotice.message
+                    : "These settings are intentionally simple, but they keep the account feeling polished and useful."}
+                </p>
+              </SectionShell>
+
+              <div className="grid gap-5 lg:grid-cols-2">
+                <section className={sectionCardClassName}>
+                  <div className="border-b border-[rgba(255,255,255,0.06)] px-5 py-4 md:px-6">
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">Recent activity</h2>
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">A compact view of your latest attempts.</p>
+                  </div>
+                  <div className="space-y-3 px-5 py-5 md:px-6">
                     {recentActivity.length > 0 ? (
                       recentActivity.map((item) => (
                         <div
                           key={`${item.id}-${item.answeredAt}`}
-                          className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4"
+                          className={`${subtleCardClassName} flex items-start justify-between gap-4 px-4 py-3`}
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-semibold text-[var(--text-primary)]">{item.topic}</p>
-                              <p className="mt-1 text-xs text-[var(--text-muted)]">{item.exam}</p>
-                            </div>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                item.isCorrect
-                                  ? "border border-[rgba(45,181,93,0.24)] bg-[rgba(45,181,93,0.12)] text-[#67da8b]"
-                                  : "border border-[rgba(255,184,0,0.24)] bg-[rgba(255,184,0,0.12)] text-[#ffc857]"
-                              }`}
-                            >
-                              {item.isCorrect ? "Correct" : "Needs review"}
-                            </span>
+                          <div>
+                            <p className="text-sm font-medium text-[var(--text-primary)]">{item.topic}</p>
+                            <p className="mt-1 text-xs text-[var(--text-muted)]">{item.exam}</p>
+                            <p className="mt-2 text-xs text-[var(--text-muted)]">
+                              {formatActivityStamp(item.answeredAt)}
+                            </p>
                           </div>
-                          <p className="mt-3 text-xs text-[var(--text-muted)]">
-                            {formatActivityStamp(item.answeredAt)}
-                          </p>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              item.isCorrect
+                                ? "border border-[rgba(45,181,93,0.24)] bg-[rgba(45,181,93,0.12)] text-[#67da8b]"
+                                : "border border-[rgba(255,184,0,0.24)] bg-[rgba(255,184,0,0.12)] text-[#ffc857]"
+                            }`}
+                          >
+                            {item.isCorrect ? "Correct" : "Review"}
+                          </span>
                         </div>
                       ))
                     ) : (
-                      <div className="rounded-[22px] border border-dashed border-[rgba(255,255,255,0.12)] bg-[rgba(13,13,18,0.72)] p-5 text-sm text-[var(--text-muted)]">
-                        Your recent attempts will show up here once you begin solving.
+                      <div className={`${subtleCardClassName} px-4 py-4 text-sm text-[var(--text-muted)]`}>
+                        Your recent attempts will appear here once you begin solving.
                       </div>
                     )}
                   </div>
                 </section>
-              </div>
 
-              <section className={`${sidebarCardClassName} p-5`}>
-                <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                  <div>
-                    <p className="text-lg font-semibold text-[var(--text-primary)]">Account health</p>
-                    <p className="mt-1 text-sm text-[var(--text-muted)]">
-                      A few signals that make the whole profile feel trustworthy and useful.
-                    </p>
+                <section className={sectionCardClassName}>
+                  <div className="border-b border-[rgba(255,255,255,0.06)] px-5 py-4 md:px-6">
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">Insights</h2>
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">Quick signals from your current progress.</p>
                   </div>
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Last activity: {profile?.last_active ? formatActivityStamp(profile.last_active) : "Not available yet"}
-                  </p>
-                </div>
-
-                <div className="mt-5 grid gap-3 md:grid-cols-3">
-                  {[
-                    {
-                      label: "Identity ready",
-                      value: settings.fullName && settings.username ? "Yes" : "Incomplete",
-                      tone: settings.fullName && settings.username ? "text-[#67da8b]" : "text-[#ffc857]",
-                    },
-                    {
-                      label: "Goal alignment",
-                      value: settings.targetExam,
-                      tone: "text-[var(--brand-light)]",
-                    },
-                    {
-                      label: "Study target",
-                      value: `${dailyGoal} questions/day`,
-                      tone: "text-[#9ec5ff]",
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(13,13,18,0.9)] p-4"
-                    >
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">{item.label}</p>
-                      <p className={`mt-3 text-lg font-semibold ${item.tone}`}>{item.value}</p>
+                  <div className="space-y-3 px-5 py-5 md:px-6">
+                    <div className={`${subtleCardClassName} px-4 py-3`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
+                          <BadgeCheck size={15} className="text-[var(--brand)]" />
+                          Strongest topic
+                        </div>
+                        {bestTopics[0] ? (
+                          <span className="text-xs font-medium text-[#67da8b]">{bestTopics[0].accuracy}%</span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        {bestTopics[0]?.topic || "Solve a few more questions to surface your strongest area."}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </section>
+
+                    <div className={`${subtleCardClassName} px-4 py-3`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
+                          <MapPin size={15} className="text-[var(--brand)]" />
+                          Needs attention
+                        </div>
+                        {needsWork[0] ? (
+                          <span className="text-xs font-medium text-[#ffc857]">{needsWork[0].accuracy}%</span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        {needsWork[0]?.topic || "Weak-topic guidance will appear as your answer history grows."}
+                      </p>
+                    </div>
+
+                    <div className={`${subtleCardClassName} px-4 py-3`}>
+                      <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
+                        <GraduationCap size={15} className="text-[var(--brand)]" />
+                        Account summary
+                      </div>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        Best streak: {maxStreak} day{maxStreak === 1 ? "" : "s"}. Study target: {dailyGoal} question
+                        {dailyGoal === 1 ? "" : "s"} per day.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              </div>
             </div>
           </div>
         </div>
