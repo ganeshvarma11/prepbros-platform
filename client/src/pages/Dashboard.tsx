@@ -33,10 +33,10 @@ type TopicPerformance = {
 
 const signInPanelClassName = "rounded-[24px] bg-[rgba(255,255,255,0.03)] p-8 text-center md:p-12";
 const heroClassName =
-  "rounded-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.045)_0%,rgba(255,255,255,0.02)_100%)] px-6 py-7 md:px-8 md:py-8";
-const sectionClassName = "rounded-[28px] bg-[rgba(255,255,255,0.02)] px-6 py-6 md:px-7 md:py-7";
+  "rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.02)_100%)] px-5 py-5 md:px-6 md:py-6";
+const sectionClassName = "rounded-[24px] bg-[rgba(255,255,255,0.02)] px-5 py-5 md:px-6 md:py-6";
 const listRowClassName =
-  "block rounded-[20px] bg-[rgba(255,255,255,0.03)] px-4 py-4 transition hover:bg-[rgba(255,255,255,0.045)]";
+  "block rounded-[16px] bg-[rgba(255,255,255,0.03)] px-3.5 py-3 transition hover:bg-[rgba(255,255,255,0.045)]";
 
 const toDateKey = (value: Date | string) => new Date(value).toLocaleDateString("en-CA");
 
@@ -135,6 +135,11 @@ export default function Dashboard() {
     [answers, questionIdentity],
   );
 
+  const solvedIds = useMemo(
+    () => new Set(resolvedAnswers.map((item) => item.question_id)),
+    [resolvedAnswers],
+  );
+
   const sortedAnswers = useMemo(
     () =>
       [...resolvedAnswers].sort(
@@ -220,9 +225,28 @@ export default function Dashboard() {
 
   const focusAreas: TopicPerformance[] = topicPerformance.slice(0, 4);
 
+  const solvedCoverage = useMemo(() => {
+    const order = ["Easy", "Medium", "Hard"] as const;
+
+    return {
+      totalSolved: solvedIds.size,
+      totalQuestions: questions.length,
+      byDifficulty: order.map((difficulty) => {
+        const pool = questions.filter((question) => question.difficulty === difficulty);
+        const solved = pool.filter((question) => solvedIds.has(toQuestionId(question.id))).length;
+
+        return {
+          difficulty,
+          solved,
+          total: pool.length,
+        };
+      }),
+    };
+  }, [questions, solvedIds]);
+
   const recentSessions = useMemo(
     () =>
-      sortedAnswers.slice(0, 5).map((item) => {
+      sortedAnswers.slice(0, 4).map((item) => {
         const question = questionLookup.get(item.question_id);
         return {
           id: item.question_id,
@@ -235,10 +259,7 @@ export default function Dashboard() {
     [questionLookup, sortedAnswers],
   );
 
-  const progressCopy =
-    dailyRemaining > 0
-      ? `${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} left today.`
-      : "Daily target complete for today.";
+  const progressCopy = `${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} left today.`;
 
   const nextStepCopy =
     dailyRemaining > 0
@@ -300,55 +321,55 @@ export default function Dashboard() {
         }}
       />
 
-      <div className="space-y-5">
+      <div className="space-y-4">
         <section className={heroClassName}>
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-2xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
                 {targetExam}
               </p>
-              <h1 className="mt-4 text-4xl font-semibold tracking-[-0.08em] text-[var(--text-primary)] md:text-[3.5rem] md:leading-[0.96]">
+              <h1 className="mt-3 text-[2rem] font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-[2.6rem] md:leading-[1]">
                 {greeting}, {firstName}
               </h1>
-              <p className="mt-4 text-xl text-[var(--text-secondary)] md:text-2xl">
+              <p className="mt-2 text-base text-[var(--text-secondary)] md:text-lg">
                 {progressCopy}
               </p>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-muted)] md:text-base">
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--text-muted)]">
                 {nextStepCopy}
               </p>
             </div>
 
             <Link href="/practice">
-              <span className="btn-primary inline-flex cursor-pointer self-start rounded-[18px] px-6 py-3.5 text-base md:px-7 md:text-lg">
+              <span className="btn-primary inline-flex cursor-pointer self-start rounded-[16px] px-5 py-3 text-sm md:px-6 md:text-base">
                 Continue Practice
-                <ArrowRight size={18} />
+                <ArrowRight size={16} />
               </span>
             </Link>
           </div>
         </section>
 
         <section className={sectionClassName}>
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
                 Today Progress
               </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-[2rem]">
+              <h2 className="mt-1.5 text-[1.35rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-[1.55rem]">
                 Keep today visible and simple
               </h2>
             </div>
 
-            <p className="text-sm text-[var(--text-muted)]">
+            <p className="text-xs uppercase tracking-[0.14em] text-[var(--text-muted)]">
               {todayAttempts} of {dailyGoal} questions done
             </p>
           </div>
 
-          <div className="mt-6">
-            <div className="flex items-center justify-between gap-4 text-sm text-[var(--text-secondary)]">
+          <div className="mt-4">
+            <div className="flex items-center justify-between gap-4 text-xs uppercase tracking-[0.14em] text-[var(--text-secondary)]">
               <span>{dailyPercent}% complete</span>
               <span>{dailyRemaining} left</span>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
+            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
               <div
                 className="h-full rounded-full bg-[rgba(255,255,255,0.88)] transition-[width]"
                 style={{ width: `${dailyPercent}%` }}
@@ -356,7 +377,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-6 border-t border-white/6 pt-6 md:grid-cols-3">
+          <div className="mt-5 grid gap-4 border-t border-white/6 pt-4 md:grid-cols-3">
             {[
               {
                 label: "Progress",
@@ -378,29 +399,48 @@ export default function Dashboard() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                   {item.label}
                 </p>
-                <p className="mt-3 text-[2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-[1.6rem]">
                   {item.value}
                 </p>
-                <p className="mt-2 text-sm text-[var(--text-muted)]">{item.meta}</p>
+                <p className="mt-1.5 text-xs leading-5 text-[var(--text-muted)]">{item.meta}</p>
               </div>
             ))}
           </div>
+
+          <div className="mt-5 border-t border-white/6 pt-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+              Solved Coverage
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="rounded-full bg-[rgba(255,255,255,0.04)] px-3 py-1.5 text-sm text-[var(--text-primary)]">
+                All {solvedCoverage.totalSolved}/{solvedCoverage.totalQuestions}
+              </span>
+              {solvedCoverage.byDifficulty.map((item) => (
+                <span
+                  key={item.difficulty}
+                  className="rounded-full bg-[rgba(255,255,255,0.04)] px-3 py-1.5 text-sm text-[var(--text-secondary)]"
+                >
+                  {item.difficulty} {item.solved}/{item.total}
+                </span>
+              ))}
+            </div>
+          </div>
         </section>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
           <section className={sectionClassName}>
             <div className="flex items-end justify-between gap-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
                   Recent Activity
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                <h2 className="mt-1.5 text-[1.3rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                   What you touched most recently
                 </h2>
               </div>
             </div>
 
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2.5">
               {recentSessions.length > 0 ? (
                 recentSessions.map((session) => (
                   <Link
@@ -412,24 +452,24 @@ export default function Dashboard() {
                     })}
                   >
                     <span className={listRowClassName}>
-                      <span className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <span className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
                         <span className="min-w-0">
-                          <span className="block truncate text-base font-medium text-[var(--text-primary)]">
+                          <span className="block truncate text-sm font-medium text-[var(--text-primary)] md:text-[0.95rem]">
                             {session.topic}
                           </span>
-                          <span className="mt-1 block text-sm text-[var(--text-muted)]">
+                          <span className="mt-1 block text-xs text-[var(--text-muted)]">
                             {session.exam} · {session.date}
                           </span>
                         </span>
 
                         <span
-                          className={`inline-flex w-fit items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${
+                          className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${
                             session.correct
                               ? "bg-[rgba(76,214,114,0.12)] text-[#72e08c]"
                               : "bg-[rgba(255,107,107,0.12)] text-[#ff8e8e]"
                           }`}
                         >
-                          {session.correct ? <CheckCircle2 size={13} /> : <CircleAlert size={13} />}
+                          {session.correct ? <CheckCircle2 size={12} /> : <CircleAlert size={12} />}
                           {session.correct ? "Correct" : "Needs review"}
                         </span>
                       </span>
@@ -449,26 +489,26 @@ export default function Dashboard() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
                 Focus Areas
               </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+              <h2 className="mt-1.5 text-[1.3rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                 Weak topics worth reviewing next
               </h2>
             </div>
 
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2.5">
               {focusAreas.length > 0 ? (
-                focusAreas.map((topic) => (
+                focusAreas.slice(0, 3).map((topic) => (
                   <Link key={topic.topic} href={buildPracticeHref({ topic: topic.topic, incorrect: true })}>
                     <span className={listRowClassName}>
                       <span className="flex items-start justify-between gap-4">
                         <span className="min-w-0 flex-1">
-                          <span className="block text-base font-medium text-[var(--text-primary)]">
+                          <span className="block text-sm font-medium text-[var(--text-primary)] md:text-[0.95rem]">
                             {topic.topic}
                           </span>
-                          <span className="mt-1 block text-sm text-[var(--text-muted)]">
+                          <span className="mt-1 block text-xs leading-5 text-[var(--text-muted)]">
                             {topic.incorrect} miss{topic.incorrect === 1 ? "" : "es"} across {topic.total} attempt
                             {topic.total === 1 ? "" : "s"}
                           </span>
-                          <span className="mt-4 block h-1.5 overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
+                          <span className="mt-3 block h-1 overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
                             <span
                               className="block h-full rounded-full bg-[rgba(255,255,255,0.82)]"
                               style={{ width: `${Math.max(8, topic.accuracy)}%` }}
