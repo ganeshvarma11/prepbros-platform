@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
+  BarChart3,
   BookMarked,
   Brain,
-  Flame,
+  CheckCircle2,
+  CircleAlert,
   Loader2,
-  Sparkles,
   Target,
   TrendingUp,
 } from "lucide-react";
@@ -14,7 +15,7 @@ import { Link } from "wouter";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import OnboardingModal from "@/components/OnboardingModal";
-import SectionHeader from "@/components/SectionHeader";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
 import { supabase } from "@/lib/supabase";
@@ -25,22 +26,99 @@ type AnswerRow = {
   answered_at: string;
 };
 
+type BookmarkRow = {
+  question_id: number;
+};
+
 type ProfileRow = {
   full_name?: string;
+  username?: string;
   streak?: number;
   max_streak?: number;
   accuracy?: number;
   total_solved?: number;
   target_exam?: string;
+  avatar_url?: string;
+};
+
+type TopicPerformance = {
+  topic: string;
+  correct: number;
+  total: number;
+  incorrect: number;
+  accuracy: number;
+  exams: string[];
+  latestAnsweredAt: string | null;
+};
+
+type QueueItem = {
+  id: number;
+  title: string;
+  topic: string;
+  exam: string;
+  reason: string;
+  kind: "mistake" | "bookmark";
+};
+
+const shellClassName =
+  "rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(21,20,31,0.94)_0%,rgba(14,14,22,0.98)_100%)] shadow-[0_30px_80px_-52px_rgba(0,0,0,0.96)]";
+
+const insetClassName =
+  "rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(24,23,35,0.78)]";
+
+const toDateKey = (value: Date | string) => new Date(value).toLocaleDateString("en-CA");
+
+const clampPercent = (value: number) => Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+
+const formatActivityStamp = (value: string) =>
+  new Date(value).toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+const getHeatmapColor = (count: number, maxCount: number) => {
+  if (!count) return "rgba(255,255,255,0.06)";
+  const intensity = count / maxCount;
+  if (intensity < 0.34) return "rgba(52, 211, 104, 0.32)";
+  if (intensity < 0.67) return "rgba(52, 211, 104, 0.6)";
+  return "#3fe06f";
+};
+
+const buildPracticeHref = ({
+  topic,
+  exam,
+  bookmarked,
+  incorrect,
+  questionId,
+}: {
+  topic?: string;
+  exam?: string;
+  bookmarked?: boolean;
+  incorrect?: boolean;
+  questionId?: number;
+}) => {
+  const params = new URLSearchParams();
+  if (topic) params.set("topic", topic);
+  if (exam) params.set("exam", exam);
+  if (bookmarked) params.set("bookmarked", "1");
+  if (incorrect) params.set("incorrect", "1");
+  if (questionId) params.set("question", String(questionId));
+  const query = params.toString();
+  return query ? `/practice?${query}` : "/practice";
 };
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [answers, setAnswers] = useState<AnswerRow[]>([]);
-  const [bookmarkCount, setBookmarkCount] = useState(0);
+  const [bookmarkIds, setBookmarkIds] = useState<number[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [dailyGoalOverride, setDailyGoalOverride] = useState<number | null>(null);
+  const [activePanel, setActivePanel] = useState<"activity" | "review" | "actions">("activity");
+  const [heatmapRange, setHeatmapRange] = useState<"7D" | "30D" | "26W" | "1Y">("26W");
   const { questions } = useQuestionBank();
 
   useEffect(() => {
@@ -52,23 +130,19 @@ export default function Dashboard() {
 
     const load = async () => {
       setPageLoading(true);
-      const [{ data: profileData }, { data: answersData }, { count }] = await Promise.all([
+      const [{ data: profileData }, { data: answersData }, { data: bookmarkData }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
         supabase
           .from("user_answers")
           .select("question_id, is_correct, answered_at")
           .eq("user_id", user.id)
-          .order("answered_at", { ascending: false })
-          .limit(50),
-        supabase
-          .from("bookmarks")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id),
+          .order("answered_at", { ascending: false }),
+        supabase.from("bookmarks").select("question_id").eq("user_id", user.id),
       ]);
 
       setProfile(profileData || null);
       setAnswers(answersData || []);
-      setBookmarkCount(count || 0);
+      setBookmarkIds((bookmarkData as BookmarkRow[] | null)?.map((item) => item.question_id) || []);
       const metadata = user.user_metadata || {};
       if (!metadata.onboarding_completed_at && (profileData?.total_solved ?? 0) === 0 && (answersData?.length ?? 0) === 0) {
         setShowOnboarding(true);
@@ -79,62 +153,415 @@ export default function Dashboard() {
     load();
   }, [loading, user]);
 
+  const questionLookup = useMemo(
+    () => new Map(questions.map((question) => [question.id, question])),
+    [questions],
+  );
+
   const solvedIds = useMemo(
     () => Array.from(new Set(answers.map((item) => item.question_id))),
     [answers],
   );
 
-  const totalSolved = profile?.total_solved ?? solvedIds.length;
+  const totalAttempts = answers.length;
+  const totalSolved = solvedIds.length;
+  const correctAttempts = answers.filter((item) => item.is_correct).length;
   const accuracy =
-    profile?.accuracy ??
-    (answers.length ? Math.round((answers.filter((item) => item.is_correct).length / answers.length) * 100) : 0);
+    totalAttempts > 0
+      ? Math.round((correctAttempts / totalAttempts) * 100)
+      : profile?.accuracy ?? 0;
   const streak = profile?.streak ?? 0;
   const maxStreak = profile?.max_streak ?? 0;
+  const bookmarkCount = bookmarkIds.length;
+  const targetExam = profile?.target_exam || user?.user_metadata?.target_exam || "UPSC CSE 2026";
   const displayName =
     profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Aspirant";
+  const username = profile?.username || user?.email?.split("@")[0] || "prepbros-user";
+  const avatarUrl =
+    profile?.avatar_url ||
+    user?.user_metadata?.avatar_url ||
+    user?.user_metadata?.picture ||
+    user?.user_metadata?.avatar ||
+    "";
+  const questionCount = questions.length;
 
-  const today = new Date().toISOString().split("T")[0];
-  const todaySolved = answers.filter((item) => item.answered_at?.startsWith(today)).length;
-  const dailyGoal = Number.parseInt(String(user?.user_metadata?.daily_goal || "12"), 10) || 12;
-  const dailyPercent = Math.min(100, Math.round((todaySolved / dailyGoal) * 100));
+  const dailyGoal =
+    dailyGoalOverride ??
+    (Number.parseInt(String(user?.user_metadata?.daily_goal || "12"), 10) || 12);
+  const todayKey = toDateKey(new Date());
+  const todayAnswers = answers.filter((item) => toDateKey(item.answered_at) === todayKey);
+  const todayAttempts = todayAnswers.length;
+  const todayCorrect = todayAnswers.filter((item) => item.is_correct).length;
+  const todayAccuracy = todayAttempts > 0 ? Math.round((todayCorrect / todayAttempts) * 100) : 0;
+  const dailyPercent = clampPercent(Math.round((todayAttempts / dailyGoal) * 100));
+  const dailyRemaining = Math.max(0, dailyGoal - todayAttempts);
 
-  const topicPerformance = Object.values(
-    answers.reduce<Record<string, { topic: string; correct: number; total: number }>>((acc, item) => {
-      const match = questions.find((question) => question.id === item.question_id);
-      if (!match) return acc;
-      const current = acc[match.topic] || { topic: match.topic, correct: 0, total: 0 };
+  const weekBuckets = useMemo(() => {
+    const weekdayFormatter = new Intl.DateTimeFormat("en-IN", { weekday: "short" });
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - (6 - index));
+      return {
+        dateKey: toDateKey(date),
+        label: weekdayFormatter.format(date).slice(0, 3),
+        total: 0,
+        correct: 0,
+      };
+    });
+
+    const bucketMap = new Map(days.map((day) => [day.dateKey, day]));
+
+    answers.forEach((answer) => {
+      const bucket = bucketMap.get(toDateKey(answer.answered_at));
+      if (!bucket) return;
+      bucket.total += 1;
+      if (answer.is_correct) bucket.correct += 1;
+    });
+
+    return days.map((day) => ({
+      ...day,
+      accuracy: day.total > 0 ? Math.round((day.correct / day.total) * 100) : 0,
+    }));
+  }, [answers]);
+
+  const weeklyAttempts = weekBuckets.reduce((sum, day) => sum + day.total, 0);
+  const weeklyCorrect = weekBuckets.reduce((sum, day) => sum + day.correct, 0);
+  const weeklyAccuracy = weeklyAttempts > 0 ? Math.round((weeklyCorrect / weeklyAttempts) * 100) : 0;
+  const activeDays = weekBuckets.filter((day) => day.total > 0).length;
+
+  const topicPerformance = useMemo(() => {
+    const grouped = answers.reduce<
+      Record<
+        string,
+        {
+          topic: string;
+          correct: number;
+          total: number;
+          incorrect: number;
+          exams: Set<string>;
+          latestAnsweredAt: string | null;
+        }
+      >
+    >((acc, item) => {
+      const question = questionLookup.get(item.question_id);
+      if (!question) return acc;
+
+      const current = acc[question.topic] || {
+        topic: question.topic,
+        correct: 0,
+        total: 0,
+        incorrect: 0,
+        exams: new Set<string>(),
+        latestAnsweredAt: null,
+      };
+
       current.total += 1;
-      if (item.is_correct) current.correct += 1;
-      acc[match.topic] = current;
-      return acc;
-    }, {}),
-  )
-    .map((item) => ({
-      ...item,
-      accuracy: Math.round((item.correct / item.total) * 100),
-    }))
-    .sort((a, b) => a.accuracy - b.accuracy);
+      current.exams.add(question.exam);
+      if (item.is_correct) {
+        current.correct += 1;
+      } else {
+        current.incorrect += 1;
+      }
+      if (
+        !current.latestAnsweredAt ||
+        new Date(item.answered_at).getTime() > new Date(current.latestAnsweredAt).getTime()
+      ) {
+        current.latestAnsweredAt = item.answered_at;
+      }
 
-  const improvementTopics = topicPerformance.slice(0, 3);
-  const recentSessions = answers.slice(0, 5).map((item) => {
-    const match = questions.find((question) => question.id === item.question_id);
-    return {
-      id: item.question_id,
-      topic: match?.topic || "Practice session",
-      exam: match?.exam || "General",
-      correct: item.is_correct,
-      date: new Date(item.answered_at).toLocaleString("en-IN", {
-        day: "numeric",
-        month: "short",
-        hour: "numeric",
-        minute: "2-digit",
+      acc[question.topic] = current;
+      return acc;
+    }, {});
+
+    return Object.values(grouped)
+      .map((item) => ({
+        topic: item.topic,
+        correct: item.correct,
+        total: item.total,
+        incorrect: item.incorrect,
+        accuracy: clampPercent(Math.round((item.correct / item.total) * 100)),
+        exams: Array.from(item.exams),
+        latestAnsweredAt: item.latestAnsweredAt,
+      }))
+      .sort((a, b) => {
+        const aHasContext = a.total >= 2 ? 1 : 0;
+        const bHasContext = b.total >= 2 ? 1 : 0;
+        if (aHasContext !== bHasContext) return bHasContext - aHasContext;
+        if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
+        return b.total - a.total;
+      });
+  }, [answers, questionLookup]);
+
+  const improvementTopics: TopicPerformance[] = topicPerformance.slice(0, 3);
+
+  const bookmarkTopics = useMemo(() => {
+    const grouped = bookmarkIds.reduce<Record<string, { topic: string; total: number }>>((acc, questionId) => {
+      const question = questionLookup.get(questionId);
+      if (!question) return acc;
+      const current = acc[question.topic] || { topic: question.topic, total: 0 };
+      current.total += 1;
+      acc[question.topic] = current;
+      return acc;
+    }, {});
+
+    return Object.values(grouped)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 3);
+  }, [bookmarkIds, questionLookup]);
+
+  const recentSessions = useMemo(
+    () =>
+      answers.slice(0, 5).map((item) => {
+        const question = questionLookup.get(item.question_id);
+        return {
+          id: item.question_id,
+          topic: question?.topic || "Practice session",
+          exam: question?.exam || "General",
+          type: question?.type || "Question",
+          correct: item.is_correct,
+          date: formatActivityStamp(item.answered_at),
+        };
       }),
+    [answers, questionLookup],
+  );
+
+  const solvedSet = useMemo(() => new Set(solvedIds), [solvedIds]);
+
+  const difficultyProgress = useMemo(() => {
+    const order = ["Easy", "Medium", "Hard"] as const;
+    const palette = {
+      Easy: "#38d26f",
+      Medium: "#ffb64c",
+      Hard: "#ff695b",
     };
-  });
+
+    return order.map((difficulty) => {
+      const pool = questions.filter((question) => question.difficulty === difficulty);
+      const solved = pool.filter((question) => solvedSet.has(question.id)).length;
+      return {
+        difficulty,
+        solved,
+        total: pool.length,
+        color: palette[difficulty],
+      };
+    });
+  }, [questions, solvedSet]);
+
+  const solvedRingStyle = useMemo(() => {
+    if (questionCount === 0) {
+      return {
+        background:
+          "conic-gradient(rgba(255,255,255,0.14) 0deg 360deg)",
+      };
+    }
+
+    const easyPct = (difficultyProgress[0].solved / questionCount) * 100;
+    const medPct = (difficultyProgress[1].solved / questionCount) * 100;
+    const hardPct = (difficultyProgress[2].solved / questionCount) * 100;
+    const easyEnd = easyPct;
+    const medEnd = easyPct + medPct;
+    const hardEnd = easyPct + medPct + hardPct;
+
+    return {
+      background: `conic-gradient(
+        ${difficultyProgress[0].color} 0% ${easyEnd}%,
+        ${difficultyProgress[1].color} ${easyEnd}% ${medEnd}%,
+        ${difficultyProgress[2].color} ${medEnd}% ${hardEnd}%,
+        rgba(255,255,255,0.08) ${hardEnd}% 100%
+      )`,
+    };
+  }, [difficultyProgress, questionCount]);
+
+  const heatmap = useMemo(() => {
+    const rangeDays =
+      heatmapRange === "7D" ? 7 : heatmapRange === "30D" ? 35 : heatmapRange === "1Y" ? 364 : 26 * 7;
+    const countByDay = answers.reduce<Record<string, number>>((acc, item) => {
+      const key = toDateKey(item.answered_at);
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    const monthFormatter = new Intl.DateTimeFormat("en-IN", { month: "short" });
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (rangeDays - 1));
+
+    const days = Array.from({ length: rangeDays }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      const dateKey = toDateKey(date);
+      return {
+        dateKey,
+        date,
+        count: countByDay[dateKey] || 0,
+        monthLabel: monthFormatter.format(date),
+      };
+    });
+
+    const weeks = [];
+    let previousMonth = "";
+
+    for (let index = 0; index < days.length; index += 7) {
+      const weekDays = days.slice(index, index + 7);
+      const firstDay = weekDays[0];
+      const monthLabel = firstDay && firstDay.monthLabel !== previousMonth ? firstDay.monthLabel : "";
+      if (firstDay) previousMonth = firstDay.monthLabel;
+      weeks.push({
+        key: firstDay?.dateKey || `week-${index}`,
+        monthLabel,
+        days: weekDays,
+      });
+    }
+
+    const maxCount = Math.max(...days.map((day) => day.count), 1);
+    const activeDayCount = days.filter((day) => day.count > 0).length;
+
+    return {
+      weeks,
+      maxCount,
+      activeDayCount,
+    };
+  }, [answers, heatmapRange]);
+
+  const heatmapRangeLabel =
+    heatmapRange === "7D" ? "7 days" : heatmapRange === "30D" ? "30 days" : heatmapRange === "1Y" ? "1 year" : "26 weeks";
+
+  const reviewQueue = useMemo(() => {
+    const queue: QueueItem[] = [];
+    const seen = new Set<number>();
+
+    for (const answer of answers) {
+      if (answer.is_correct || seen.has(answer.question_id)) continue;
+      const question = questionLookup.get(answer.question_id);
+      if (!question) continue;
+      queue.push({
+        id: question.id,
+        title: question.question,
+        topic: question.topic,
+        exam: question.exam,
+        reason: "Recent incorrect answer",
+        kind: "mistake",
+      });
+      seen.add(question.id);
+      if (queue.length >= 3) break;
+    }
+
+    for (const questionId of bookmarkIds) {
+      if (seen.has(questionId)) continue;
+      const question = questionLookup.get(questionId);
+      if (!question) continue;
+      queue.push({
+        id: question.id,
+        title: question.question,
+        topic: question.topic,
+        exam: question.exam,
+        reason: "Bookmarked for revision",
+        kind: "bookmark",
+      });
+      seen.add(questionId);
+      if (queue.length >= 5) break;
+    }
+
+    return queue;
+  }, [answers, bookmarkIds, questionLookup]);
+
+  const focusCopy = useMemo(() => {
+    if (dailyRemaining > 0) {
+      return {
+        title: `${dailyRemaining} more question${dailyRemaining === 1 ? "" : "s"} to close today cleanly`,
+        description:
+          todayAttempts > 0
+            ? "Finish the daily MCQ target first, then switch into revision while the context is still fresh."
+            : "Start with a short focused burst so the rest of the dashboard has something real to react to.",
+      };
+    }
+
+    if (improvementTopics[0]) {
+      return {
+        title: `${improvementTopics[0].topic} deserves the next review block`,
+        description: `${improvementTopics[0].incorrect} miss${improvementTopics[0].incorrect === 1 ? "" : "es"} across ${improvementTopics[0].total} recent attempt${improvementTopics[0].total === 1 ? "" : "s"} make this the sharpest place to tighten up.`,
+      };
+    }
+
+    if (bookmarkCount > 0) {
+      return {
+        title: `You have ${bookmarkCount} saved question${bookmarkCount === 1 ? "" : "s"} ready for revision`,
+        description:
+          "Use the extra runway after today's goal to turn bookmarks into a light retention pass instead of opening something random.",
+      };
+    }
+
+    return {
+      title: "The loop is simple today: practice, review, return tomorrow",
+      description:
+        "This dashboard is strongest when it stays calm and directional. One clean session is better than scattered clicking.",
+    };
+  }, [bookmarkCount, dailyRemaining, improvementTopics, todayAttempts]);
+
+  const nextActions = useMemo(() => {
+    const actions = [];
+
+    if (dailyRemaining > 0) {
+      actions.push({
+        title: `Finish ${dailyRemaining} more for today`,
+        description: "Protect the daily habit before you spend energy deciding what else to do.",
+        href: "/practice",
+        cta: "Continue practice",
+        icon: Target,
+        accent:
+          "border-[rgba(255,161,22,0.16)] bg-[rgba(255,161,22,0.10)] text-[var(--brand-light)]",
+      });
+    } else {
+      actions.push({
+        title: "Today's goal is already complete",
+        description: "Use the extra time for deliberate revision instead of overextending into noise.",
+        href: "/practice",
+        cta: "Add a review round",
+        icon: CheckCircle2,
+        accent: "border-[rgba(45,181,93,0.16)] bg-[rgba(45,181,93,0.10)] text-[var(--accent)]",
+      });
+    }
+
+    if (improvementTopics[0]) {
+      actions.push({
+        title: `Revisit ${improvementTopics[0].topic}`,
+        description: `${improvementTopics[0].accuracy}% accuracy is the clearest weak-topic signal on the board right now.`,
+        href: buildPracticeHref({ topic: improvementTopics[0].topic }),
+        cta: "Open question bank",
+        icon: TrendingUp,
+        accent: "border-[rgba(77,163,255,0.18)] bg-[rgba(77,163,255,0.10)] text-[var(--blue)]",
+      });
+    }
+
+    if (bookmarkCount > 0) {
+      actions.push({
+        title: `Review ${bookmarkCount} saved bookmark${bookmarkCount === 1 ? "" : "s"}`,
+        description: "Saved questions are the easiest way to convert recognition into retention.",
+        href: buildPracticeHref({ bookmarked: true }),
+        cta: "Use bookmarks",
+        icon: BookMarked,
+        accent:
+          "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-primary)]",
+      });
+    } else {
+      actions.push({
+        title: "Set up your review bank",
+        description: "Bookmark useful PYQs and mistakes during practice so revision stays lightweight later.",
+        href: "/practice",
+        cta: "Start practicing",
+        icon: Brain,
+        accent:
+          "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-primary)]",
+      });
+    }
+
+    return actions.slice(0, 3);
+  }, [bookmarkCount, dailyRemaining, improvementTopics]);
 
   if (loading || pageLoading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen home-reference-page">
         <Navbar />
         <div className="container-shell flex min-h-[60vh] items-center justify-center">
           <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-5 py-3 text-sm text-[var(--text-secondary)]">
@@ -148,7 +575,7 @@ export default function Dashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen home-reference-page">
         <Navbar />
         <div className="container-shell py-14">
           <div className="glass-panel rounded-[32px] p-8 text-center md:p-12">
@@ -176,204 +603,600 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen home-reference-page">
       <Navbar />
-      {user ? (
-        <OnboardingModal
-          isOpen={showOnboarding}
-          userId={user.id}
-          defaultExam={profile?.target_exam || "UPSC CSE 2026"}
-          onClose={() => setShowOnboarding(false)}
-          onComplete={({ targetExam, dailyGoal }) => {
-            setProfile((current: ProfileRow | null) => ({ ...(current || {}), target_exam: targetExam }));
-          }}
-        />
-      ) : null}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        userId={user.id}
+        defaultExam={targetExam}
+        onClose={() => setShowOnboarding(false)}
+        onComplete={({ targetExam: nextTargetExam, dailyGoal: nextDailyGoal }) => {
+          setProfile((current: ProfileRow | null) => ({
+            ...(current || {}),
+            target_exam: nextTargetExam,
+          }));
+          setDailyGoalOverride(Number.parseInt(nextDailyGoal, 10) || 12);
+        }}
+      />
 
-      <main className="px-4 py-8 md:py-10">
-        <div className="container-shell space-y-8">
-          <div className="glass-panel rounded-[24px] px-6 py-8 md:px-8 md:py-10">
-            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
-                  Dashboard
-                </p>
-                <h1 className="mt-4 text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-5xl">
-                  Welcome back, {displayName}.
-                </h1>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] md:text-base">
-                  Pick up where you left off, protect your daily goal, and use your recent answers
-                  to decide what deserves attention next.
-                </p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link href="/practice">
-                    <span className="btn-primary inline-flex cursor-pointer rounded-[12px] px-6 py-3">
-                      Continue practice
-                      <ArrowRight size={16} />
-                    </span>
-                  </Link>
+      <main className="px-4 pb-14 pt-6 md:pb-16 md:pt-8">
+        <div className="container-shell grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
+          <aside className="space-y-6 lg:sticky lg:top-[104px] lg:self-start">
+            <section className={`${shellClassName} p-5 md:p-6`}>
+              <div className="flex items-start gap-4">
+                <Avatar className="h-24 w-24 shrink-0 rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,161,22,0.22)_0%,rgba(77,163,255,0.18)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                  <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
+                  <AvatarFallback className="rounded-[24px] bg-transparent text-3xl font-semibold text-white">
+                    {displayName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    {displayName}
+                  </p>
+                  <p className="mt-1 truncate text-sm text-[var(--text-muted)]">@{username}</p>
+                  <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
+                    Focused on {targetExam}. Serious prep feels calmer when the next action is
+                    visible.
+                  </p>
                   <Link href="/profile">
-                    <span className="btn-secondary inline-flex cursor-pointer rounded-[12px] px-6 py-3">
-                      Open profile
+                    <span className="mt-3 inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--brand-light)]">
+                      {avatarUrl ? "Update profile details" : "Add your avatar"}
+                      <ArrowRight size={14} />
                     </span>
                   </Link>
                 </div>
               </div>
 
-              <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                      Today’s goal
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {[
+                  { label: "Solved", value: totalSolved, tone: "text-[var(--text-primary)]" },
+                  { label: "Accuracy", value: `${accuracy}%`, tone: "text-[var(--blue)]" },
+                  { label: "Bookmarks", value: bookmarkCount, tone: "text-[var(--brand-light)]" },
+                  { label: "Streak", value: `${streak}d`, tone: "text-[var(--accent)]" },
+                ].map((item) => (
+                  <div key={item.label} className={`${insetClassName} p-4`}>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                      {item.label}
                     </p>
-                    <p className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                      {todaySolved}/{dailyGoal}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-[var(--brand-subtle)] p-3 text-[var(--brand)]">
-                    <Target size={20} />
-                  </div>
-                </div>
-                <div className="mt-5 progress-track">
-                  <div className="progress-fill" style={{ width: `${dailyPercent}%` }} />
-                </div>
-                <p className="mt-3 text-sm text-[var(--text-secondary)]">
-                  {dailyPercent >= 100
-                    ? "You’ve hit today’s goal. Keep going to build tomorrow’s confidence."
-                    : `${dailyGoal - todaySolved} more questions to hit today’s target.`}
-                </p>
-                <div className="mt-6 rounded-[16px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                    Target exam
-                  </p>
-                    <p className="mt-2 text-lg font-semibold text-[var(--text-primary)]">
-                      {profile?.target_exam || "UPSC CSE 2026"}
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                    Keep the product personalized so the dashboard feels relevant from day one.
+                    <p className={`mt-3 text-3xl font-semibold tracking-[-0.05em] ${item.tone}`}>
+                      {item.value}
                     </p>
                   </div>
-                </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              { label: "Solved questions", value: totalSolved, icon: Brain },
-              { label: "Accuracy", value: `${accuracy}%`, icon: TrendingUp },
-              { label: "Current streak", value: `${streak}d`, icon: Flame },
-              { label: "Bookmarks", value: bookmarkCount, icon: BookMarked },
-            ].map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div key={item.label} className="stat-card rounded-[18px]">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-subtle)] text-[var(--brand)]">
-                    <Icon size={18} />
-                  </div>
-                  <p className="mt-5 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                    {item.value}
-                  </p>
-                  <p className="mt-2 text-sm text-[var(--text-muted)]">{item.label}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="glass-panel rounded-[24px] p-6 md:p-8">
-              <SectionHeader
-                eyebrow="Recent momentum"
-                title="What you touched most recently"
-                description="The dashboard should surface what happened, not make you dig for it."
-              />
-              <div className="mt-6 space-y-3">
-                {recentSessions.length > 0 ? (
-                  recentSessions.map((session) => (
-                    <div
-                      key={`${session.id}-${session.date}`}
-                      className="flex items-center justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-4 py-4"
-                    >
-                      <div>
-                        <p className="font-semibold text-[var(--text-primary)]">{session.topic}</p>
-                        <p className="text-sm text-[var(--text-secondary)]">
-                          {session.exam} · {session.date}
-                        </p>
-                      </div>
-                      <span
-                        className={`badge ${session.correct ? "badge-green" : "badge-yellow"} px-3 py-1 text-xs`}
-                      >
-                        {session.correct ? "Correct" : "Needs review"}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="rounded-[28px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)] p-6 text-center">
-                    <p className="text-lg font-semibold text-[var(--text-primary)]">
-                      No answered questions yet
-                    </p>
-                    <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                      Start with practice so your dashboard can begin showing momentum and review
-                      cues.
-                    </p>
-                    <Link href="/practice">
-                      <span className="btn-primary mt-5 inline-flex cursor-pointer rounded-[12px] px-5 py-2.5">
-                        Start now
-                      </span>
-                    </Link>
-                  </div>
-                )}
+                ))}
               </div>
-            </div>
 
-            <div className="grid gap-6">
-              <div className="glass-panel rounded-[24px] p-6 md:p-8">
-                <SectionHeader
-                  eyebrow="Improve next"
-                  title="Topics that need another pass"
-                  description="Weak-topic nudges help turn the dashboard into a study guide, not just a scoreboard."
-                />
-                <div className="mt-6 space-y-3">
-                  {improvementTopics.length > 0 ? (
-                    improvementTopics.map((topic) => (
-                      <div key={topic.topic} className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-4">
+              <div className="mt-6 flex flex-col gap-3">
+                <Link href="/practice">
+                  <span className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(180deg,#ff9838_0%,#ff7a12_100%)] px-5 py-3 text-sm font-medium text-white shadow-[0_22px_45px_-28px_rgba(255,122,18,0.95)] transition hover:brightness-105">
+                    Continue practice
+                    <ArrowRight size={15} />
+                  </span>
+                </Link>
+                <Link href="/profile">
+                  <span className="inline-flex w-full cursor-pointer items-center justify-center rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[rgba(255,255,255,0.04)] px-5 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.18)]">
+                    Open profile
+                  </span>
+                </Link>
+              </div>
+            </section>
+
+            <section className={`${shellClassName} p-5 md:p-6`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                Prep snapshot
+              </p>
+              <div className="mt-4 space-y-4">
+                {[
+                  { label: "Today", value: `${todayAttempts}/${dailyGoal}`, meta: dailyPercent >= 100 ? "Goal completed" : `${dailyRemaining} left today` },
+                  { label: "This week", value: `${weeklyAttempts}`, meta: `${weeklyAccuracy}% weekly accuracy` },
+                  { label: "Best streak", value: `${maxStreak}d`, meta: `${heatmap.activeDayCount} active days in ${heatmapRangeLabel}` },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between gap-3 rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-4 py-3.5">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                        {item.label}
+                      </p>
+                      <p className="mt-1 text-sm text-[var(--text-secondary)]">{item.meta}</p>
+                    </div>
+                    <p className="text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className={`${shellClassName} p-5 md:p-6`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                Review buckets
+              </p>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                    Weak topics
+                  </p>
+                  <div className="mt-3 space-y-2.5">
+                    {improvementTopics.length > 0 ? (
+                      improvementTopics.map((topic) => (
+                        <Link key={topic.topic} href={buildPracticeHref({ topic: topic.topic })}>
+                          <span className="flex cursor-pointer items-center justify-between gap-3 rounded-[16px] bg-[rgba(255,255,255,0.04)] px-3 py-2.5 transition hover:bg-[rgba(255,255,255,0.07)]">
+                            <span className="text-sm font-medium text-[var(--text-primary)]">{topic.topic}</span>
+                            <span className="text-sm text-[var(--brand-light)]">{topic.accuracy}%</span>
+                          </span>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="text-sm text-[var(--text-secondary)]">
+                        Weak-topic signals will show once you have more activity.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t border-[rgba(255,255,255,0.08)] pt-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                    Bookmark clusters
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {bookmarkTopics.length > 0 ? (
+                      bookmarkTopics.map((item) => (
+                        <Link key={item.topic} href={buildPracticeHref({ topic: item.topic, bookmarked: true })}>
+                          <span className="inline-flex cursor-pointer rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:border-[rgba(255,255,255,0.16)]">
+                            {item.topic} - {item.total}
+                          </span>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="text-sm text-[var(--text-secondary)]">
+                        Save questions during practice to build a cleaner revision stack.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          </aside>
+
+          <div className="space-y-6">
+            <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+              <div className={`${shellClassName} p-6 md:p-7`}>
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                      Solved progress
+                    </p>
+                    <h1 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-4xl">
+                      Your prep command center
+                    </h1>
+                    <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+                      Dense, calm, and useful: real progress, real review signals, and a clearer
+                      sense of what to do next.
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(77,163,255,0.16)] bg-[rgba(77,163,255,0.08)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--blue)]">
+                    <BarChart3 size={14} />
+                    {questionCount > 0 ? `${Math.round((totalSolved / questionCount) * 100)}% coverage` : "0% coverage"}
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-6 lg:grid-cols-[0.88fr_1.12fr] lg:items-center">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className="flex h-60 w-60 items-center justify-center rounded-full p-[12px] shadow-[0_0_60px_rgba(255,161,22,0.08)]"
+                      style={solvedRingStyle}
+                    >
+                      <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(17,16,26,0.96)_0%,rgba(10,10,17,0.98)_100%)] text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <p className="text-5xl font-semibold tracking-[-0.07em] text-[var(--text-primary)]">
+                          {totalSolved}
+                        </p>
+                        <p className="mt-1 text-sm text-[var(--text-secondary)]">/ {questionCount || 0} solved</p>
+                        <p className="mt-3 text-sm font-medium text-[var(--accent)]">{totalAttempts} attempts logged</p>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm text-[var(--text-secondary)]">
+                      Difficulty mix uses real solved questions from the bank.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {difficultyProgress.map((item) => (
+                      <div key={item.difficulty} className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="font-semibold text-[var(--text-primary)]">{topic.topic}</p>
-                            <p className="text-sm text-[var(--text-secondary)]">
-                              {topic.total} attempts logged
+                            <p className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                              {item.difficulty}
+                            </p>
+                            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                              {item.solved}/{item.total} questions solved
                             </p>
                           </div>
-                          <p className="text-xl font-semibold tracking-[-0.04em] text-[var(--red)]">
-                            {topic.accuracy}%
+                          <p className="text-2xl font-semibold tracking-[-0.05em]" style={{ color: item.color }}>
+                            {item.total > 0 ? `${Math.round((item.solved / item.total) * 100)}%` : "0%"}
                           </p>
                         </div>
-                        <div className="mt-4 progress-track">
-                          <div className="progress-fill" style={{ width: `${topic.accuracy}%` }} />
+                        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${item.total > 0 ? Math.round((item.solved / item.total) * 100) : 0}%`,
+                              background: item.color,
+                            }}
+                          />
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="rounded-[28px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)] p-6 text-sm text-[var(--text-secondary)]">
-                      Answer a few more questions and your weak-topic suggestions will show up here.
+                    ))}
+
+                    <div className={`${insetClassName} p-4`}>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                        Current read
+                      </p>
+                      <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                        {focusCopy.title}
+                      </p>
+                      <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                        {focusCopy.description}
+                      </p>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-inverse)] p-6 text-white md:p-8">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
-                  <Sparkles size={18} />
-                </div>
-                <p className="mt-5 text-2xl font-semibold tracking-[-0.05em] text-white">
-                  Best streak: {maxStreak} days
-                </p>
-                <p className="mt-3 text-sm text-white/72">
-                  Streaks only matter when the surrounding product reinforces the habit. The new
-                  layout makes that loop more visible across the platform.
-                </p>
+              <div className="grid gap-6">
+                <section className={`${shellClassName} p-6 md:p-7`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                        Today&apos;s goal
+                      </p>
+                      <p className="mt-3 text-5xl font-semibold tracking-[-0.07em] text-[var(--text-primary)]">
+                        {todayAttempts}/{dailyGoal}
+                      </p>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        {dailyPercent >= 100
+                          ? "Goal completed. Use the extra time for review."
+                          : `${dailyRemaining} more to lock in today's target.`}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold uppercase tracking-[0.18em] ${
+                        dailyPercent >= 100
+                          ? "border-[rgba(45,181,93,0.2)] bg-[rgba(45,181,93,0.12)] text-[var(--accent)]"
+                          : "border-[rgba(255,161,22,0.18)] bg-[rgba(255,161,22,0.10)] text-[var(--brand-light)]"
+                      }`}
+                    >
+                      {dailyPercent >= 100 ? <CheckCircle2 size={14} /> : <Target size={14} />}
+                      {dailyPercent >= 100 ? "Goal hit" : `${dailyPercent}% done`}
+                    </span>
+                  </div>
+
+                  <div className="mt-5 h-3 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+                    <div
+                      className="h-full rounded-full bg-[linear-gradient(90deg,#ff9838_0%,#ffb861_45%,#78d2ff_100%)] shadow-[0_0_24px_rgba(120,210,255,0.28)]"
+                      style={{ width: `${dailyPercent}%` }}
+                    />
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <div className={`${insetClassName} p-4`}>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Today accuracy</p>
+                      <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--blue)]">
+                        {todayAttempts > 0 ? `${todayAccuracy}%` : "n/a"}
+                      </p>
+                    </div>
+                    <div className={`${insetClassName} p-4`}>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Target exam</p>
+                      <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                        {targetExam}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className={`${shellClassName} p-6 md:p-7`}>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                    Focus queue
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    <Link
+                      href={
+                        improvementTopics[0]
+                          ? buildPracticeHref({ topic: improvementTopics[0].topic, incorrect: true })
+                          : "/practice"
+                      }
+                    >
+                      <span className={`block cursor-pointer ${insetClassName} p-4 transition hover:border-[rgba(255,255,255,0.16)]`}>
+                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Priority review</p>
+                        <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                          {improvementTopics[0] ? improvementTopics[0].topic : "Build activity first"}
+                        </p>
+                        <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                          {improvementTopics[0]
+                            ? `${improvementTopics[0].incorrect} misses across ${improvementTopics[0].total} recent attempts make this the highest-value topic to revisit.`
+                            : "Once you answer more questions, the dashboard will start isolating weak areas here."}
+                        </p>
+                      </span>
+                    </Link>
+
+                    <div className={`${insetClassName} p-4`}>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Consistency</p>
+                      <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--accent)]">
+                        {activeDays}/7
+                      </p>
+                      <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                        Active days this week with a current streak of {streak} day{streak === 1 ? "" : "s"}.
+                      </p>
+                    </div>
+                  </div>
+                </section>
               </div>
-            </div>
+            </section>
+
+            <section className={`${shellClassName} p-6 md:p-7`}>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                    Activity heatmap
+                  </p>
+                  <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    Attempts over time
+                  </h2>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap gap-2">
+                    {(["7D", "30D", "26W", "1Y"] as const).map((range) => (
+                      <button
+                        key={range}
+                        type="button"
+                        onClick={() => setHeatmapRange(range)}
+                        className={`rounded-[12px] px-3.5 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition ${
+                          heatmapRange === range
+                            ? "bg-[rgba(255,161,22,0.14)] text-[var(--brand-light)]"
+                            : "border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                        }`}
+                      >
+                        {range}
+                      </button>
+                    ))}
+                  </div>
+                  {[
+                    { label: "Active days", value: heatmap.activeDayCount },
+                    { label: "Current streak", value: streak },
+                    { label: "Best streak", value: maxStreak },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-[16px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-4 py-3"
+                    >
+                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                        {item.label}
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 overflow-x-auto">
+                <div className="min-w-[720px]">
+                  <div className="mb-3 flex gap-[6px] pl-7">
+                    {heatmap.weeks.map((week) => (
+                      <div key={`month-${week.key}`} className="w-[12px] text-[10px] text-[var(--text-muted)]">
+                        {week.monthLabel}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-[6px]">
+                    <div className="flex w-6 flex-col justify-between py-[1px] text-[10px] text-[var(--text-muted)]">
+                      <span>M</span>
+                      <span>W</span>
+                      <span>F</span>
+                    </div>
+
+                    <div className="flex gap-[6px]">
+                      {heatmap.weeks.map((week) => (
+                        <div key={week.key} className="flex flex-col gap-[6px]">
+                          {week.days.map((day) => (
+                            <div
+                              key={day.dateKey}
+                              className="h-[12px] w-[12px] rounded-[4px] border border-[rgba(255,255,255,0.04)]"
+                              style={{ backgroundColor: getHeatmapColor(day.count, heatmap.maxCount) }}
+                              title={`${day.date.toDateString()}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between gap-4">
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      Darker cells mean more attempts on that day.
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                      <span>Less</span>
+                      {[0, 1, 2, 3].map((level) => (
+                        <span
+                          key={level}
+                          className="h-3 w-3 rounded-[3px] border border-[rgba(255,255,255,0.04)]"
+                          style={{ backgroundColor: getHeatmapColor(level, 3) }}
+                        />
+                      ))}
+                      <span>More</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className={`${shellClassName} p-6 md:p-7`}>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                    Workspace
+                  </p>
+                  <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    Recent activity, review, and next actions
+                  </h2>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: "activity", label: "Recent activity" },
+                    { id: "review", label: "Review queue" },
+                    { id: "actions", label: "Next actions" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActivePanel(tab.id as typeof activePanel)}
+                      className={`rounded-[14px] px-4 py-2.5 text-sm font-medium transition ${
+                        activePanel === tab.id
+                          ? "bg-[rgba(255,161,22,0.14)] text-[var(--brand-light)]"
+                          : "border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6">
+                {activePanel === "activity" ? (
+                  <div className="space-y-3">
+                    {recentSessions.length > 0 ? (
+                      recentSessions.map((session) => (
+                        <Link
+                          key={`${session.id}-${session.date}`}
+                          href={buildPracticeHref({
+                            questionId: session.id,
+                            topic: session.topic,
+                            exam: session.exam !== "General" ? session.exam : undefined,
+                          })}
+                        >
+                          <span className="flex cursor-pointer flex-col gap-4 rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-4 py-4 transition hover:border-[rgba(255,255,255,0.16)] md:flex-row md:items-center md:justify-between">
+                            <span>
+                              <span className="flex flex-wrap items-center gap-2">
+                                <span className="font-semibold text-[var(--text-primary)]">{session.topic}</span>
+                                <span className="rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                                  {session.type}
+                                </span>
+                              </span>
+                              <span className="mt-1 block text-sm text-[var(--text-secondary)]">
+                                {session.exam} - {session.date}
+                              </span>
+                            </span>
+
+                            <span
+                              className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] ${
+                                session.correct
+                                  ? "border-[rgba(45,181,93,0.2)] bg-[rgba(45,181,93,0.10)] text-[var(--accent)]"
+                                  : "border-[rgba(255,184,0,0.2)] bg-[rgba(255,184,0,0.10)] text-[var(--yellow)]"
+                              }`}
+                            >
+                              {session.correct ? <CheckCircle2 size={13} /> : <CircleAlert size={13} />}
+                              {session.correct ? "Correct" : "Needs review"}
+                            </span>
+                          </span>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="rounded-[26px] border border-dashed border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.03)] p-8 text-center">
+                        <p className="text-xl font-semibold text-[var(--text-primary)]">
+                          No answered questions yet
+                        </p>
+                        <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">
+                          Start with practice so this workspace begins showing useful activity.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                {activePanel === "review" ? (
+                  <div className="space-y-3">
+                    {reviewQueue.length > 0 ? (
+                      reviewQueue.map((item) => (
+                        <Link
+                          key={`${item.kind}-${item.id}`}
+                          href={buildPracticeHref({
+                            questionId: item.id,
+                            topic: item.topic,
+                            exam: item.exam,
+                            bookmarked: item.kind === "bookmark",
+                            incorrect: item.kind === "mistake",
+                          })}
+                        >
+                          <span className="block cursor-pointer rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-4 transition hover:border-[rgba(255,255,255,0.16)]">
+                            <span className="flex items-start justify-between gap-3">
+                              <span>
+                                <span className="line-clamp-2 text-[15px] font-medium leading-6 text-[var(--text-primary)]">
+                                  {item.title}
+                                </span>
+                                <span className="mt-1 block text-sm text-[var(--text-secondary)]">
+                                  {item.exam} - {item.topic}
+                                </span>
+                              </span>
+                              <span
+                                className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                                  item.kind === "mistake"
+                                    ? "border-[rgba(255,95,86,0.18)] bg-[rgba(255,95,86,0.10)] text-[var(--red)]"
+                                    : "border-[rgba(255,161,22,0.18)] bg-[rgba(255,161,22,0.10)] text-[var(--brand-light)]"
+                                }`}
+                              >
+                                {item.reason}
+                              </span>
+                            </span>
+                          </span>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="rounded-[22px] border border-dashed border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.03)] p-6 text-sm text-[var(--text-secondary)]">
+                        Missed questions and bookmarks will collect here as your review queue builds up.
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                {activePanel === "actions" ? (
+                  <div className="space-y-3">
+                    {nextActions.map((action) => {
+                      const Icon = action.icon;
+                      return (
+                        <div
+                          key={action.title}
+                          className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-4"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className={`rounded-[16px] border p-3 ${action.accent}`}>
+                              <Icon size={18} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                                {action.title}
+                              </p>
+                              <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                                {action.description}
+                              </p>
+                              <Link href={action.href}>
+                                <span className="mt-3 inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--brand-light)]">
+                                  {action.cta}
+                                  <ArrowRight size={14} />
+                                </span>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            </section>
           </div>
         </div>
       </main>

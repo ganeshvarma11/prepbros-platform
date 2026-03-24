@@ -14,6 +14,7 @@ import { Link } from "wouter";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import SectionHeader from "@/components/SectionHeader";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
 import { supabase } from "@/lib/supabase";
@@ -37,6 +38,8 @@ export default function Profile() {
   const [answers, setAnswers] = useState<any[]>([]);
   const [bookmarkIds, setBookmarkIds] = useState<number[]>([]);
   const [targetExam, setTargetExam] = useState("UPSC CSE 2026");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [savingAvatar, setSavingAvatar] = useState(false);
   const { questions } = useQuestionBank();
 
   useEffect(() => {
@@ -61,6 +64,13 @@ export default function Profile() {
       setAnswers(answerData || []);
       setBookmarkIds((bookmarkData || []).map((item: any) => item.question_id));
       setTargetExam(profileData?.target_exam || "UPSC CSE 2026");
+      setAvatarUrl(
+        profileData?.avatar_url ||
+          user.user_metadata?.avatar_url ||
+          user.user_metadata?.picture ||
+          user.user_metadata?.avatar ||
+          "",
+      );
       setLoading(false);
     };
 
@@ -105,6 +115,20 @@ export default function Profile() {
     setTargetExam(value);
     if (!user) return;
     await supabase.from("profiles").update({ target_exam: value }).eq("id", user.id);
+  };
+
+  const saveAvatar = async () => {
+    if (!user) return;
+    setSavingAvatar(true);
+    const nextAvatarUrl = avatarUrl.trim();
+    await supabase.auth.updateUser({
+      data: {
+        ...(user.user_metadata || {}),
+        avatar_url: nextAvatarUrl,
+      },
+    });
+    setProfile((current: any) => ({ ...(current || {}), avatar_url: nextAvatarUrl }));
+    setSavingAvatar(false);
   };
 
   if (loading) {
@@ -160,9 +184,12 @@ export default function Profile() {
               <div className="rounded-[28px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-[22px] bg-[var(--brand-subtle)] text-[var(--brand)]">
-                      <UserCircle2 size={34} />
-                    </div>
+                    <Avatar className="h-16 w-16 rounded-[22px] border border-[var(--border)]">
+                      <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
+                      <AvatarFallback className="rounded-[22px] bg-[var(--brand-subtle)] text-[var(--brand)]">
+                        <UserCircle2 size={34} />
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <p className="text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                         {displayName}
@@ -185,6 +212,23 @@ export default function Profile() {
                       <option key={exam}>{exam}</option>
                     ))}
                   </select>
+                </div>
+
+                <div className="mt-4 rounded-3xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                    Avatar image URL
+                  </p>
+                  <input
+                    value={avatarUrl}
+                    onChange={(event) => setAvatarUrl(event.target.value)}
+                    placeholder="https://..."
+                    className="input mt-3"
+                  />
+                  <div className="mt-3 flex justify-end">
+                    <button type="button" onClick={saveAvatar} disabled={savingAvatar} className="btn-secondary rounded-full px-4">
+                      {savingAvatar ? "Saving..." : "Save avatar"}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">

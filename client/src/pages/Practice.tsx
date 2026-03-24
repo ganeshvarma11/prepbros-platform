@@ -77,6 +77,7 @@ export default function Practice() {
   const [selTypes, setSelTypes] = useState<string[]>([]);
   const [selTopics, setSelTopics] = useState<string[]>([]);
   const [selYears, setSelYears] = useState<number[]>([]);
+  const [reviewMode, setReviewMode] = useState<"" | "bookmarked" | "wrong">("");
   const [sortBy, setSortBy] = useState<"default" | "difficulty" | "year">("default");
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
@@ -86,6 +87,41 @@ export default function Practice() {
   const [solved, setSolved] = useState<number[]>([]);
   const [answerStatuses, setAnswerStatuses] = useState<Record<number, "correct" | "wrong">>({});
   const [answerStart, setAnswerStart] = useState<number>(Date.now());
+  const [queryHydrated, setQueryHydrated] = useState(false);
+  const [pendingQuestionId, setPendingQuestionId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const getList = (key: string, fallbackKey?: string) => {
+      const raw = params.get(key) || (fallbackKey ? params.get(fallbackKey) : "") || "";
+      return raw
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    };
+
+    setSearch(params.get("search") || "");
+    setSelExams(getList("exams", "exam"));
+    setSelDiff(params.get("difficulty") || "");
+    setSelTypes(getList("types", "type"));
+    setSelTopics(getList("topics", "topic"));
+    setSelYears(
+      getList("years", "year")
+        .map((value) => Number.parseInt(value, 10))
+        .filter((value) => Number.isFinite(value)),
+    );
+    setSortBy((params.get("sort") as "default" | "difficulty" | "year") || "default");
+    const questionId = Number.parseInt(params.get("question") || "", 10);
+    setPendingQuestionId(Number.isFinite(questionId) ? questionId : null);
+    if (params.get("bookmarked") === "1") {
+      setReviewMode("bookmarked");
+    } else if (params.get("incorrect") === "1") {
+      setReviewMode("wrong");
+    } else {
+      setReviewMode("");
+    }
+    setQueryHydrated(true);
+  }, []);
 
   useEffect(() => {
     fetchQuestions().then((records) => {
@@ -113,6 +149,9 @@ export default function Practice() {
     getAnswerStatuses(user.id).then(setAnswerStatuses);
   }, [user]);
 
+  const solvedSet = useMemo(() => new Set(solved), [solved]);
+  const bookmarkSet = useMemo(() => new Set(bookmarks), [bookmarks]);
+
   const filtered = useMemo(() => {
     let current = [...questions];
 
@@ -128,6 +167,12 @@ export default function Practice() {
     if (selTypes.length) current = current.filter((item) => selTypes.includes(item.type));
     if (selTopics.length) current = current.filter((item) => selTopics.includes(item.topic));
     if (selYears.length) current = current.filter((item) => item.year !== null && selYears.includes(item.year));
+    if (reviewMode === "bookmarked") {
+      current = current.filter((item) => bookmarkSet.has(item.id));
+    }
+    if (reviewMode === "wrong") {
+      current = current.filter((item) => answerStatuses[item.id] === "wrong");
+    }
     if (sortBy === "difficulty") {
       current.sort(
         (a, b) =>
@@ -139,16 +184,13 @@ export default function Practice() {
       current.sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
     }
     return current;
-  }, [questions, search, selExams, selDiff, selTypes, selTopics, selYears, sortBy]);
+  }, [questions, search, selExams, selDiff, selTypes, selTopics, selYears, reviewMode, sortBy, bookmarkSet, answerStatuses]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const activeIdx = activeQ ? filtered.findIndex((question) => question.id === activeQ.id) : -1;
   const filterCount =
-    selExams.length + (selDiff ? 1 : 0) + selTypes.length + selTopics.length + selYears.length;
-
-  const solvedSet = useMemo(() => new Set(solved), [solved]);
-  const bookmarkSet = useMemo(() => new Set(bookmarks), [bookmarks]);
+    selExams.length + (selDiff ? 1 : 0) + selTypes.length + selTopics.length + selYears.length + (reviewMode ? 1 : 0);
   const examCounts = useMemo(
     () =>
       EXAMS.reduce<Record<string, number>>((acc, exam) => {
@@ -162,6 +204,37 @@ export default function Practice() {
     setPage((current) => Math.min(current, totalPages));
   }, [totalPages]);
 
+  useEffect(() => {
+    if (!queryHydrated) return;
+
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (selExams.length) params.set("exams", selExams.join(","));
+    if (selDiff) params.set("difficulty", selDiff);
+    if (selTypes.length) params.set("types", selTypes.join(","));
+    if (selTopics.length) params.set("topics", selTopics.join(","));
+    if (selYears.length) params.set("years", selYears.join(","));
+    if (reviewMode === "bookmarked") params.set("bookmarked", "1");
+    if (reviewMode === "wrong") params.set("incorrect", "1");
+    if (sortBy !== "default") params.set("sort", sortBy);
+    if (pendingQuestionId) params.set("question", String(pendingQuestionId));
+
+    const query = params.toString();
+    window.history.replaceState({}, "", query ? `/practice?${query}` : "/practice");
+  }, [pendingQuestionId, queryHydrated, reviewMode, search, selDiff, selExams, selTopics, selTypes, selYears, sortBy]);
+
+  useEffect(() => {
+    if (questionsLoading || questions.length === 0 || pendingQuestionId === null) return;
+
+    const match = questions.find((question) => question.id === pendingQuestionId);
+    if (!match) return;
+
+    setActiveQ(match);
+    setSelected(null);
+    setAnswerStart(Date.now());
+    setPendingQuestionId(null);
+  }, [pendingQuestionId, questions, questionsLoading]);
+
   const toggle = <T,>(arr: T[], setArr: (value: T[]) => void, value: T) => {
     setArr(arr.includes(value) ? arr.filter((item) => item !== value) : [...arr, value]);
   };
@@ -173,6 +246,7 @@ export default function Practice() {
     setSelTypes([]);
     setSelTopics([]);
     setSelYears([]);
+    setReviewMode("");
     setSortBy("default");
     setPage(1);
   };
@@ -269,6 +343,33 @@ export default function Practice() {
       </div>
 
       <div className="mt-6 space-y-6">
+        <div>
+          <p className="filter-section-title">Review</p>
+          <div className="space-y-2">
+            {[
+              { value: "", label: "All questions" },
+              { value: "bookmarked", label: "Bookmarked only" },
+              { value: "wrong", label: "Incorrect only" },
+            ].map((item) => (
+              <label
+                key={item.label}
+                className="flex cursor-pointer items-center gap-3 rounded-[14px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
+              >
+                <input
+                  type="radio"
+                  name="review-mode"
+                  checked={reviewMode === item.value}
+                  onChange={() => {
+                    setReviewMode(item.value as typeof reviewMode);
+                    setPage(1);
+                  }}
+                />
+                <span className="text-sm text-[var(--text-secondary)]">{item.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         <div>
           <p className="filter-section-title">Exam</p>
           <div className="space-y-2">
