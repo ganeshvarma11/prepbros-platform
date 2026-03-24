@@ -1,4 +1,4 @@
-import { ArrowUpRight, HeartHandshake, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Mail, ShieldCheck, Target, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 
 import BrandLogo from "@/components/BrandLogo";
@@ -13,7 +13,7 @@ const FOOTER_LINKS: Record<
     { label: "Explore", href: "/explore" },
     { label: "Resources", href: "/resources" },
   ],
-  Platform: [
+  Prep: [
     { label: "Contests", href: "/contests" },
     { label: "Leaderboard", href: "/leaderboard" },
     { label: "Profile", href: "/profile" },
@@ -29,19 +29,19 @@ const FOOTER_LINKS: Record<
 
 const PROMISES = [
   {
+    icon: Target,
+    title: "Daily targets that feel usable",
+    description: "Set a realistic practice goal and keep the next step obvious every time you return.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Progress that stays visible",
+    description: "Solved counts, streaks, and weak-topic cues make improvement easier to follow.",
+  },
+  {
     icon: ShieldCheck,
-    title: "Progress you can trust",
-    description: "Secure auth with Supabase and a cleaner practice history across sessions.",
-  },
-  {
-    icon: Sparkles,
-    title: "Designed for focus",
-    description: "No cluttered coaching-site feel. Clear hierarchy, better pacing, stronger mobile UX.",
-  },
-  {
-    icon: HeartHandshake,
-    title: "Built for real aspirants",
-    description: "Study workflows that reduce overwhelm and reward consistency, not just speed.",
+    title: "A calmer prep workflow",
+    description: "Focused product screens reduce noise so practice feels serious, clean, and repeatable.",
   },
 ];
 
@@ -52,8 +52,15 @@ export default function Footer() {
     <footer className="border-t border-[var(--border)] bg-[var(--bg-base)]/90 pb-10 pt-14 backdrop-blur">
       <div className="container-shell space-y-10">
         <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-          <div className="glass-panel rounded-[28px] p-6 md:p-8">
+          <div className="home-section-surface rounded-[28px] p-6 md:p-8">
             <BrandLogo />
+            <h3 className="mt-6 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+              A cleaner home for daily exam preparation.
+            </h3>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+              PrepBros is designed to help aspirants practice every day, notice what improved, and
+              revisit what still needs work without getting buried in clutter.
+            </p>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {PROMISES.map((item) => {
                 const Icon = item.icon;
@@ -74,24 +81,32 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="glass-panel rounded-[28px] p-6 md:p-8">
+          <div className="home-section-surface rounded-[28px] p-6 md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand)]">
-              Launch Checklist
+              Keep going
             </p>
             <h3 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-              Make your first impression feel established.
+              Start a focused prep routine and keep your progress in one place.
             </h3>
             <p className="mt-3 text-sm text-[var(--text-secondary)]">
-              Add your domain, support email, privacy policy, and real social proof before sending
-              paid or organic traffic to the homepage.
+              The strongest V1 value is the daily loop itself: practice, progress, review, and
+              consistency. Everything below should make that loop easier to access.
             </p>
-            <a
-              href="mailto:hello@prepbros.com"
-              className="mt-6 inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--brand-muted)]"
-            >
-              <Mail size={14} className="text-[var(--brand)]" />
-              hello@prepbros.com
-            </a>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/practice">
+                <span className="btn-primary inline-flex cursor-pointer rounded-[12px] px-5">
+                  Start practicing
+                  <ArrowRight size={15} />
+                </span>
+              </Link>
+              <a
+                href="mailto:hello@prepbros.com"
+                className="inline-flex items-center gap-2 rounded-[12px] border border-[var(--border-strong)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--brand-muted)]"
+              >
+                <Mail size={14} className="text-[var(--brand)]" />
+                hello@prepbros.com
+              </a>
+            </div>
           </div>
         </div>
 
@@ -100,40 +115,29 @@ export default function Footer() {
             <div key={group}>
               <p className="mb-4 text-sm font-semibold text-[var(--text-primary)]">{group}</p>
               <div className="space-y-3">
-                {items.map((item) =>
-                  item.external ? (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
-                    >
+                {items.map((item) => (
+                  <Link key={item.label} href={item.href}>
+                    <span className="block cursor-pointer text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]">
                       {item.label}
-                      <ArrowUpRight size={13} className="text-[var(--text-faint)]" />
-                    </a>
-                  ) : (
-                    <Link key={item.label} href={item.href}>
-                      <span className="block cursor-pointer text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]">
-                        {item.label}
-                      </span>
-                    </Link>
-                  ),
-                )}
+                    </span>
+                  </Link>
+                ))}
               </div>
             </div>
           ))}
           <div>
-            <p className="mb-4 text-sm font-semibold text-[var(--text-primary)]">Why users stay</p>
+            <p className="mb-4 text-sm font-semibold text-[var(--text-primary)]">What the product helps with</p>
             <div className="space-y-3 text-sm text-[var(--text-secondary)]">
-              <p>Daily challenge and streak loops encourage consistency.</p>
-              <p>Dashboard context turns practice into a visible plan.</p>
-              <p>Better copy and structure reduce drop-off for first-time visitors.</p>
+              <p>Daily targets make the first action obvious.</p>
+              <p>Progress history turns practice into a visible plan.</p>
+              <p>Bookmarks and weak-topic review reduce revision friction.</p>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-6 text-sm text-[var(--text-muted)] md:flex-row md:items-center md:justify-between">
-          <p>© {year} PrepBros. Built to help serious aspirants prepare with clarity and confidence.</p>
-          <p>Domain, policies, analytics, and support flows should be finalized before launch.</p>
+          <p>© {year} PrepBros. Built for serious aspirants who want calmer, clearer daily practice.</p>
+          <p>UPSC, SSC, and state exam prep with a tighter practice to review loop.</p>
         </div>
       </div>
     </footer>

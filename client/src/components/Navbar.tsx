@@ -7,8 +7,6 @@ import {
   LogOut,
   Menu,
   Moon,
-  ShieldCheck,
-  Sparkles,
   Sun,
   User,
   X,
@@ -23,10 +21,15 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/practice", label: "Practice" },
-  { href: "/explore", label: "Explore" },
+  { href: "/explore", label: "Exam tracks" },
   { href: "/resources", label: "Resources" },
+];
+
+const MOBILE_SECONDARY_LINKS = [
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/contests", label: "Contests" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/premium", label: "Premium" },
 ];
 
 export default function Navbar() {
@@ -69,25 +72,27 @@ export default function Navbar() {
       <nav
         className={cn(
           "navbar transition-all duration-200",
-          scrolled && "shadow-[0_14px_44px_-30px_rgba(0,0,0,0.72)]",
+          scrolled && "shadow-[0_20px_60px_-36px_rgba(0,0,0,0.82)]",
         )}
       >
         <div className="container-shell flex min-h-[72px] items-center justify-between gap-4 py-3">
           <div className="flex items-center gap-4">
             <BrandLogo compact />
-            <div className="hidden items-center gap-1 rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] p-1 lg:flex">
+            <div className="hidden items-center gap-1 rounded-[16px] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.02)_100%)] p-1 lg:flex">
               {NAV_LINKS.map((item) => (
                 <Link key={item.href} href={item.href}>
                   <span
-                    className={cn(
-                      "nav-link cursor-pointer",
-                      activeRoute(item.href) && "active",
-                    )}
+                    className={cn("nav-link cursor-pointer", activeRoute(item.href) && "active")}
                   >
                     {item.label}
                   </span>
                 </Link>
               ))}
+            </div>
+            <div className="hidden xl:flex">
+              <span className="rounded-full border border-[var(--border)] bg-[var(--bg-card)]/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                UPSC • SSC • State exams
+              </span>
             </div>
           </div>
 
@@ -101,15 +106,14 @@ export default function Navbar() {
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            <Link href="/premium">
-              <span className="inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-[var(--border)] bg-[linear-gradient(180deg,#221b11_0%,#181818_100%)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--brand-muted)]">
-                <Sparkles size={14} className="text-[var(--brand)]" />
-                PrepBros Pro
-              </span>
-            </Link>
-
             {user ? (
               <>
+                <Link href="/dashboard">
+                  <span className="inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.02)_100%)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--brand-muted)]">
+                    <LayoutDashboard size={14} className="text-[var(--brand)]" />
+                    Dashboard
+                  </span>
+                </Link>
                 <Link href="/profile">
                   <span className="inline-flex cursor-pointer items-center gap-3 rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 transition hover:border-[var(--brand-muted)]">
                     <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[var(--brand-subtle)] text-sm font-semibold text-[var(--brand-light)]">
@@ -131,7 +135,11 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <button type="button" onClick={openLogin} className="btn-secondary rounded-[12px] px-5">
+                <button
+                  type="button"
+                  onClick={openLogin}
+                  className="btn-secondary rounded-[12px] px-5"
+                >
                   Log in
                 </button>
                 <button
@@ -169,15 +177,6 @@ export default function Navbar() {
           <div className="border-t border-[var(--border)] bg-[var(--bg-card)]/95 px-4 pb-5 pt-4 md:hidden">
             <div className="container-shell space-y-4">
               <div className="grid gap-2">
-                <Link href="/dashboard">
-                  <span
-                    onClick={() => setIsOpen(false)}
-                    className="inline-flex cursor-pointer items-center gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-3 text-sm font-medium text-[var(--text-primary)]"
-                  >
-                    <LayoutDashboard size={16} className="text-[var(--brand)]" />
-                    Dashboard
-                  </span>
-                </Link>
                 {NAV_LINKS.map((item) => (
                   <Link key={item.href} href={item.href}>
                     <span
@@ -196,23 +195,48 @@ export default function Navbar() {
                 ))}
               </div>
 
+              <div className="grid gap-2">
+                {MOBILE_SECONDARY_LINKS.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <span
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "inline-flex cursor-pointer items-center gap-3 rounded-[14px] border px-4 py-3 text-sm font-medium transition",
+                        activeRoute(item.href)
+                          ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-light)]"
+                          : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)]",
+                      )}
+                    >
+                      <LayoutDashboard size={16} className="text-[var(--brand)]" />
+                      {item.label}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+
               <div className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">
-                      {user ? `Welcome back, ${displayName}` : "Practice with momentum"}
-                    </p>
-                    <p className="text-xs text-[var(--text-muted)]">
-                      {user
-                        ? "Your dashboard, streaks, and profile are one tap away."
-                        : "Sign in to save progress, keep streaks, and unlock smarter review."}
-                    </p>
-                  </div>
-                  <ShieldCheck size={16} className="mt-1 text-[var(--accent)]" />
+                <div className="mb-3">
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">
+                    {user ? `Welcome back, ${displayName}` : "Practice with momentum"}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    {user
+                      ? "Your dashboard, streaks, and review history are ready."
+                      : "Sign in to save progress, keep streaks, and unlock smarter review."}
+                  </p>
                 </div>
 
                 {user ? (
                   <div className="grid gap-2">
+                    <Link href="/dashboard">
+                      <span
+                        onClick={() => setIsOpen(false)}
+                        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-sm font-medium text-[var(--text-primary)]"
+                      >
+                        <LayoutDashboard size={14} />
+                        Open dashboard
+                      </span>
+                    </Link>
                     <Link href="/profile">
                       <span
                         onClick={() => setIsOpen(false)}
