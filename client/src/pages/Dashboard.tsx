@@ -12,8 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/AppShell";
 import OnboardingModal from "@/components/OnboardingModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -582,22 +581,20 @@ export default function Dashboard() {
 
   if (loading || pageLoading || questionsSyncing) {
     return (
-      <div className="min-h-screen home-reference-page">
-        <Navbar />
+      <AppShell>
         <div className="container-shell flex min-h-[60vh] items-center justify-center">
           <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-5 py-3 text-sm text-[var(--text-secondary)]">
             <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
             Loading your dashboard...
           </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen home-reference-page">
-        <Navbar />
+      <AppShell>
         <div className="container-shell py-14">
           <div className="glass-panel rounded-[32px] p-8 text-center md:p-12">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
@@ -618,14 +615,12 @@ export default function Dashboard() {
             </Link>
           </div>
         </div>
-        <Footer />
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen home-reference-page">
-      <Navbar />
+    <AppShell>
       <OnboardingModal
         isOpen={showOnboarding}
         userId={user.id}
@@ -640,9 +635,8 @@ export default function Dashboard() {
         }}
       />
 
-      <main className="px-4 pb-12 pt-5 md:pb-14 md:pt-6">
-        <div className="container-shell grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="space-y-6 lg:sticky lg:top-[104px] lg:self-start">
+      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
+          <aside className="space-y-6 lg:sticky lg:top-8 lg:self-start">
             <section className={`${shellClassName} p-4 md:p-5`}>
               <div className="flex items-start gap-3.5">
                 <Avatar className="h-20 w-20 shrink-0 rounded-[20px] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,161,22,0.22)_0%,rgba(77,163,255,0.18)_100%)] shadow-[inset_0_1px_0_var(--border)]">
@@ -1218,10 +1212,7 @@ export default function Dashboard() {
               </div>
             </section>
           </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AppShell>
   );
 }

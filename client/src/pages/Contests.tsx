@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { CalendarClock, Clock3, Loader2, Sparkles, Trophy, Users } from "lucide-react";
 
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/AppShell";
 import SectionHeader from "@/components/SectionHeader";
 import { supabase } from "@/lib/supabase";
 
@@ -147,11 +146,8 @@ export default function Contests() {
   const displayPast = livePast.length > 0 ? livePast : pastContests;
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-
-      <main className="px-4 py-8 md:py-10">
-        <div className="container-shell space-y-6">
+    <AppShell>
+      <div className="container-shell space-y-6">
           <div className="rounded-[36px] border border-[var(--border)] bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_44%,#4f46e5_100%)] px-6 py-8 text-white md:px-8 md:py-10">
             <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
               <div>
@@ -292,10 +288,7 @@ export default function Contests() {
               ))}
             </div>
           </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AppShell>
   );
 }

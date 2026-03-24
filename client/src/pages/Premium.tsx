@@ -1,7 +1,6 @@
 import { Check, Sparkles, Zap } from "lucide-react";
 
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/AppShell";
 
 const plans = [
   {
@@ -69,11 +68,8 @@ const faqs = [
 
 export default function Premium() {
   return (
-    <div className="min-h-screen">
-      <Navbar />
-
-      <main className="px-4 py-8 md:py-10">
-        <div className="container-shell space-y-8">
+    <AppShell>
+      <div className="container-shell space-y-8">
           <section className="rounded-[24px] border border-[var(--border)] bg-[linear-gradient(180deg,#1b1b1b_0%,#151515_100%)] p-6 md:p-10">
             <div className="max-w-4xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-light)]">
@@ -146,10 +142,7 @@ export default function Premium() {
               ))}
             </div>
           </section>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AppShell>
   );
 }

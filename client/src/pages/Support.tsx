@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Mail, MessageSquareMore, ShieldCheck } from "lucide-react";
 
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/AppShell";
 import SectionHeader from "@/components/SectionHeader";
 import { trackEvent } from "@/lib/analytics";
 import { supabase } from "@/lib/supabase";
@@ -31,6 +30,22 @@ export default function Support() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<null | { ok: boolean; message: string }>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get("category");
+    const subject = params.get("subject");
+    const message = params.get("message");
+
+    if (!category && !subject && !message) return;
+
+    setForm((current) => ({
+      ...current,
+      category: category || current.category,
+      subject: subject || current.subject,
+      message: message || current.message,
+    }));
+  }, []);
 
   const submitRequest = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -61,10 +76,8 @@ export default function Support() {
   };
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <main className="px-4 py-8 md:py-10">
-        <div className="container-shell space-y-6">
+    <AppShell>
+      <div className="container-shell space-y-6">
           <div className="glass-panel rounded-[32px] px-6 py-8 md:px-8 md:py-10">
             <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
               <div>
@@ -169,9 +182,7 @@ export default function Support() {
               </div>
             </div>
           </div>
-        </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </AppShell>
   );
 }

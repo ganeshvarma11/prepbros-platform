@@ -16,8 +16,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/AppShell";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useAuth } from "@/contexts/AuthContext";
 import { type Question } from "@/data/questions";
@@ -570,11 +569,8 @@ export default function Practice() {
   );
 
   return (
-    <div className="min-h-screen home-reference-page">
-      <Navbar />
-
-      <main className="px-4 py-8 md:py-10">
-        <div className="container-shell space-y-6">
+    <AppShell>
+      <div className="container-shell space-y-6">
           <div className={`${shellClassName} overflow-hidden rounded-[32px] px-6 py-8 md:px-8 md:py-10`}>
             <div className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
               <div>
@@ -665,7 +661,7 @@ export default function Practice() {
               <div className="hidden lg:block">
                 <ResizablePanelGroup direction="horizontal" className="h-auto min-h-[760px]">
                   <ResizablePanel defaultSize={25} minSize={18} maxSize={36}>
-                    <div className="sticky top-[104px] pr-3">{filterPanel}</div>
+                    <div className="sticky top-8 pr-3">{filterPanel}</div>
                   </ResizablePanel>
 
                   <ResizableHandle
@@ -1244,10 +1240,7 @@ export default function Practice() {
               </div>
             </div>
           )}
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AppShell>
   );
 }

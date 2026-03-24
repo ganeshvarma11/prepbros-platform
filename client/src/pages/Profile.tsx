@@ -7,10 +7,7 @@ import {
   BellRing,
   Bookmark,
   Flame,
-  Github,
-  Globe2,
   GraduationCap,
-  Linkedin,
   Loader2,
   LogOut,
   MapPin,
@@ -21,12 +18,10 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/AppShell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
@@ -229,12 +224,21 @@ function SummaryStat({
   value: string;
 }) {
   return (
-    <div className="rounded-[18px] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--text-muted)]">
-        <Icon size={14} className="text-[var(--brand)]" />
-        {label}
+    <div className={`${subtleCardClassName} p-4`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            <Icon size={14} className="text-[var(--brand)]" />
+            {label}
+          </div>
+          <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+            {value}
+          </p>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--brand)]">
+          <Icon size={16} />
+        </div>
       </div>
-      <p className="mt-2 text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">{value}</p>
     </div>
   );
 }
@@ -305,6 +309,26 @@ function SectionShell({
       </div>
       <div className="px-5 py-5 md:px-6">{children}</div>
     </section>
+  );
+}
+
+function MetaCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className={`${subtleCardClassName} p-4`}>
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+        <Icon size={14} className="text-[var(--brand)]" />
+        {label}
+      </div>
+      <p className="mt-3 text-sm font-medium leading-6 text-[var(--text-primary)]">{value}</p>
+    </div>
   );
 }
 
@@ -538,22 +562,20 @@ export default function Profile() {
 
   if (loading || pageLoading || questionsSyncing) {
     return (
-      <div className="min-h-screen">
-        <Navbar />
+      <AppShell>
         <div className="container-shell flex min-h-[62vh] items-center justify-center">
           <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-5 py-3 text-sm text-[var(--text-secondary)]">
             <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
             Loading account settings...
           </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen">
-        <Navbar />
+      <AppShell>
         <div className="container-shell py-14">
           <div className={`${sectionCardClassName} p-8 text-center md:p-12`}>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
@@ -572,142 +594,126 @@ export default function Profile() {
             </Link>
           </div>
         </div>
-        <Footer />
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
+    <AppShell>
+      <div className="mx-auto w-full max-w-[1220px] space-y-6">
+        <section className={`${sectionCardClassName} overflow-hidden`}>
+          <div className="grid gap-6 px-5 py-5 md:px-6 md:py-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+            <div className="flex flex-col gap-5 md:flex-row md:items-start">
+              <Avatar className="h-24 w-24 rounded-[28px] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,161,22,0.16)_0%,rgba(77,163,255,0.12)_100%)]">
+                <AvatarImage src={settings.avatarUrl} alt={settings.fullName} className="object-cover" />
+                <AvatarFallback className="rounded-[28px] bg-[var(--brand-subtle)] text-[var(--brand)]">
+                  <UserCircle2 size={36} />
+                </AvatarFallback>
+              </Avatar>
 
-      <main className="px-4 py-8 md:py-10">
-        <div className="mx-auto w-full max-w-[1180px]">
-          <div className="flex flex-col gap-5 border-b border-[var(--border)] pb-6 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
-                Settings
-              </p>
-              <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                Profile
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm text-[var(--text-secondary)]">
-                Manage your account details, public profile information, and study preferences in one clean place.
-              </p>
-            </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
+                  Profile and settings
+                </p>
+                <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                  {settings.fullName}
+                </h1>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">
+                  @{settings.username} · {user.email}
+                </p>
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+                  {settings.bio ||
+                    "Keep your account simple, trustworthy, and up to date so your prep identity looks polished everywhere in PrepBros."}
+                </p>
 
-            <div className="flex flex-wrap gap-2">
-              <Link href="/practice">
-                <span className="btn-primary cursor-pointer rounded-full px-4 py-2.5 text-sm">
-                  Continue practice
-                  <ArrowRight size={15} />
-                </span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => signOut()}
-                className="btn-secondary rounded-full px-4 py-2.5 text-sm"
-              >
-                <LogOut size={15} />
-                Sign out
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryStat icon={Target} label="Solved" value={compactNumber.format(totalSolved)} />
-            <SummaryStat icon={TrendingUp} label="Accuracy" value={`${accuracy}%`} />
-            <SummaryStat icon={Bookmark} label="Bookmarks" value={String(bookmarkCount)} />
-            <SummaryStat icon={Flame} label="Streak" value={`${streak}d`} />
-          </div>
-
-          <div className="mt-6 grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-            <aside className="xl:sticky xl:top-28 xl:self-start">
-              <div className={`${sectionCardClassName} p-5`}>
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16 rounded-[18px] border border-[var(--border)]">
-                    <AvatarImage src={settings.avatarUrl} alt={settings.fullName} className="object-cover" />
-                    <AvatarFallback className="rounded-[18px] bg-[var(--brand-subtle)] text-[var(--brand)]">
-                      <UserCircle2 size={28} />
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="min-w-0">
-                    <p className="truncate text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                      {settings.fullName}
-                    </p>
-                    <p className="mt-1 truncate text-sm text-[var(--text-muted)]">@{settings.username}</p>
-                    <p className="mt-1 truncate text-xs text-[var(--text-muted)]">{user.email}</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-medium text-[var(--text-primary)]">Profile completion</span>
-                    <span className="text-sm font-semibold text-[var(--brand-light)]">{completionPercent}%</span>
-                  </div>
-                  <Progress value={completionPercent} className="mt-3 h-1.5 bg-white/6 [&_[data-slot=progress-indicator]]:bg-[var(--brand)]" />
-                </div>
-
-                <div className="mt-4 grid gap-2">
-                  {[
-                    { href: "#general", label: "General" },
-                    { href: "#links", label: "Links" },
-                    { href: "#preferences", label: "Preferences" },
-                  ].map((item) => (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </div>
-
-                <Separator className="my-4 bg-white/6" />
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-[var(--text-muted)]">Target exam</span>
-                    <span className="text-right text-[var(--text-primary)]">{settings.targetExam}</span>
-                  </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-[var(--text-muted)]">Joined</span>
-                    <span className="text-right text-[var(--text-primary)]">{formatJoinedDate(user.created_at)}</span>
-                  </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-[var(--text-muted)]">Provider</span>
-                    <span className="text-right text-[var(--text-primary)]">
-                      {toDisplayProvider(String(user.app_metadata?.provider || "email"))}
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <Link href="/practice">
+                    <span className="btn-primary cursor-pointer rounded-full px-4 py-2.5 text-sm">
+                      Continue practice
+                      <ArrowRight size={15} />
                     </span>
-                  </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-[var(--text-muted)]">Last active</span>
-                    <span className="text-right text-[var(--text-primary)]">
-                      {profile?.last_active ? formatActivityStamp(profile.last_active) : "Not available"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-2">
+                  </Link>
                   <Link href="/dashboard">
-                    <span className="flex cursor-pointer items-center justify-between rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-primary)] transition hover:border-[var(--border-strong)]">
+                    <span className="btn-secondary cursor-pointer rounded-full px-4 py-2.5 text-sm">
                       View dashboard
-                      <ArrowRight size={14} className="text-[var(--text-muted)]" />
                     </span>
                   </Link>
                   <Link href="/practice?bookmarked=1">
-                    <span className="flex cursor-pointer items-center justify-between rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm text-[var(--text-primary)] transition hover:border-[var(--border-strong)]">
+                    <span className="btn-secondary cursor-pointer rounded-full px-4 py-2.5 text-sm">
                       Review bookmarks
-                      <ArrowRight size={14} className="text-[var(--text-muted)]" />
                     </span>
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => signOut()}
+                    className="btn-secondary rounded-full px-4 py-2.5 text-sm"
+                  >
+                    <LogOut size={15} />
+                    Sign out
+                  </button>
                 </div>
               </div>
-            </aside>
+            </div>
 
-            <div className="space-y-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <MetaCard icon={Target} label="Target exam" value={settings.targetExam} />
+              <MetaCard icon={BadgeCheck} label="Joined" value={formatJoinedDate(user.created_at)} />
+              <MetaCard
+                icon={AtSign}
+                label="Login method"
+                value={toDisplayProvider(String(user.app_metadata?.provider || "email"))}
+              />
+              <MetaCard
+                icon={Flame}
+                label="Last active"
+                value={profile?.last_active ? formatActivityStamp(profile.last_active) : "Not available"}
+              />
+
+              <div className={`${subtleCardClassName} p-4 sm:col-span-2`}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-[var(--text-primary)]">
+                    Profile completion
+                  </span>
+                  <span className="text-sm font-semibold text-[var(--brand-light)]">
+                    {completionPercent}%
+                  </span>
+                </div>
+                <Progress
+                  value={completionPercent}
+                  className="mt-3 h-1.5 bg-white/6 [&_[data-slot=progress-indicator]]:bg-[var(--brand)]"
+                />
+                <p className="mt-3 text-xs text-[var(--text-muted)]">
+                  Fill in the core details so your account feels complete and professional wherever it appears.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <SummaryStat icon={Target} label="Solved" value={compactNumber.format(totalSolved)} />
+          <SummaryStat icon={TrendingUp} label="Accuracy" value={`${accuracy}%`} />
+          <SummaryStat icon={Bookmark} label="Bookmarks" value={String(bookmarkCount)} />
+          <SummaryStat icon={Flame} label="Streak" value={`${streak}d`} />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {[
+            { href: "#general", label: "General details" },
+            { href: "#links", label: "Links and showcase" },
+            { href: "#preferences", label: "Preferences" },
+          ].map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
+            >
+              {item.label}
+            </a>
+          ))}
+        </div>
+
+        <div className="space-y-5">
               <SectionShell
                 id="general"
                 title="General"
@@ -1123,12 +1129,8 @@ export default function Profile() {
                   </div>
                 </section>
               </div>
-            </div>
-          </div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AppShell>
   );
 }

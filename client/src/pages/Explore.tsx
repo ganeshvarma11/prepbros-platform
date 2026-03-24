@@ -13,8 +13,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/AppShell";
 import SectionHeader from "@/components/SectionHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
@@ -105,11 +104,8 @@ export default function Explore() {
   );
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-
-      <main className="px-4 py-8 md:py-10">
-        <div className="container-shell space-y-6">
+    <AppShell>
+      <div className="container-shell space-y-6">
           <div className="glass-panel rounded-[32px] px-6 py-8 md:px-8 md:py-10">
             <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
               <div>
@@ -325,10 +321,7 @@ export default function Explore() {
               ))}
             </div>
           </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AppShell>
   );
 }

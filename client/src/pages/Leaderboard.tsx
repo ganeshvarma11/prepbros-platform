@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Crown, Flame, Loader2, Medal, Sparkles, Trophy, Users } from "lucide-react";
 
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/AppShell";
 import SectionHeader from "@/components/SectionHeader";
 import { supabase } from "@/lib/supabase";
 
@@ -77,11 +76,8 @@ export default function Leaderboard() {
   const rest = filteredData.slice(3);
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-
-      <main className="px-4 py-8 md:py-10">
-        <div className="container-shell space-y-6">
+    <AppShell>
+      <div className="container-shell space-y-6">
           <div className="rounded-[36px] border border-[var(--border)] bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_45%,#4f46e5_100%)] px-6 py-8 text-white md:px-8 md:py-10">
             <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
               <div>
@@ -233,10 +229,7 @@ export default function Leaderboard() {
               </div>
             </div>
           </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AppShell>
   );
 }
