@@ -18,6 +18,13 @@ import { trackEvent } from "@/lib/analytics";
 
 const focusTracks = ["UPSC", "SSC", "State Exams"];
 
+const heroSignals = [
+  "Daily MCQs",
+  "PYQs",
+  "Progress tracking",
+  "Weak-topic review",
+];
+
 const workflowCards = [
   {
     icon: BookOpenText,
@@ -76,21 +83,21 @@ export default function Home() {
     <div className="page-container home-reference-page">
       <Navbar />
 
-      <main className="px-4 pb-14 pt-4 md:pb-18 md:pt-6">
+      <main className="px-4 pb-14 pt-3 md:pb-18 md:pt-4">
         <div className="container-shell">
-          <section className="home-reference-hero relative overflow-hidden rounded-[36px] px-6 pb-10 pt-10 md:px-10 md:pb-12 md:pt-12 lg:px-12 lg:pb-16 lg:pt-14">
+          <section className="home-reference-hero relative overflow-hidden rounded-[36px] px-6 pb-10 pt-7 md:px-10 md:pb-12 md:pt-8 lg:px-12 lg:pb-14 lg:pt-9">
             <div className="home-reference-glow home-reference-glow-left" />
             <div className="home-reference-glow home-reference-glow-right" />
             <div className="home-reference-noise" />
 
-            <div className="relative grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-              <div className="max-w-2xl">
+            <div className="relative grid gap-8 lg:grid-cols-[0.98fr_0.9fr] lg:items-start lg:gap-8">
+              <div className="max-w-2xl lg:pt-2">
                 <p className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(30,29,42,0.7)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
                   <CheckCircle2 size={13} />
                   Daily question-solving for serious aspirants
                 </p>
 
-                <h1 className="mt-7 text-balance text-5xl font-semibold leading-[1.05] tracking-[-0.07em] text-[var(--text-primary)] md:text-6xl lg:text-[4.35rem]">
+                <h1 className="mt-5 max-w-[11ch] text-balance text-5xl font-semibold leading-[1.03] tracking-[-0.07em] text-[var(--text-primary)] md:text-6xl lg:text-[4.1rem]">
                   Daily exam practice
                   <br />
                   that actually helps
@@ -98,10 +105,21 @@ export default function Home() {
                   <span className="text-[var(--brand-light)]">you improve.</span>
                 </h1>
 
-                <p className="mt-6 max-w-xl text-lg leading-9 text-[rgba(240,236,246,0.82)]">
-                  Track your progress, review weak topics, and stay on course with a calm daily
-                  practice loop built for UPSC, SSC, and state exam aspirants.
+                <p className="mt-5 max-w-[34rem] text-lg leading-8 text-[rgba(240,236,246,0.82)]">
+                  PrepBros is a focused exam preparation platform for aspirants who want one clear
+                  loop: practice every day, track progress, review weak topics, and stay consistent.
                 </p>
+
+                <div className="mt-5 flex flex-wrap gap-2.5">
+                  {heroSignals.map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(36,34,49,0.66)] px-3.5 py-1.5 text-sm font-medium text-[rgba(240,236,246,0.92)]"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link href={primaryHref}>
@@ -142,12 +160,12 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="relative">
-                <div className="home-app-board rounded-[30px] p-4 md:p-5">
-                  <div className="rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(18,18,28,0.82)] p-5 shadow-[0_22px_45px_-32px_rgba(0,0,0,0.9)]">
+              <div className="relative lg:pt-1">
+                <div className="home-app-board mx-auto w-full max-w-[640px] rounded-[28px] p-3 md:p-4">
+                  <div className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(18,18,28,0.82)] p-4 shadow-[0_22px_45px_-32px_rgba(0,0,0,0.9)]">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <h2 className="text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                        <h2 className="text-[1.85rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                           Daily Goal
                         </h2>
                       </div>
@@ -161,30 +179,30 @@ export default function Home() {
                       <div className="h-full w-[72%] rounded-full bg-[linear-gradient(90deg,#78d2ff_0%,#93e7ff_100%)] shadow-[0_0_20px_rgba(120,210,255,0.35)]" />
                     </div>
 
-                    <div className="mt-5 grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-                      <div className="space-y-4">
+                    <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_0.88fr]">
+                      <div className="space-y-3">
                         <div className="grid gap-3 sm:grid-cols-2">
                           {recentStats.map((item) => (
                             <div
                               key={item.label}
-                              className="rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-4"
+                              className="rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-3.5"
                             >
                               <p className="text-sm text-[var(--text-secondary)]">{item.label}</p>
-                              <p className="mt-2 text-[2rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                              <p className="mt-2 text-[1.75rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                                 {item.value}
                               </p>
                             </div>
                           ))}
                         </div>
 
-                        <div className="rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-5">
+                        <div className="rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-4">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-[var(--text-secondary)]">Today</p>
                             <Clock3 size={16} className="text-[var(--blue)]" />
                           </div>
                           <div className="mt-3 flex items-end justify-between gap-4">
                             <div>
-                              <p className="text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                              <p className="text-[2.8rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                                 88%
                               </p>
                               <p className="mt-1 text-sm text-[var(--text-secondary)]">
@@ -203,8 +221,8 @@ export default function Home() {
                           </div>
                         </div>
 
-                        <div className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
-                          <div className="rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-5">
+                        <div className="grid gap-3 md:grid-cols-[1.15fr_0.85fr]">
+                          <div className="rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-4">
                             <div className="flex items-center justify-between">
                               <h3 className="text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                                 Weak Topics
@@ -240,9 +258,9 @@ export default function Home() {
                             </div>
                           </div>
 
-                          <div className="rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-5">
+                          <div className="rounded-[20px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-4">
                             <p className="text-sm font-medium text-[var(--text-secondary)]">Bookmarks</p>
-                            <p className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                            <p className="mt-3 text-[2.8rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                               24
                             </p>
                             <p className="mt-1 text-sm text-[var(--text-secondary)]">
@@ -262,9 +280,9 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="relative flex items-center justify-center">
+                      <div className="relative flex items-center justify-center lg:justify-end">
                         <div className="home-question-rail hidden xl:block" />
-                        <div className="home-question-card relative z-10 w-full max-w-[320px] rounded-[22px] border border-[rgba(255,255,255,0.16)] bg-[linear-gradient(180deg,#f8f1e9_0%,#f3eee6_100%)] p-4 text-[#201913] shadow-[0_28px_60px_-28px_rgba(0,0,0,0.95)]">
+                        <div className="home-question-card relative z-10 w-full max-w-[290px] rounded-[20px] border border-[rgba(255,255,255,0.16)] bg-[linear-gradient(180deg,#f8f1e9_0%,#f3eee6_100%)] p-3.5 text-[#201913] shadow-[0_28px_60px_-28px_rgba(0,0,0,0.95)]">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-[#5b4b3f]">Answer Questions</p>
                             <LayoutGrid size={16} className="text-[#8f8076]" />
