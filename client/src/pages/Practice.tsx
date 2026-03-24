@@ -24,9 +24,9 @@ import { type Question } from "@/data/questions";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
 import { trackEvent } from "@/lib/analytics";
 import {
-  getAnswerStatuses,
+  buildAnswerStatuses,
+  getAnswerAttempts,
   getBookmarks,
-  getSolvedQuestions,
   saveAnswer,
   toggleBookmark,
 } from "@/lib/userProgress";
@@ -64,7 +64,7 @@ const shellClassName =
   "rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(21,20,31,0.94)_0%,rgba(14,14,22,0.98)_100%)] shadow-[0_30px_80px_-52px_rgba(0,0,0,0.96)]";
 
 export default function Practice() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { questions, loading: questionsLoading } = useQuestionBank();
 
   const [search, setSearch] = useState("");
@@ -73,18 +73,18 @@ export default function Practice() {
   const [selTypes, setSelTypes] = useState<string[]>([]);
   const [selTopics, setSelTopics] = useState<string[]>([]);
   const [selYears, setSelYears] = useState<number[]>([]);
-  const [reviewMode, setReviewMode] = useState<"" | "bookmarked" | "wrong">("");
+  const [reviewMode, setReviewMode] = useState<"" | "bookmarked" | "solved" | "wrong">("");
   const [sortBy, setSortBy] = useState<"default" | "difficulty" | "year">("default");
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [activeQ, setActiveQ] = useState<Question | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [solved, setSolved] = useState<number[]>([]);
   const [answerStatuses, setAnswerStatuses] = useState<Record<number, "correct" | "wrong">>({});
   const [answerStart, setAnswerStart] = useState<number>(Date.now());
   const [queryHydrated, setQueryHydrated] = useState(false);
   const [pendingQuestionId, setPendingQuestionId] = useState<number | null>(null);
+  const [progressLoading, setProgressLoading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -111,6 +111,8 @@ export default function Practice() {
     setPendingQuestionId(Number.isFinite(questionId) ? questionId : null);
     if (params.get("bookmarked") === "1") {
       setReviewMode("bookmarked");
+    } else if (params.get("solved") === "1") {
+      setReviewMode("solved");
     } else if (params.get("incorrect") === "1") {
       setReviewMode("wrong");
     } else {
@@ -120,19 +122,50 @@ export default function Practice() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    if (authLoading) return () => {
+      cancelled = true;
+    };
+
     if (!user) {
       setBookmarks([]);
-      setSolved([]);
       setAnswerStatuses({});
-      return;
+      setProgressLoading(false);
+      return () => {
+        cancelled = true;
+      };
     }
 
-    getBookmarks(user.id).then(setBookmarks);
-    getSolvedQuestions(user.id).then(setSolved);
-    getAnswerStatuses(user.id).then(setAnswerStatuses);
-  }, [user]);
+    const loadProgress = async () => {
+      setProgressLoading(true);
+      const [bookmarkIds, attempts] = await Promise.all([
+        getBookmarks(user.id),
+        getAnswerAttempts(user.id),
+      ]);
 
-  const solvedSet = useMemo(() => new Set(solved), [solved]);
+      if (cancelled) return;
+
+      setBookmarks(bookmarkIds);
+      setAnswerStatuses(buildAnswerStatuses(attempts));
+      setProgressLoading(false);
+    };
+
+    loadProgress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user]);
+
+  const solvedIds = useMemo(
+    () =>
+      Object.keys(answerStatuses)
+        .map((value) => Number.parseInt(value, 10))
+        .filter((value) => Number.isFinite(value)),
+    [answerStatuses],
+  );
+  const solvedSet = useMemo(() => new Set(solvedIds), [solvedIds]);
   const bookmarkSet = useMemo(() => new Set(bookmarks), [bookmarks]);
   const allTopics = useMemo(
     () => Array.from(new Set(questions.map((question) => question.topic))).sort(),
@@ -164,6 +197,9 @@ export default function Practice() {
     if (reviewMode === "bookmarked") {
       current = current.filter((item) => bookmarkSet.has(item.id));
     }
+    if (reviewMode === "solved") {
+      current = current.filter((item) => solvedSet.has(item.id));
+    }
     if (reviewMode === "wrong") {
       current = current.filter((item) => answerStatuses[item.id] === "wrong");
     }
@@ -178,7 +214,7 @@ export default function Practice() {
       current.sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
     }
     return current;
-  }, [questions, search, selExams, selDiff, selTypes, selTopics, selYears, reviewMode, sortBy, bookmarkSet, answerStatuses]);
+  }, [questions, search, selExams, selDiff, selTypes, selTopics, selYears, reviewMode, sortBy, bookmarkSet, solvedSet, answerStatuses]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -209,6 +245,7 @@ export default function Practice() {
     if (selTopics.length) params.set("topics", selTopics.join(","));
     if (selYears.length) params.set("years", selYears.join(","));
     if (reviewMode === "bookmarked") params.set("bookmarked", "1");
+    if (reviewMode === "solved") params.set("solved", "1");
     if (reviewMode === "wrong") params.set("incorrect", "1");
     if (sortBy !== "default") params.set("sort", sortBy);
     if (pendingQuestionId) params.set("question", String(pendingQuestionId));
@@ -265,7 +302,6 @@ export default function Practice() {
     if (selected !== null || !activeQ) return;
     const isCorrect = index === activeQ.correct;
     setSelected(index);
-    if (!solved.includes(activeQ.id)) setSolved((current) => [...current, activeQ.id]);
     setAnswerStatuses((current) => ({
       ...current,
       [activeQ.id]: isCorrect ? "correct" : "wrong",
@@ -343,6 +379,7 @@ export default function Practice() {
             {[
               { value: "", label: "All questions" },
               { value: "bookmarked", label: "Bookmarked only" },
+              { value: "solved", label: "Solved only" },
               { value: "wrong", label: "Incorrect only" },
             ].map((item) => (
               <label
@@ -519,19 +556,36 @@ export default function Practice() {
 
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
-                  { label: "Questions available", value: questionsLoading ? "..." : filtered.length },
-                  { label: "Bookmarked", value: bookmarks.length },
-                  { label: "Solved", value: solved.length },
+                  { label: "Questions available", value: questionsLoading ? "..." : filtered.length, mode: "" as const },
+                  { label: "Bookmarked", value: bookmarks.length, mode: "bookmarked" as const },
+                  { label: "Solved", value: solvedIds.length, mode: "solved" as const },
                 ].map((item) => (
-                  <div
+                  <button
                     key={item.label}
-                    className="rounded-[22px] border border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] p-5"
+                    type="button"
+                    onClick={() => {
+                      setReviewMode(item.mode);
+                      setPage(1);
+                    }}
+                    className={`rounded-[22px] border p-5 text-left transition ${
+                      reviewMode === item.mode
+                        ? "border-[var(--brand-muted)] bg-[rgba(255,161,22,0.08)] shadow-[0_18px_40px_-30px_rgba(255,161,22,0.9)]"
+                        : "border-[rgba(255,255,255,0.08)] bg-[rgba(28,27,40,0.72)] hover:border-[rgba(255,255,255,0.18)]"
+                    }`}
+                    aria-pressed={reviewMode === item.mode}
                   >
                     <p className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                       {item.value}
                     </p>
                     <p className="mt-2 text-sm text-[var(--text-secondary)]">{item.label}</p>
-                  </div>
+                    {user && item.mode && progressLoading ? (
+                      <p className="mt-3 text-xs text-[var(--text-muted)]">Loading saved progress...</p>
+                    ) : (
+                      <p className="mt-3 text-xs text-[var(--brand-light)]">
+                        {item.mode ? "Click to filter this list" : "Click to reset review filters"}
+                      </p>
+                    )}
+                  </button>
                 ))}
               </div>
             </div>

@@ -1,5 +1,90 @@
 import { supabase } from "./supabase";
 
+export type AnswerAttempt = {
+  question_id: number;
+  is_correct: boolean;
+  answered_at: string | null;
+};
+
+type AnswerAttemptRow = {
+  id?: number;
+  question_id: number | string;
+  is_correct: boolean;
+  answered_at?: string | null;
+  created_at?: string | null;
+};
+
+const toQuestionId = (value: number | string) => {
+  const normalized = typeof value === "number" ? value : Number.parseInt(value, 10);
+  return Number.isFinite(normalized) ? normalized : null;
+};
+
+const normalizeAnswerAttempt = (row: AnswerAttemptRow): AnswerAttempt | null => {
+  const questionId = toQuestionId(row.question_id);
+  if (questionId === null) return null;
+
+  return {
+    question_id: questionId,
+    is_correct: Boolean(row.is_correct),
+    answered_at: row.answered_at ?? row.created_at ?? null,
+  };
+};
+
+export async function getAnswerAttempts(userId: string): Promise<AnswerAttempt[]> {
+  const queries = [
+    () =>
+      supabase
+        .from("user_answers")
+        .select("question_id, is_correct, answered_at")
+        .eq("user_id", userId)
+        .order("answered_at", { ascending: false }),
+    () =>
+      supabase
+        .from("user_answers")
+        .select("question_id, is_correct, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }),
+    () =>
+      supabase
+        .from("user_answers")
+        .select("id, question_id, is_correct")
+        .eq("user_id", userId)
+        .order("id", { ascending: false }),
+    () => supabase.from("user_answers").select("question_id, is_correct").eq("user_id", userId),
+  ];
+
+  let lastError: unknown = null;
+
+  for (const runQuery of queries) {
+    const { data, error } = await runQuery();
+    if (error) {
+      lastError = error;
+      continue;
+    }
+
+    return (data as AnswerAttemptRow[] | null)?.map(normalizeAnswerAttempt).filter(Boolean) as AnswerAttempt[];
+  }
+
+  if (lastError) {
+    console.error("Error loading answer attempts:", lastError);
+  }
+
+  return [];
+}
+
+export function buildAnswerStatuses(
+  attempts: AnswerAttempt[],
+): Record<number, "correct" | "wrong"> {
+  const statuses: Record<number, "correct" | "wrong"> = {};
+
+  for (const answer of attempts) {
+    if (statuses[answer.question_id]) continue;
+    statuses[answer.question_id] = answer.is_correct ? "correct" : "wrong";
+  }
+
+  return statuses;
+}
+
 // Save a question answer to Supabase
 export async function saveAnswer(
   userId: string,
@@ -47,39 +132,34 @@ export async function toggleBookmark(userId: string, questionId: number) {
 
 // Get user's bookmarked question IDs
 export async function getBookmarks(userId: string): Promise<number[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("bookmarks")
     .select("question_id")
     .eq("user_id", userId);
-  return data?.map((b) => b.question_id) ?? [];
+
+  if (error) {
+    console.error("Error loading bookmarks:", error);
+    return [];
+  }
+
+  return (
+    data
+      ?.map((bookmark) => toQuestionId(bookmark.question_id))
+      .filter((questionId): questionId is number => questionId !== null) ?? []
+  );
 }
 
 // Get user's solved question IDs
 export async function getSolvedQuestions(userId: string): Promise<number[]> {
-  const { data } = await supabase
-    .from("user_answers")
-    .select("question_id")
-    .eq("user_id", userId);
-  return Array.from(new Set(data?.map((a) => a.question_id) ?? []));
+  const attempts = await getAnswerAttempts(userId);
+  return Array.from(new Set(attempts.map((attempt) => attempt.question_id)));
 }
 
 export async function getAnswerStatuses(
   userId: string,
 ): Promise<Record<number, "correct" | "wrong">> {
-  const { data } = await supabase
-    .from("user_answers")
-    .select("question_id, is_correct, answered_at")
-    .eq("user_id", userId)
-    .order("answered_at", { ascending: false });
-
-  const statuses: Record<number, "correct" | "wrong"> = {};
-
-  for (const answer of data ?? []) {
-    if (statuses[answer.question_id]) continue;
-    statuses[answer.question_id] = answer.is_correct ? "correct" : "wrong";
-  }
-
-  return statuses;
+  const attempts = await getAnswerAttempts(userId);
+  return buildAnswerStatuses(attempts);
 }
 
 // Update profile total_solved and accuracy
