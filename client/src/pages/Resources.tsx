@@ -1,58 +1,142 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowUpRight,
-  BookOpen,
-  ExternalLink,
-  FileText,
-  Loader2,
-  PlayCircle,
-  Sparkles,
-  Target,
-} from "lucide-react";
+import { ArrowUpRight, Loader2, Search } from "lucide-react";
 
 import AppShell from "@/components/AppShell";
-import SectionHeader from "@/components/SectionHeader";
 import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
-const DEFAULT_FREE = [
-  { title: "UPSC GS1 Syllabus PDF", description: "Complete syllabus for General Studies Paper 1", url: "https://upsc.gov.in/sites/default/files/Syllabus-CSP-2020-Engl-31102019.pdf" },
-  { title: "Previous Year Papers", description: "Official question papers and archive links for revision planning", url: "https://upsc.gov.in/examinations/previous-question-papers" },
-  { title: "CSAT Syllabus PDF", description: "Use this to align aptitude prep with the actual exam scope", url: "https://upsc.gov.in/sites/default/files/Syllabus-CSP-2020-Engl-31102019.pdf" },
-];
-
-const DEFAULT_BOOKS = [
-  { title: "Indian Polity", author: "M. Laxmikanth", description: "A must-have foundational book for polity preparation.", price: "₹699", url: "https://www.amazon.in/dp/9355323816" },
-  { title: "Spectrum Modern India", author: "Rajiv Ahir", description: "Reliable coverage for modern history revision.", price: "₹450", url: "https://www.amazon.in/dp/8193975170" },
-];
-
-const DEFAULT_VIDEOS = [
-  { name: "Drishti IAS", description: "Structured UPSC-oriented teaching and current affairs coverage.", subscribers: "2M+", url: "https://www.youtube.com/@DrishtiIASEnglish" },
-  { name: "ForumIAS", description: "Useful for analysis and revision-oriented sessions.", subscribers: "1.5M+", url: "https://www.youtube.com/@ForumIAS" },
-];
-
-const TYPE_ICON: Record<string, typeof FileText> = {
-  PDF: FileText,
-  Book: BookOpen,
-  Video: PlayCircle,
-  Link: FileText,
-  Notes: FileText,
+type ResourceRecord = {
+  id?: string;
+  title: string;
+  description?: string | null;
+  type?: string | null;
+  url: string;
+  exam?: string | null;
+  category?: string | null;
 };
 
-const CATEGORY_ORDER = [
-  "Syllabus",
-  "Previous Papers",
-  "Strategy",
-  "Notes",
+type FilterTab = "All" | "UPSC" | "SSC" | "Books" | "PDFs" | "Channels";
+
+const FILTER_TABS: FilterTab[] = [
+  "All",
+  "UPSC",
+  "SSC",
   "Books",
-  "Video Lectures",
-  "Current Affairs",
-  "State Exam",
+  "PDFs",
+  "Channels",
 ];
 
+const FALLBACK_RESOURCES: ResourceRecord[] = [
+  {
+    id: "fallback-upsc-syllabus",
+    title: "UPSC Civil Services Syllabus",
+    type: "PDF",
+    exam: "UPSC",
+    category: "Syllabus",
+    url: "https://upsc.gov.in/sites/default/files/Syllabus-CSP-2020-Engl-31102019.pdf",
+  },
+  {
+    id: "fallback-upsc-papers",
+    title: "UPSC Previous Year Papers",
+    type: "PDF",
+    exam: "UPSC",
+    category: "Previous Papers",
+    url: "https://upsc.gov.in/examinations/previous-question-papers",
+  },
+  {
+    id: "fallback-ssc-syllabus",
+    title: "SSC Exams And Syllabus",
+    type: "PDF",
+    exam: "SSC",
+    category: "Syllabus",
+    url: "https://ssc.nic.in/",
+  },
+  {
+    id: "fallback-polity-book",
+    title: "Indian Polity",
+    type: "Book",
+    exam: "UPSC",
+    category: "Books",
+    url: "https://www.amazon.in/dp/9355323816",
+  },
+  {
+    id: "fallback-lucent-book",
+    title: "Lucent's General Knowledge",
+    type: "Book",
+    exam: "SSC",
+    category: "Books",
+    url: "https://www.amazon.in/dp/935501404X",
+  },
+  {
+    id: "fallback-mrunal",
+    title: "Mrunal Economy Playlist",
+    type: "Video",
+    exam: "UPSC",
+    category: "Video Lectures",
+    url: "https://www.youtube.com/@TheMrunalPatel",
+  },
+  {
+    id: "fallback-ssc-channel",
+    title: "SSC Adda Study Channel",
+    type: "Video",
+    exam: "SSC",
+    category: "Video Lectures",
+    url: "https://www.youtube.com/@sscadda247",
+  },
+];
+
+const normalizeType = (type?: string | null) => type?.trim() || "Link";
+
+const isChannelResource = (resource: ResourceRecord) => {
+  const type = normalizeType(resource.type).toLowerCase();
+  const url = resource.url.toLowerCase();
+
+  return (
+    type === "video" || url.includes("youtube.com") || url.includes("youtu.be")
+  );
+};
+
+const isPdfResource = (resource: ResourceRecord) => {
+  const type = normalizeType(resource.type).toLowerCase();
+  return type === "pdf" || type === "notes";
+};
+
+const getSubject = (resource: ResourceRecord) =>
+  resource.category?.trim() || "General";
+
+const getSourceLabel = (url: string) => {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+
+    if (host.includes("youtube.com") || host.includes("youtu.be"))
+      return "YouTube";
+    if (host.includes("upsc.gov.in")) return "Official UPSC";
+    if (host.includes("ssc.nic.in")) return "Official SSC";
+    if (host.includes("amazon.")) return "Amazon";
+
+    return host;
+  } catch {
+    return "External source";
+  }
+};
+
+const matchesTab = (resource: ResourceRecord, tab: FilterTab) => {
+  const exam = resource.exam?.trim();
+  const type = normalizeType(resource.type);
+
+  if (tab === "All") return true;
+  if (tab === "UPSC") return exam === "UPSC" || exam === "All";
+  if (tab === "SSC") return exam === "SSC" || exam === "All";
+  if (tab === "Books") return type === "Book";
+  if (tab === "PDFs") return isPdfResource(resource);
+  return isChannelResource(resource);
+};
+
 export default function Resources() {
-  const [dbResources, setDbResources] = useState<any[]>([]);
+  const [dbResources, setDbResources] = useState<ResourceRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeExam, setActiveExam] = useState("All");
+  const [activeTab, setActiveTab] = useState<FilterTab>("All");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     supabase
@@ -61,216 +145,178 @@ export default function Resources() {
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        setDbResources(data || []);
+        setDbResources((data as ResourceRecord[]) || []);
         setLoading(false);
       });
   }, []);
 
-  const exams = useMemo(
-    () => ["All", ...Array.from(new Set(dbResources.map((item) => item.exam).filter((exam) => exam && exam !== "All")))],
-    [dbResources],
-  );
+  const resources = dbResources.length > 0 ? dbResources : FALLBACK_RESOURCES;
 
-  const grouped = useMemo(
-    () =>
-      CATEGORY_ORDER.reduce((acc, category) => {
-        const items = dbResources.filter(
-          (item) =>
-            item.category === category &&
-            (activeExam === "All" || item.exam === activeExam || item.exam === "All"),
-        );
-        if (items.length) acc[category] = items;
-        return acc;
-      }, {} as Record<string, any[]>),
-    [activeExam, dbResources],
-  );
+  const filteredResources = useMemo(() => {
+    const search = query.trim().toLowerCase();
+
+    return resources.filter(resource => {
+      if (!matchesTab(resource, activeTab)) return false;
+      if (!search) return true;
+
+      const haystack = [
+        resource.title,
+        resource.description,
+        resource.type,
+        resource.exam,
+        resource.category,
+        getSourceLabel(resource.url),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(search);
+    });
+  }, [activeTab, query, resources]);
 
   return (
-    <AppShell>
-      <div className="container-shell space-y-6">
-          <div className="glass-panel rounded-[32px] px-6 py-8 md:px-8 md:py-10">
-            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-              <div>
-                <SectionHeader
-                  eyebrow="Resources"
-                  title="A study library that feels curated, not dumped on the page."
-                  description="Resources now read like a product feature instead of a fallback page: clearer organization, better trust cues, and cleaner external-link behavior."
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {[
-                  { label: "Live resources", value: dbResources.length || "Fallback" },
-                  { label: "Categories", value: CATEGORY_ORDER.length },
-                  { label: "Designed for", value: "Clarity" },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] p-4">
-                    <p className="text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">{item.value}</p>
-                    <p className="mt-1 text-sm text-[var(--text-muted)]">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+    <AppShell contentClassName="max-w-[1040px]">
+      <div className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top,rgba(255,161,22,0.1),transparent_60%)]" />
 
-          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="glass-panel rounded-[32px] p-6 md:p-8">
-              <SectionHeader
-                eyebrow="Why this page is better"
-                title="It now helps users trust your curation."
-                description="A strong resources page improves conversion because it makes the platform feel useful beyond MCQs."
+        <div className="relative mx-auto space-y-8 px-1 pb-8 pt-4 md:space-y-10 md:pt-8">
+          <header className="space-y-3">
+            <h1 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-5xl">
+              Resources
+            </h1>
+            <p className="max-w-2xl text-sm text-[var(--text-secondary)] md:text-base">
+              Useful study materials, books, PDFs, and channels in one focused
+              place.
+            </p>
+          </header>
+
+          <section className="space-y-5">
+            <label className="relative block">
+              <Search
+                size={18}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)]"
               />
-              <div className="mt-6 grid gap-3">
-                {[
-                  "Cleaner grouping makes the page easier to skim on mobile.",
-                  "Empty states and fallbacks make the product feel resilient.",
-                  "External resources are framed more intentionally, which improves credibility.",
-                ].map((item) => (
-                  <div key={item} className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card-strong)] p-4 text-sm text-[var(--text-secondary)]">
-                    {item}
-                  </div>
-                ))}
+              <input
+                type="search"
+                value={query}
+                onChange={event => setQuery(event.target.value)}
+                placeholder="Search resources"
+                className="w-full rounded-[20px] border border-transparent bg-white/[0.035] px-12 py-3.5 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[rgba(255,161,22,0.24)] focus:bg-white/[0.045]"
+              />
+            </label>
+
+            <div className="border-b border-[var(--border)]">
+              <div className="flex flex-wrap gap-6">
+                {FILTER_TABS.map(tab => {
+                  const active = tab === activeTab;
+
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setActiveTab(tab)}
+                      className={cn(
+                        "relative pb-3 text-sm font-medium transition",
+                        active
+                          ? "text-[var(--text-primary)]"
+                          : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                      )}
+                    >
+                      {tab}
+                      <span
+                        className={cn(
+                          "absolute inset-x-0 bottom-0 h-0.5 rounded-full transition",
+                          active ? "bg-[var(--brand)]" : "bg-transparent"
+                        )}
+                      />
+                    </button>
+                  );
+                })}
               </div>
             </div>
+          </section>
 
-            <div className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-inverse)] p-6 text-white md:p-8">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
-                <Sparkles size={18} />
-              </div>
-              <p className="mt-5 text-2xl font-semibold tracking-[-0.05em] text-white">
-                Strong resources give users another reason to return between practice sessions.
-              </p>
-              <p className="mt-3 text-sm text-white/72">
-                As your content library improves, resources can support revision, deeper reading, and calmer study days outside the question bank.
-              </p>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="glass-panel flex min-h-[320px] items-center justify-center rounded-[32px] p-6">
-              <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-5 py-3 text-sm text-[var(--text-secondary)]">
-                <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
+          <section>
+            {loading ? (
+              <div className="flex min-h-[180px] items-center gap-3 text-sm text-[var(--text-muted)]">
+                <Loader2
+                  size={16}
+                  className="animate-spin text-[var(--brand)]"
+                />
                 Loading resources...
               </div>
-            </div>
-          ) : dbResources.length > 0 ? (
-            <div className="glass-panel rounded-[32px] p-6 md:p-8">
-              {exams.length > 1 ? (
-                <div className="mb-6 flex flex-wrap gap-2">
-                  {exams.map((exam) => (
-                    <button
-                      key={exam}
-                      type="button"
-                      onClick={() => setActiveExam(exam)}
-                      className={activeExam === exam ? "btn-primary rounded-full px-5 py-2" : "btn-secondary rounded-full px-5 py-2"}
-                    >
-                      {exam}
-                    </button>
-                  ))}
+            ) : filteredResources.length > 0 ? (
+              <div>
+                <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                    {filteredResources.length} resource
+                    {filteredResources.length === 1 ? "" : "s"}
+                  </p>
                 </div>
-              ) : null}
 
-              {Object.keys(grouped).length > 0 ? (
-                <div className="space-y-10">
-                  {Object.entries(grouped).map(([category, items]) => (
-                    <section key={category}>
-                      <div className="mb-5 flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">{category}</p>
-                          <p className="mt-1 text-sm text-[var(--text-secondary)]">{items.length} curated item{items.length === 1 ? "" : "s"}</p>
+                <div>
+                  {filteredResources.map(resource => {
+                    const type = normalizeType(resource.type);
+                    const subject = getSubject(resource);
+                    const meta = [
+                      resource.exam && resource.exam !== "All"
+                        ? resource.exam
+                        : null,
+                      getSourceLabel(resource.url),
+                    ]
+                      .filter(Boolean)
+                      .join(" • ");
+
+                    return (
+                      <article
+                        key={resource.id || `${resource.title}-${resource.url}`}
+                        className="grid gap-3 border-b border-[var(--border)] py-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-8"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <h2 className="text-lg font-medium tracking-[-0.03em] text-[var(--text-primary)]">
+                              {resource.title}
+                            </h2>
+                            <span className="text-[11px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                              {type}
+                            </span>
+                          </div>
+
+                          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                            {subject}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--text-muted)]">
+                            {meta}
+                          </p>
                         </div>
-                        <Target size={16} className="text-[var(--brand)]" />
-                      </div>
-                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {items.map((item: any) => {
-                          const Icon = TYPE_ICON[item.type] || FileText;
-                          return (
-                            <a
-                              key={item.id}
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="card card-interactive block rounded-[28px] p-5"
-                            >
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--brand-subtle)] text-[var(--brand)]">
-                                  <Icon size={18} />
-                                </div>
-                                {item.exam && item.exam !== "All" ? <span className="badge badge-brand">{item.exam}</span> : null}
-                              </div>
-                              <p className="mt-5 text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">{item.title}</p>
-                              {item.description ? <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{item.description}</p> : null}
-                              <div className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-[var(--brand)]">
-                                Open resource
-                                <ArrowUpRight size={14} />
-                              </div>
-                            </a>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-[28px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-subtle)] p-8 text-center">
-                  <p className="text-lg font-semibold text-[var(--text-primary)]">No resources found for {activeExam}.</p>
-                  <p className="mt-2 text-sm text-[var(--text-secondary)]">Switch back to All to show the broader library.</p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="glass-panel rounded-[32px] p-6 md:p-8">
-                <SectionHeader
-                  eyebrow="Fallback library"
-                  title="You still have a useful base even before your database is full."
-                  description="This fallback state is now much cleaner, which matters if your live resources catalog is still small."
-                />
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
-                  {DEFAULT_FREE.map((item) => (
-                    <a key={item.title} href={item.url} target="_blank" rel="noopener noreferrer" className="card card-interactive block rounded-[28px] p-5">
-                      <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--brand-subtle)] text-[var(--brand)]">
-                        <FileText size={18} />
-                      </div>
-                      <p className="mt-5 text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">{item.title}</p>
-                      <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{item.description}</p>
-                      <div className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-[var(--brand)]">
-                        Open
-                        <ExternalLink size={14} />
-                      </div>
-                    </a>
-                  ))}
+
+                        <a
+                          href={resource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-sm font-medium text-[var(--brand)] transition hover:text-[var(--brand-light)]"
+                        >
+                          Open resource
+                          <ArrowUpRight size={15} />
+                        </a>
+                      </article>
+                    );
+                  })}
                 </div>
               </div>
-
-              <div className="grid gap-6 lg:grid-cols-2">
-                <div className="glass-panel rounded-[32px] p-6 md:p-8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">Books</p>
-                  <div className="mt-5 space-y-4">
-                    {DEFAULT_BOOKS.map((book) => (
-                      <a key={book.title} href={book.url} target="_blank" rel="noopener noreferrer" className="card card-interactive block rounded-[28px] p-5">
-                        <p className="text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">{book.title}</p>
-                        <p className="mt-1 text-sm text-[var(--text-muted)]">{book.author} · {book.price}</p>
-                        <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{book.description}</p>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="glass-panel rounded-[32px] p-6 md:p-8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">Channels</p>
-                  <div className="mt-5 space-y-4">
-                    {DEFAULT_VIDEOS.map((video) => (
-                      <a key={video.name} href={video.url} target="_blank" rel="noopener noreferrer" className="card card-interactive block rounded-[28px] p-5">
-                        <p className="text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">{video.name}</p>
-                        <p className="mt-1 text-sm text-[var(--text-muted)]">{video.subscribers}</p>
-                        <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{video.description}</p>
-                      </a>
-                    ))}
-                  </div>
-                </div>
+            ) : (
+              <div className="py-12">
+                <p className="text-lg font-medium text-[var(--text-primary)]">
+                  No resources found.
+                </p>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">
+                  Try a different search or switch to another tab.
+                </p>
               </div>
-            </div>
-          )}
+            )}
+          </section>
+        </div>
       </div>
     </AppShell>
   );
