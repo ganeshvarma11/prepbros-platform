@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Bookmark,
   BookmarkCheck,
+  Check,
   ChevronLeft,
   ChevronRight,
   Circle,
@@ -23,6 +24,7 @@ import { type Question } from "@/data/questions";
 import { trackEvent } from "@/lib/analytics";
 import { fetchQuestions } from "@/lib/questionsDB";
 import {
+  getAnswerStatuses,
   getBookmarks,
   getSolvedQuestions,
   saveAnswer,
@@ -73,6 +75,7 @@ export default function Practice() {
   const [selected, setSelected] = useState<number | null>(null);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [solved, setSolved] = useState<number[]>([]);
+  const [answerStatuses, setAnswerStatuses] = useState<Record<number, "correct" | "wrong">>({});
   const [answerStart, setAnswerStart] = useState<number>(Date.now());
 
   useEffect(() => {
@@ -92,11 +95,13 @@ export default function Practice() {
     if (!user) {
       setBookmarks([]);
       setSolved([]);
+      setAnswerStatuses({});
       return;
     }
 
     getBookmarks(user.id).then(setBookmarks);
     getSolvedQuestions(user.id).then(setSolved);
+    getAnswerStatuses(user.id).then(setAnswerStatuses);
   }, [user]);
 
   const filtered = useMemo(() => {
@@ -181,16 +186,21 @@ export default function Practice() {
 
   const handleAnswer = (index: number) => {
     if (selected !== null || !activeQ) return;
+    const isCorrect = index === activeQ.correct;
     setSelected(index);
     if (!solved.includes(activeQ.id)) setSolved((current) => [...current, activeQ.id]);
+    setAnswerStatuses((current) => ({
+      ...current,
+      [activeQ.id]: isCorrect ? "correct" : "wrong",
+    }));
     trackEvent("practice_answered", {
       exam: activeQ.exam,
       topic: activeQ.topic,
-      correct: index === activeQ.correct,
+      correct: isCorrect,
     });
     if (user) {
       const timeTaken = Math.round((Date.now() - answerStart) / 1000);
-      saveAnswer(user.id, activeQ.id, index === activeQ.correct, index, timeTaken);
+      saveAnswer(user.id, activeQ.id, isCorrect, index, timeTaken);
     }
   };
 
@@ -221,9 +231,6 @@ export default function Practice() {
             <Filter size={16} className="text-[var(--brand)]" />
             Filters
           </div>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-            Narrow the question set by exam, topic, difficulty, type, and year.
-          </p>
         </div>
         {filterCount > 0 ? (
           <button
@@ -259,7 +266,7 @@ export default function Practice() {
             {EXAMS.map((exam) => (
               <label
                 key={exam}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-transparent px-3 py-2.5 transition hover:border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[14px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
               >
                 <input
                   type="checkbox"
@@ -282,7 +289,7 @@ export default function Practice() {
             {["", ...DIFFICULTIES].map((difficulty) => (
               <label
                 key={difficulty || "all"}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-transparent px-3 py-2.5 transition hover:border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[14px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
               >
                 <input
                   type="radio"
@@ -294,7 +301,7 @@ export default function Practice() {
                   }}
                 />
                 <span className="text-sm text-[var(--text-secondary)]">
-                  {difficulty || "All difficulties"}
+                  {difficulty || "All"}
                 </span>
               </label>
             ))}
@@ -307,7 +314,7 @@ export default function Practice() {
             {TYPES.map((type) => (
               <label
                 key={type}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-transparent px-3 py-2.5 transition hover:border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[14px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
               >
                 <input
                   type="checkbox"
@@ -325,11 +332,11 @@ export default function Practice() {
 
         <div>
           <p className="filter-section-title">Topic</p>
-          <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+          <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
             {allTopics.map((topic) => (
               <label
                 key={topic}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-transparent px-3 py-2.5 transition hover:border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[14px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
               >
                 <input
                   type="checkbox"
@@ -351,7 +358,7 @@ export default function Practice() {
             {allYears.map((year) => (
               <label
                 key={year}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-transparent px-3 py-2.5 transition hover:border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[14px] px-2 py-2 transition hover:bg-[rgba(255,255,255,0.03)]"
               >
                 <input
                   type="checkbox"
@@ -541,7 +548,7 @@ export default function Practice() {
                               <tbody>
                                 {paginated.map((question, index) => {
                                   const rowNumber = (page - 1) * PER_PAGE + index + 1;
-                                  const isSolved = solvedSet.has(question.id);
+                                  const status = answerStatuses[question.id];
 
                                   return (
                                     <tr
@@ -549,53 +556,46 @@ export default function Practice() {
                                       onClick={() => openQuestion(question)}
                                       className="cursor-pointer border-b border-[rgba(255,255,255,0.06)] transition hover:bg-[rgba(255,161,22,0.04)]"
                                     >
-                                      <td className="px-5 py-5 align-top">
+                                      <td className="px-5 py-4 align-middle">
                                         <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-[12px] bg-[rgba(255,255,255,0.05)] px-2 text-sm font-semibold text-[var(--text-muted)]">
                                           {rowNumber}
                                         </span>
                                       </td>
-                                      <td className="px-5 py-5 align-top">
-                                        <div className="max-w-[420px]">
-                                          <p className="text-base font-medium leading-7 text-[var(--text-primary)]">
-                                            {question.question.length > 120
-                                              ? `${question.question.slice(0, 120)}...`
-                                              : question.question}
+                                      <td className="px-5 py-4 align-middle">
+                                        <div className="max-w-[430px]">
+                                          <p className="line-clamp-1 text-base font-medium leading-7 text-[var(--text-primary)]">
+                                            {question.question}
                                           </p>
-                                          <div className="mt-2 flex flex-wrap gap-2">
-                                            <span className="badge badge-blue">{question.type}</span>
-                                            {bookmarkSet.has(question.id) ? (
-                                              <span className="badge badge-gray">Bookmarked</span>
-                                            ) : null}
-                                          </div>
                                         </div>
                                       </td>
-                                      <td className="px-5 py-5 align-top">
+                                      <td className="px-5 py-4 align-middle">
                                         <span className={`badge ${EXAM_COLORS[question.exam]}`}>
                                           {question.exam}
                                         </span>
                                       </td>
-                                      <td className="px-5 py-5 align-top text-sm leading-7 text-[var(--text-secondary)]">
+                                      <td className="px-5 py-4 align-middle text-sm leading-7 text-[var(--text-secondary)]">
                                         {question.topic}
                                       </td>
-                                      <td className="px-5 py-5 align-top">
+                                      <td className="px-5 py-4 align-middle">
                                         <span className={`badge ${DIFF_COLORS[question.difficulty]}`}>
                                           {question.difficulty}
                                         </span>
                                       </td>
-                                      <td className="px-5 py-5 align-top text-sm text-[var(--text-secondary)]">
+                                      <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
                                         {question.year ?? "—"}
                                       </td>
-                                      <td className="px-5 py-5 align-top">
-                                        <span
-                                          className={`inline-flex items-center gap-2 rounded-[12px] border px-3 py-2 text-xs font-medium ${
-                                            isSolved
-                                              ? "border-[var(--accent-muted)] bg-[var(--accent-subtle)] text-[var(--accent)]"
-                                              : "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-muted)]"
-                                          }`}
-                                        >
-                                          {isSolved ? <BookmarkCheck size={14} /> : <Circle size={14} />}
-                                          {isSolved ? "Solved" : "Unsolved"}
-                                        </span>
+                                      <td className="px-5 py-4 align-middle">
+                                        {status === "correct" ? (
+                                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--accent-muted)] bg-[var(--accent-subtle)] text-[var(--accent)]">
+                                            <Check size={16} />
+                                          </span>
+                                        ) : status === "wrong" ? (
+                                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--red)]/30 bg-[var(--red-bg)] text-[var(--red)]">
+                                            <X size={16} />
+                                          </span>
+                                        ) : (
+                                          <span className="text-lg text-[var(--text-muted)]">-</span>
+                                        )}
                                       </td>
                                     </tr>
                                   );
@@ -729,7 +729,7 @@ export default function Practice() {
                         <tbody>
                           {paginated.map((question, index) => {
                             const rowNumber = (page - 1) * PER_PAGE + index + 1;
-                            const isSolved = solvedSet.has(question.id);
+                            const status = answerStatuses[question.id];
 
                             return (
                               <tr
@@ -740,27 +740,37 @@ export default function Practice() {
                                 <td className="px-5 py-5 align-top text-sm font-semibold text-[var(--text-muted)]">
                                   {rowNumber}
                                 </td>
-                                <td className="px-5 py-5 align-top text-sm leading-7 text-[var(--text-primary)]">
-                                  {question.question.length > 90
-                                    ? `${question.question.slice(0, 90)}...`
-                                    : question.question}
+                                <td className="px-5 py-4 align-middle text-sm leading-7 text-[var(--text-primary)]">
+                                  <span className="line-clamp-1 block">
+                                    {question.question}
+                                  </span>
                                 </td>
-                                <td className="px-5 py-5 align-top">
+                                <td className="px-5 py-4 align-middle">
                                   <span className={`badge ${EXAM_COLORS[question.exam]}`}>{question.exam}</span>
                                 </td>
-                                <td className="px-5 py-5 align-top text-sm text-[var(--text-secondary)]">
+                                <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
                                   {question.topic}
                                 </td>
-                                <td className="px-5 py-5 align-top">
+                                <td className="px-5 py-4 align-middle">
                                   <span className={`badge ${DIFF_COLORS[question.difficulty]}`}>
                                     {question.difficulty}
                                   </span>
                                 </td>
-                                <td className="px-5 py-5 align-top text-sm text-[var(--text-secondary)]">
+                                <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
                                   {question.year ?? "—"}
                                 </td>
-                                <td className="px-5 py-5 align-top text-sm text-[var(--text-secondary)]">
-                                  {isSolved ? "Solved" : "Unsolved"}
+                                <td className="px-5 py-4 align-middle text-sm text-[var(--text-secondary)]">
+                                  {status === "correct" ? (
+                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--accent-muted)] bg-[var(--accent-subtle)] text-[var(--accent)]">
+                                      <Check size={14} />
+                                    </span>
+                                  ) : status === "wrong" ? (
+                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--red)]/30 bg-[var(--red-bg)] text-[var(--red)]">
+                                      <X size={14} />
+                                    </span>
+                                  ) : (
+                                    "-"
+                                  )}
                                 </td>
                               </tr>
                             );

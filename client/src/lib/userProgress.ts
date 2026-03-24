@@ -63,6 +63,25 @@ export async function getSolvedQuestions(userId: string): Promise<number[]> {
   return Array.from(new Set(data?.map((a) => a.question_id) ?? []));
 }
 
+export async function getAnswerStatuses(
+  userId: string,
+): Promise<Record<number, "correct" | "wrong">> {
+  const { data } = await supabase
+    .from("user_answers")
+    .select("question_id, is_correct, answered_at")
+    .eq("user_id", userId)
+    .order("answered_at", { ascending: false });
+
+  const statuses: Record<number, "correct" | "wrong"> = {};
+
+  for (const answer of data ?? []) {
+    if (statuses[answer.question_id]) continue;
+    statuses[answer.question_id] = answer.is_correct ? "correct" : "wrong";
+  }
+
+  return statuses;
+}
+
 // Update profile total_solved and accuracy
 async function updateProfileStats(userId: string) {
   const { data } = await supabase
