@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
-  BarChart3,
   BookMarked,
   Brain,
   CheckCircle2,
@@ -57,11 +56,8 @@ type QueueItem = {
   kind: "mistake" | "bookmark";
 };
 
-const shellClassName =
-  "rounded-[26px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-lg)]";
-
-const insetClassName =
-  "rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)]";
+const panelClassName = "rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)]";
+const mutedPanelClassName = "rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)]";
 
 const toDateKey = (value: Date | string) => new Date(value).toLocaleDateString("en-CA");
 
@@ -78,8 +74,8 @@ const formatActivityStamp = (value: string) =>
 const getHeatmapColor = (count: number, maxCount: number) => {
   if (!count) return "var(--bg-muted)";
   const intensity = count / maxCount;
-  if (intensity < 0.34) return "rgba(52, 211, 104, 0.32)";
-  if (intensity < 0.67) return "rgba(52, 211, 104, 0.6)";
+  if (intensity < 0.34) return "rgba(52, 211, 104, 0.24)";
+  if (intensity < 0.67) return "rgba(52, 211, 104, 0.46)";
   return "#3fe06f";
 };
 
@@ -196,6 +192,7 @@ export default function Dashboard() {
   const targetExam = profile?.target_exam || user?.user_metadata?.target_exam || "UPSC CSE 2026";
   const displayName =
     profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Aspirant";
+  const firstName = displayName.split(" ")[0] || displayName;
   const username = profile?.username || user?.email?.split("@")[0] || "prepbros-user";
   const avatarUrl =
     profile?.avatar_url ||
@@ -204,6 +201,7 @@ export default function Dashboard() {
     user?.user_metadata?.avatar ||
     "";
   const questionCount = questions.length;
+  const coveragePercent = questionCount > 0 ? Math.round((totalSolved / questionCount) * 100) : 0;
 
   const dailyGoal =
     dailyGoalOverride ??
@@ -249,6 +247,7 @@ export default function Dashboard() {
   const weeklyCorrect = weekBuckets.reduce((sum, day) => sum + day.correct, 0);
   const weeklyAccuracy = weeklyAttempts > 0 ? Math.round((weeklyCorrect / weeklyAttempts) * 100) : 0;
   const activeDays = weekBuckets.filter((day) => day.total > 0).length;
+  const weekPeak = Math.max(...weekBuckets.map((day) => day.total), 1);
 
   const topicPerformance = useMemo(() => {
     const grouped = resolvedAnswers.reduce<
@@ -367,31 +366,6 @@ export default function Dashboard() {
       };
     });
   }, [questions, solvedSet]);
-
-  const solvedRingStyle = useMemo(() => {
-    if (questionCount === 0) {
-      return {
-        background:
-          "conic-gradient(rgba(255,255,255,0.14) 0deg 360deg)",
-      };
-    }
-
-    const easyPct = (difficultyProgress[0].solved / questionCount) * 100;
-    const medPct = (difficultyProgress[1].solved / questionCount) * 100;
-    const hardPct = (difficultyProgress[2].solved / questionCount) * 100;
-    const easyEnd = easyPct;
-    const medEnd = easyPct + medPct;
-    const hardEnd = easyPct + medPct + hardPct;
-
-    return {
-      background: `conic-gradient(
-        ${difficultyProgress[0].color} 0% ${easyEnd}%,
-        ${difficultyProgress[1].color} ${easyEnd}% ${medEnd}%,
-        ${difficultyProgress[2].color} ${medEnd}% ${hardEnd}%,
-        rgba(255,255,255,0.08) ${hardEnd}% 100%
-      )`,
-    };
-  }, [difficultyProgress, questionCount]);
 
   const heatmap = useMemo(() => {
     const rangeDays =
@@ -529,8 +503,7 @@ export default function Dashboard() {
         href: "/practice",
         cta: "Continue practice",
         icon: Target,
-        accent:
-          "border-[rgba(255,161,22,0.16)] bg-[rgba(255,161,22,0.10)] text-[var(--brand-light)]",
+        accent: "bg-[var(--brand-subtle)] text-[var(--brand-light)]",
       });
     } else {
       actions.push({
@@ -539,7 +512,7 @@ export default function Dashboard() {
         href: "/practice",
         cta: "Add a review round",
         icon: CheckCircle2,
-        accent: "border-[rgba(45,181,93,0.16)] bg-[rgba(45,181,93,0.10)] text-[var(--accent)]",
+        accent: "bg-[var(--accent-subtle)] text-[var(--accent)]",
       });
     }
 
@@ -550,7 +523,7 @@ export default function Dashboard() {
         href: buildPracticeHref({ topic: improvementTopics[0].topic }),
         cta: "Open question bank",
         icon: TrendingUp,
-        accent: "border-[rgba(77,163,255,0.18)] bg-[rgba(77,163,255,0.10)] text-[var(--blue)]",
+        accent: "bg-[var(--blue-bg)] text-[var(--blue)]",
       });
     }
 
@@ -561,8 +534,7 @@ export default function Dashboard() {
         href: buildPracticeHref({ bookmarked: true }),
         cta: "Use bookmarks",
         icon: BookMarked,
-        accent:
-          "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-primary)]",
+        accent: "bg-[var(--bg-elevated)] text-[var(--text-primary)]",
       });
     } else {
       actions.push({
@@ -571,8 +543,7 @@ export default function Dashboard() {
         href: "/practice",
         cta: "Start practicing",
         icon: Brain,
-        accent:
-          "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[var(--text-primary)]",
+        accent: "bg-[var(--bg-elevated)] text-[var(--text-primary)]",
       });
     }
 
@@ -596,19 +567,18 @@ export default function Dashboard() {
     return (
       <AppShell>
         <div className="container-shell py-14">
-          <div className="glass-panel rounded-[32px] p-8 text-center md:p-12">
+          <div className={`${panelClassName} p-8 text-center md:p-12`}>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
               Dashboard
             </p>
             <h1 className="mt-4 text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
-              Sign in to unlock your prep command center.
+              Sign in to unlock your prep workspace.
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm text-[var(--text-secondary)] md:text-base">
-              Your dashboard ties together streaks, solved questions, bookmarks, and weak-topic
-              revision. It works best once your answers are tied to an account.
+              Your dashboard ties together streaks, solved questions, bookmarks, and review signals once your progress is attached to an account.
             </p>
             <Link href="/">
-              <span className="btn-primary mt-8 inline-flex cursor-pointer rounded-full px-6 py-3">
+              <span className="btn-primary mt-8 inline-flex cursor-pointer px-6 py-3">
                 Go back home
                 <ArrowRight size={16} />
               </span>
@@ -635,361 +605,195 @@ export default function Dashboard() {
         }}
       />
 
-      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="space-y-6 lg:sticky lg:top-8 lg:self-start">
-            <section className={`${shellClassName} p-4 md:p-5`}>
-              <div className="flex items-start gap-3.5">
-                <Avatar className="h-20 w-20 shrink-0 rounded-[20px] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,161,22,0.22)_0%,rgba(77,163,255,0.18)_100%)] shadow-[inset_0_1px_0_var(--border)]">
+      <div className="space-y-4">
+        <section className={`${panelClassName} px-5 py-5 md:px-6`}>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                Dashboard
+              </p>
+              <div className="mt-3 flex items-start gap-3">
+                <Avatar className="mt-0.5 h-11 w-11 rounded-[14px] border border-[var(--border)]">
                   <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
-                  <AvatarFallback className="rounded-[20px] bg-transparent text-2xl font-semibold text-white">
+                  <AvatarFallback className="rounded-[14px] bg-[var(--brand-subtle)] text-[var(--brand)]">
                     {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                    {displayName}
+                <div className="min-w-0">
+                  <h1 className="text-[1.75rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-[2rem]">
+                    Welcome back, {firstName}
+                  </h1>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
+                    {focusCopy.title}. {focusCopy.description}
                   </p>
-                  <p className="mt-1 truncate text-sm text-[var(--text-muted)]">@{username}</p>
-                  <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
-                    Focused on {targetExam}. Serious prep feels calmer when the next action is
-                    visible.
+                  <p className="mt-2 text-xs uppercase tracking-[0.14em] text-[var(--text-faint)]">
+                    @{username} · {targetExam}
                   </p>
-                  <Link href="/profile">
-                    <span className="mt-3 inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--brand-light)]">
-                      {avatarUrl ? "Update profile details" : "Add your avatar"}
-                      <ArrowRight size={14} />
-                    </span>
-                  </Link>
                 </div>
               </div>
+            </div>
 
-              <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                {[
-                  { label: "Solved", value: totalSolved, tone: "text-[var(--text-primary)]" },
-                  { label: "Accuracy", value: `${accuracy}%`, tone: "text-[var(--blue)]" },
-                  { label: "Bookmarks", value: bookmarkCount, tone: "text-[var(--brand-light)]" },
-                  { label: "Streak", value: `${streak}d`, tone: "text-[var(--accent)]" },
-                ].map((item) => (
-                  <div key={item.label} className={`${insetClassName} p-3.5`}>
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                      {item.label}
-                    </p>
-                    <p className={`mt-2.5 text-[2rem] font-semibold tracking-[-0.05em] ${item.tone}`}>
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
+            <div className="flex flex-wrap gap-2">
+              <Link href="/practice">
+                <span className="btn-primary cursor-pointer px-4 py-2.5 text-sm">
+                  Continue practice
+                  <ArrowRight size={15} />
+                </span>
+              </Link>
+              <Link href="/practice?bookmarked=1">
+                <span className="btn-secondary cursor-pointer px-4 py-2.5 text-sm">
+                  Review bookmarks
+                </span>
+              </Link>
+              <Link href="/profile">
+                <span className="btn-secondary cursor-pointer px-4 py-2.5 text-sm">
+                  Account settings
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: "Today",
+                value: `${todayAttempts}/${dailyGoal}`,
+                meta: dailyPercent >= 100 ? "Goal complete" : `${dailyRemaining} left`,
+              },
+              {
+                label: "Accuracy",
+                value: `${accuracy}%`,
+                meta: `${correctAttempts} correct across ${totalAttempts} attempts`,
+              },
+              {
+                label: "Solved",
+                value: String(totalSolved),
+                meta: `${coveragePercent}% of the bank covered`,
+              },
+              {
+                label: "Streak",
+                value: `${streak}d`,
+                meta: `${bookmarkCount} bookmark${bookmarkCount === 1 ? "" : "s"} saved`,
+              },
+            ].map((item) => (
+              <div key={item.label} className={`${mutedPanelClassName} px-4 py-3.5`}>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                  {item.label}
+                </p>
+                <p className="mt-2 text-[1.6rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                  {item.value}
+                </p>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">{item.meta}</p>
               </div>
+            ))}
+          </div>
+        </section>
 
-              <div className="mt-5 flex flex-col gap-2.5">
-                <Link href="/practice">
-                  <span className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(180deg,#ff9838_0%,#ff7a12_100%)] px-4 py-2.5 text-sm font-medium text-white shadow-[0_18px_36px_-28px_rgba(255,122,18,0.95)] transition hover:brightness-105">
-                    Continue practice
-                    <ArrowRight size={15} />
-                  </span>
-                </Link>
-                <Link href="/profile">
-                  <span className="inline-flex w-full cursor-pointer items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)]">
-                    Open profile
-                  </span>
-                </Link>
-              </div>
-            </section>
-
-            <section className={`${shellClassName} p-4 md:p-5`}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
-                Prep snapshot
-              </p>
-              <div className="mt-4 space-y-3">
-                {[
-                  { label: "Today", value: `${todayAttempts}/${dailyGoal}`, meta: dailyPercent >= 100 ? "Goal completed" : `${dailyRemaining} left today` },
-                  { label: "This week", value: `${weeklyAttempts}`, meta: `${weeklyAccuracy}% weekly accuracy` },
-                  { label: "Best streak", value: `${maxStreak}d`, meta: `${heatmap.activeDayCount} active days in ${heatmapRangeLabel}` },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                        {item.label}
-                      </p>
-                      <p className="mt-1 text-sm text-[var(--text-secondary)]">{item.meta}</p>
-                    </div>
-                    <p className="text-xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className={`${shellClassName} p-4 md:p-5`}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
-                Review buckets
-              </p>
-              <div className="mt-4 space-y-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                    Weak topics
-                  </p>
-                  <div className="mt-3 space-y-2.5">
-                    {improvementTopics.length > 0 ? (
-                      improvementTopics.map((topic) => (
-                        <Link key={topic.topic} href={buildPracticeHref({ topic: topic.topic })}>
-                          <span className="flex cursor-pointer items-center justify-between gap-3 rounded-[16px] bg-[rgba(255,255,255,0.04)] px-3 py-2.5 transition hover:bg-[rgba(255,255,255,0.07)]">
-                            <span className="text-sm font-medium text-[var(--text-primary)]">{topic.topic}</span>
-                            <span className="text-sm text-[var(--brand-light)]">{topic.accuracy}%</span>
-                          </span>
-                        </Link>
-                      ))
-                    ) : (
-                      <p className="text-sm text-[var(--text-secondary)]">
-                        Weak-topic signals will show once you have more activity.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="border-t border-[var(--border)] pt-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                    Bookmark clusters
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {bookmarkTopics.length > 0 ? (
-                      bookmarkTopics.map((item) => (
-                        <Link key={item.topic} href={buildPracticeHref({ topic: item.topic, bookmarked: true })}>
-                          <span className="inline-flex cursor-pointer rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:border-[var(--border-strong)]">
-                            {item.topic} - {item.total}
-                          </span>
-                        </Link>
-                      ))
-                    ) : (
-                      <p className="text-sm text-[var(--text-secondary)]">
-                        Save questions during practice to build a cleaner revision stack.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
-          </aside>
-
-          <div className="space-y-5">
-            <section className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-              <div className={`${shellClassName} p-5 md:p-6`}>
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
-                      Solved progress
-                    </p>
-                    <h1 className="mt-2.5 text-[2.1rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-[2.35rem]">
-                      Your prep command center
-                    </h1>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-                      Dense, calm, and useful: real progress, real review signals, and a clearer
-                      sense of what to do next.
-                    </p>
-                  </div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(77,163,255,0.16)] bg-[rgba(77,163,255,0.08)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--blue)]">
-                    <BarChart3 size={14} />
-                    {questionCount > 0 ? `${Math.round((totalSolved / questionCount) * 100)}% coverage` : "0% coverage"}
-                  </div>
-                </div>
-
-                <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className="flex h-44 w-44 items-center justify-center rounded-full p-[10px] shadow-[0_0_48px_rgba(255,161,22,0.08)] md:h-48 md:w-48"
-                      style={solvedRingStyle}
-                    >
-                      <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-[var(--border)] bg-[linear-gradient(180deg,var(--bg-card)_0%,var(--bg-elevated)_100%)] text-center shadow-[inset_0_1px_0_var(--border)]">
-                        <p className="text-4xl font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-[2.65rem]">
-                          {totalSolved}
-                        </p>
-                        <p className="mt-1 text-sm text-[var(--text-secondary)]">/ {questionCount || 0} solved</p>
-                        <p className="mt-2 text-xs font-medium text-[var(--accent)]">{totalAttempts} attempts logged</p>
-                      </div>
-                    </div>
-                    <p className="mt-3 text-xs text-[var(--text-secondary)]">
-                      Difficulty mix uses real solved questions from the bank.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {difficultyProgress.map((item) => (
-                      <div key={item.difficulty} className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-base font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
-                              {item.difficulty}
-                            </p>
-                            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                              {item.solved}/{item.total} questions solved
-                            </p>
-                          </div>
-                          <p className="text-xl font-semibold tracking-[-0.05em]" style={{ color: item.color }}>
-                            {item.total > 0 ? `${Math.round((item.solved / item.total) * 100)}%` : "0%"}
-                          </p>
-                        </div>
-                        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[var(--bg-muted)]">
-                          <div
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${item.total > 0 ? Math.round((item.solved / item.total) * 100) : 0}%`,
-                              background: item.color,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className={`${insetClassName} p-3.5`}>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                        Current read
-                      </p>
-                      <p className="mt-2.5 text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                        {focusCopy.title}
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                        {focusCopy.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-5">
-                <section className={`${shellClassName} p-5 md:p-6`}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
-                        Today&apos;s goal
-                      </p>
-                      <p className="mt-2.5 text-4xl font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-[3.1rem]">
-                        {todayAttempts}/{dailyGoal}
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                        {dailyPercent >= 100
-                          ? "Goal completed. Use the extra time for review."
-                          : `${dailyRemaining} more to lock in today's target.`}
-                      </p>
-                    </div>
-                    <span
-                      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold uppercase tracking-[0.18em] ${
-                        dailyPercent >= 100
-                          ? "border-[rgba(45,181,93,0.2)] bg-[rgba(45,181,93,0.12)] text-[var(--accent)]"
-                          : "border-[rgba(255,161,22,0.18)] bg-[rgba(255,161,22,0.10)] text-[var(--brand-light)]"
-                      }`}
-                    >
-                      {dailyPercent >= 100 ? <CheckCircle2 size={14} /> : <Target size={14} />}
-                      {dailyPercent >= 100 ? "Goal hit" : `${dailyPercent}% done`}
-                    </span>
-                  </div>
-
-                  <div className="mt-5 h-3 overflow-hidden rounded-full bg-[var(--bg-muted)]">
-                    <div
-                      className="h-full rounded-full bg-[linear-gradient(90deg,#ff9838_0%,#ffb861_45%,#78d2ff_100%)] shadow-[0_0_24px_rgba(120,210,255,0.28)]"
-                      style={{ width: `${dailyPercent}%` }}
-                    />
-                  </div>
-
-                  <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                    <div className={`${insetClassName} p-3.5`}>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Today accuracy</p>
-                      <p className="mt-2.5 text-[2rem] font-semibold tracking-[-0.05em] text-[var(--blue)]">
-                        {todayAttempts > 0 ? `${todayAccuracy}%` : "n/a"}
-                      </p>
-                    </div>
-                    <div className={`${insetClassName} p-3.5`}>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Target exam</p>
-                      <p className="mt-2.5 text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                        {targetExam}
-                      </p>
-                    </div>
-                  </div>
-                </section>
-
-                <section className={`${shellClassName} p-5 md:p-6`}>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
-                    Focus queue
-                  </p>
-                  <div className="mt-4 space-y-2.5">
-                    <Link
-                      href={
-                        improvementTopics[0]
-                          ? buildPracticeHref({ topic: improvementTopics[0].topic })
-                          : "/practice"
-                      }
-                    >
-                      <span className={`block cursor-pointer ${insetClassName} p-3.5 transition hover:border-[rgba(255,255,255,0.16)]`}>
-                        <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Priority review</p>
-                        <p className="mt-2.5 text-lg font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                          {improvementTopics[0] ? improvementTopics[0].topic : "Build activity first"}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                          {improvementTopics[0]
-                            ? `${improvementTopics[0].incorrect} misses across ${improvementTopics[0].total} recent attempts make this the highest-value topic to revisit.`
-                            : "Once you answer more questions, the dashboard will start isolating weak areas here."}
-                        </p>
-                      </span>
-                    </Link>
-
-                    <div className={`${insetClassName} p-3.5`}>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Consistency</p>
-                      <p className="mt-2.5 text-[2rem] font-semibold tracking-[-0.05em] text-[var(--accent)]">
-                        {activeDays}/7
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                        Active days this week with a current streak of {streak} day{streak === 1 ? "" : "s"}.
-                      </p>
-                    </div>
-                  </div>
-                </section>
-              </div>
-            </section>
-
-            <section className={`${shellClassName} p-5 md:p-6`}>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_320px]">
+          <div className="space-y-4">
+            <section className={`${panelClassName} p-5 md:p-6`}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                    Daily progress
+                  </p>
+                  <h2 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    Keep today simple and visible
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                    Small, repeatable sessions work best when the daily target and weekly rhythm stay in view.
+                  </p>
+                </div>
+
+                <div className={`${mutedPanelClassName} px-4 py-3`}>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                    This week
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    {weeklyAttempts}
+                  </p>
+                  <p className="text-sm text-[var(--text-muted)]">{weeklyAccuracy}% weekly accuracy</p>
+                </div>
+              </div>
+
+              <div className="mt-5 h-2 overflow-hidden rounded-full bg-[var(--bg-muted)]">
+                <div
+                  className="h-full rounded-full bg-[linear-gradient(90deg,#ff9838_0%,#ffb861_50%,#7bd7ff_100%)]"
+                  style={{ width: `${dailyPercent}%` }}
+                />
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className={`${mutedPanelClassName} px-4 py-3`}>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                    Today accuracy
+                  </p>
+                  <p className="mt-2 text-xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    {todayAttempts > 0 ? `${todayAccuracy}%` : "No attempts yet"}
+                  </p>
+                </div>
+                <div className={`${mutedPanelClassName} px-4 py-3`}>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                    Active days
+                  </p>
+                  <p className="mt-2 text-xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    {activeDays}/7
+                  </p>
+                </div>
+                <div className={`${mutedPanelClassName} px-4 py-3`}>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                    Best streak
+                  </p>
+                  <p className="mt-2 text-xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    {maxStreak}d
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-7 gap-2">
+                {weekBuckets.map((day) => (
+                  <div key={day.dateKey} className={`${mutedPanelClassName} px-3 py-3`}>
+                    <div className="flex h-16 items-end">
+                      <div
+                        className="w-full rounded-full bg-[var(--brand)]/80"
+                        style={{
+                          height: `${Math.max(12, Math.round((day.total / weekPeak) * 100))}%`,
+                          opacity: day.total > 0 ? 1 : 0.2,
+                        }}
+                      />
+                    </div>
+                    <p className="mt-3 text-xs font-medium text-[var(--text-primary)]">{day.label}</p>
+                    <p className="text-xs text-[var(--text-muted)]">{day.total} attempts</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className={`${panelClassName} p-5 md:p-6`}>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                     Activity heatmap
                   </p>
-                  <h2 className="mt-2.5 text-[1.9rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                  <h2 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                     Attempts over time
                   </h2>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex flex-wrap gap-2">
-                    {(["7D", "30D", "26W", "1Y"] as const).map((range) => (
-                      <button
-                        key={range}
-                        type="button"
-                        onClick={() => setHeatmapRange(range)}
-                        className={`rounded-[10px] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
-                          heatmapRange === range
-                            ? "bg-[rgba(255,161,22,0.14)] text-[var(--brand-light)]"
-                            : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                        }`}
-                      >
-                        {range}
-                      </button>
-                    ))}
-                  </div>
-                  {[
-                    { label: "Active days", value: heatmap.activeDayCount },
-                    { label: "Current streak", value: streak },
-                    { label: "Best streak", value: maxStreak },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-2.5"
+                <div className="flex flex-wrap gap-2">
+                  {(["7D", "30D", "26W", "1Y"] as const).map((range) => (
+                    <button
+                      key={range}
+                      type="button"
+                      onClick={() => setHeatmapRange(range)}
+                      className={`rounded-[10px] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition ${
+                        heatmapRange === range
+                          ? "bg-[var(--brand-subtle)] text-[var(--brand-light)]"
+                          : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      }`}
                     >
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                        {item.label}
-                      </p>
-                      <p className="mt-1.5 text-xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
-                        {item.value}
-                      </p>
-                    </div>
+                      {range}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -1017,7 +821,7 @@ export default function Dashboard() {
                           {week.days.map((day) => (
                             <div
                               key={day.dateKey}
-                            className="h-[11px] w-[11px] rounded-[3px] border border-[rgba(255,255,255,0.04)]"
+                              className="h-[11px] w-[11px] rounded-[3px] border border-[rgba(255,255,255,0.04)]"
                               style={{ backgroundColor: getHeatmapColor(day.count, heatmap.maxCount) }}
                               title={`${day.date.toDateString()}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
                             />
@@ -1026,34 +830,32 @@ export default function Dashboard() {
                       ))}
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  <div className="mt-4 flex items-center justify-between gap-4">
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      Darker cells mean more attempts on that day.
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                      <span>Less</span>
-                      {[0, 1, 2, 3].map((level) => (
-                        <span
-                          key={level}
-                          className="h-3 w-3 rounded-[3px] border border-[rgba(255,255,255,0.04)]"
-                          style={{ backgroundColor: getHeatmapColor(level, 3) }}
-                        />
-                      ))}
-                      <span>More</span>
-                    </div>
-                  </div>
+              <div className="mt-4 flex flex-col gap-3 text-sm text-[var(--text-secondary)] sm:flex-row sm:items-center sm:justify-between">
+                <p>{heatmap.activeDayCount} active days in the last {heatmapRangeLabel}.</p>
+                <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                  <span>Less</span>
+                  {[0, 1, 2, 3].map((level) => (
+                    <span
+                      key={level}
+                      className="h-3 w-3 rounded-[3px] border border-[rgba(255,255,255,0.04)]"
+                      style={{ backgroundColor: getHeatmapColor(level, 3) }}
+                    />
+                  ))}
+                  <span>More</span>
                 </div>
               </div>
             </section>
 
-            <section className={`${shellClassName} p-5 md:p-6`}>
+            <section className={`${panelClassName} p-5 md:p-6`}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-light)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                     Workspace
                   </p>
-                  <h2 className="mt-2.5 text-[1.9rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                  <h2 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                     Recent activity, review, and next actions
                   </h2>
                 </div>
@@ -1068,9 +870,9 @@ export default function Dashboard() {
                       key={tab.id}
                       type="button"
                       onClick={() => setActivePanel(tab.id as typeof activePanel)}
-                      className={`rounded-[12px] px-3.5 py-2 text-sm font-medium transition ${
+                      className={`rounded-[10px] px-3 py-2 text-sm font-medium transition ${
                         activePanel === tab.id
-                          ? "bg-[rgba(255,161,22,0.14)] text-[var(--brand-light)]"
+                          ? "bg-[var(--brand-subtle)] text-[var(--brand-light)]"
                           : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
@@ -1080,9 +882,9 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="mt-5">
-                {activePanel === "activity" ? (
-                  <div className="space-y-2.5">
+              <div className="mt-5 space-y-2.5">
+                {activePanel === "activity" && (
+                  <>
                     {recentSessions.length > 0 ? (
                       recentSessions.map((session) => (
                         <Link
@@ -1093,24 +895,23 @@ export default function Dashboard() {
                             exam: session.exam !== "General" ? session.exam : undefined,
                           })}
                         >
-                          <span className="flex cursor-pointer flex-col gap-3 rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-3.5 transition hover:border-[var(--border-strong)] md:flex-row md:items-center md:justify-between">
+                          <span className="flex cursor-pointer flex-col gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 transition hover:border-[var(--border-strong)] md:flex-row md:items-center md:justify-between">
                             <span>
                               <span className="flex flex-wrap items-center gap-2">
-                                <span className="font-semibold text-[var(--text-primary)]">{session.topic}</span>
-                                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                                <span className="font-medium text-[var(--text-primary)]">{session.topic}</span>
+                                <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
                                   {session.type}
                                 </span>
                               </span>
                               <span className="mt-1 block text-sm text-[var(--text-secondary)]">
-                                {session.exam} - {session.date}
+                                {session.exam} · {session.date}
                               </span>
                             </span>
-
                             <span
-                              className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] ${
+                              className={`inline-flex w-fit items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${
                                 session.correct
-                                  ? "border-[rgba(45,181,93,0.2)] bg-[rgba(45,181,93,0.10)] text-[var(--accent)]"
-                                  : "border-[rgba(255,184,0,0.2)] bg-[rgba(255,184,0,0.10)] text-[var(--yellow)]"
+                                  ? "bg-[var(--accent-subtle)] text-[var(--accent)]"
+                                  : "bg-[var(--yellow-bg)] text-[var(--yellow)]"
                               }`}
                             >
                               {session.correct ? <CheckCircle2 size={13} /> : <CircleAlert size={13} />}
@@ -1120,20 +921,15 @@ export default function Dashboard() {
                         </Link>
                       ))
                     ) : (
-                      <div className="rounded-[26px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-elevated)] p-8 text-center">
-                        <p className="text-xl font-semibold text-[var(--text-primary)]">
-                          No answered questions yet
-                        </p>
-                        <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--text-secondary)]">
-                          Start with practice so this workspace begins showing useful activity.
-                        </p>
+                      <div className={`${mutedPanelClassName} px-4 py-5 text-sm text-[var(--text-secondary)]`}>
+                        Start with practice so this workspace begins showing useful activity.
                       </div>
                     )}
-                  </div>
-                ) : null}
+                  </>
+                )}
 
-                {activePanel === "review" ? (
-                  <div className="space-y-2.5">
+                {activePanel === "review" && (
+                  <>
                     {reviewQueue.length > 0 ? (
                       reviewQueue.map((item) => (
                         <Link
@@ -1143,23 +939,24 @@ export default function Dashboard() {
                             topic: item.topic,
                             exam: item.exam,
                             bookmarked: item.kind === "bookmark",
+                            incorrect: item.kind === "mistake",
                           })}
                         >
-                          <span className="block cursor-pointer rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5 transition hover:border-[var(--border-strong)]">
+                          <span className="block cursor-pointer rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 transition hover:border-[var(--border-strong)]">
                             <span className="flex items-start justify-between gap-3">
                               <span>
-                                <span className="line-clamp-2 text-[15px] font-medium leading-6 text-[var(--text-primary)]">
+                                <span className="line-clamp-2 text-sm font-medium leading-6 text-[var(--text-primary)]">
                                   {item.title}
                                 </span>
                                 <span className="mt-1 block text-sm text-[var(--text-secondary)]">
-                                  {item.exam} - {item.topic}
+                                  {item.exam} · {item.topic}
                                 </span>
                               </span>
                               <span
-                                className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
                                   item.kind === "mistake"
-                                    ? "border-[rgba(255,95,86,0.18)] bg-[rgba(255,95,86,0.10)] text-[var(--red)]"
-                                    : "border-[rgba(255,161,22,0.18)] bg-[rgba(255,161,22,0.10)] text-[var(--brand-light)]"
+                                    ? "bg-[var(--red-bg)] text-[var(--red)]"
+                                    : "bg-[var(--brand-subtle)] text-[var(--brand-light)]"
                                 }`}
                               >
                                 {item.reason}
@@ -1169,31 +966,29 @@ export default function Dashboard() {
                         </Link>
                       ))
                     ) : (
-                      <div className="rounded-[22px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-elevated)] p-6 text-sm text-[var(--text-secondary)]">
+                      <div className={`${mutedPanelClassName} px-4 py-5 text-sm text-[var(--text-secondary)]`}>
                         Missed questions and bookmarks will collect here as your review queue builds up.
                       </div>
                     )}
-                  </div>
-                ) : null}
+                  </>
+                )}
 
-                {activePanel === "actions" ? (
-                  <div className="space-y-2.5">
+                {activePanel === "actions" && (
+                  <>
                     {nextActions.map((action) => {
                       const Icon = action.icon;
                       return (
                         <div
                           key={action.title}
-                          className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5"
+                          className="rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3"
                         >
                           <div className="flex items-start gap-4">
-                            <div className={`rounded-[14px] border p-2.5 ${action.accent}`}>
-                              <Icon size={18} />
+                            <div className={`rounded-[12px] p-2.5 ${action.accent}`}>
+                              <Icon size={17} />
                             </div>
                             <div className="flex-1">
-                              <p className="text-base font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
-                                {action.title}
-                              </p>
-                              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                              <p className="text-sm font-medium text-[var(--text-primary)]">{action.title}</p>
+                              <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
                                 {action.description}
                               </p>
                               <Link href={action.href}>
@@ -1207,11 +1002,160 @@ export default function Dashboard() {
                         </div>
                       );
                     })}
-                  </div>
-                ) : null}
+                  </>
+                )}
               </div>
             </section>
           </div>
+
+          <aside className="space-y-4 xl:sticky xl:top-7 xl:self-start">
+            <section className={`${panelClassName} p-5`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                Snapshot
+              </p>
+              <div className="mt-4 space-y-2.5">
+                {[
+                  {
+                    label: "Today",
+                    value: `${todayAttempts}/${dailyGoal}`,
+                    meta: dailyPercent >= 100 ? "Goal completed" : `${dailyRemaining} to go`,
+                  },
+                  {
+                    label: "This week",
+                    value: String(weeklyAttempts),
+                    meta: `${weeklyAccuracy}% accuracy`,
+                  },
+                  {
+                    label: "Review queue",
+                    value: String(reviewQueue.length),
+                    meta: `${bookmarkCount} bookmarks saved`,
+                  },
+                  {
+                    label: "Coverage",
+                    value: `${coveragePercent}%`,
+                    meta: `${totalSolved}/${questionCount || 0} solved`,
+                  },
+                ].map((item) => (
+                  <div key={item.label} className={`${mutedPanelClassName} px-4 py-3`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-[var(--text-primary)]">{item.label}</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">{item.value}</p>
+                    </div>
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">{item.meta}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className={`${panelClassName} p-5`}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                    Coverage
+                  </p>
+                  <p className="mt-2 text-[1.6rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                    {coveragePercent}% complete
+                  </p>
+                </div>
+                <span className="rounded-full bg-[var(--brand-subtle)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--brand-light)]">
+                  {questionCount} total
+                </span>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {difficultyProgress.map((item) => (
+                  <div key={item.difficulty} className={`${mutedPanelClassName} px-4 py-3`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-[var(--text-primary)]">{item.difficulty}</p>
+                      <p className="text-sm font-semibold" style={{ color: item.color }}>
+                        {item.total > 0 ? `${Math.round((item.solved / item.total) * 100)}%` : "0%"}
+                      </p>
+                    </div>
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">
+                      {item.solved}/{item.total} solved
+                    </p>
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--bg-muted)]">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${item.total > 0 ? Math.round((item.solved / item.total) * 100) : 0}%`,
+                          background: item.color,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className={`${mutedPanelClassName} mt-4 px-4 py-3`}>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                  Current read
+                </p>
+                <p className="mt-2 text-sm font-medium leading-6 text-[var(--text-primary)]">
+                  {focusCopy.title}
+                </p>
+              </div>
+            </section>
+
+            <section className={`${panelClassName} p-5`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                Review signals
+              </p>
+
+              <div className="mt-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">
+                  Weak topics
+                </p>
+                <div className="mt-2 space-y-2">
+                  {improvementTopics.length > 0 ? (
+                    improvementTopics.map((topic) => (
+                      <Link key={topic.topic} href={buildPracticeHref({ topic: topic.topic, incorrect: true })}>
+                        <span className="flex cursor-pointer items-center justify-between gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-3 transition hover:border-[var(--border-strong)]">
+                          <span>
+                            <span className="block text-sm font-medium text-[var(--text-primary)]">
+                              {topic.topic}
+                            </span>
+                            <span className="block text-xs text-[var(--text-muted)]">
+                              {topic.incorrect} miss{topic.incorrect === 1 ? "" : "es"} · {topic.total} attempts
+                            </span>
+                          </span>
+                          <span className="text-sm font-semibold text-[var(--brand-light)]">
+                            {topic.accuracy}%
+                          </span>
+                        </span>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className={`${mutedPanelClassName} px-4 py-3 text-sm text-[var(--text-secondary)]`}>
+                      Weak-topic signals will appear once you build more answer history.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">
+                  Bookmark clusters
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {bookmarkTopics.length > 0 ? (
+                    bookmarkTopics.map((item) => (
+                      <Link key={item.topic} href={buildPracticeHref({ topic: item.topic, bookmarked: true })}>
+                        <span className="inline-flex cursor-pointer rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:border-[var(--border-strong)]">
+                          {item.topic} · {item.total}
+                        </span>
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      Save useful questions during practice to build a lightweight revision stack.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
       </div>
     </AppShell>
   );

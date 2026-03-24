@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Sparkles,
   Trophy,
   UserCircle2,
 } from "lucide-react";
@@ -80,21 +79,27 @@ function NavLink({
       <span
         onClick={onNavigate}
         className={cn(
-          "group flex cursor-pointer items-center gap-3 rounded-[16px] border px-3.5 py-3 text-sm font-medium transition",
+          "group flex cursor-pointer items-center gap-3 rounded-[12px] px-3 py-2 text-[13px] font-medium transition",
           active
-            ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--text-primary)] shadow-[0_18px_40px_-34px_rgba(255,161,22,0.85)]"
-            : "border-transparent text-[var(--text-secondary)] hover:border-[var(--border)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]",
+            ? "bg-[var(--bg-elevated)] text-[var(--text-primary)]"
+            : "text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]",
         )}
       >
         <span
           className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-[12px] border transition",
+            "h-1.5 w-1.5 rounded-full transition",
+            active ? "bg-[var(--brand)]" : "bg-transparent group-hover:bg-[var(--border-strong)]",
+          )}
+        />
+        <span
+          className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-[9px] transition",
             active
-              ? "border-[var(--brand-muted)] bg-[rgba(255,161,22,0.14)] text-[var(--brand-light)]"
-              : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-muted)] group-hover:text-[var(--brand-light)]",
+              ? "bg-[var(--brand-subtle)] text-[var(--brand-light)]"
+              : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)]",
           )}
         >
-          <Icon size={16} />
+          <Icon size={15} />
         </span>
         <span className="truncate">{item.label}</span>
       </span>
@@ -122,20 +127,20 @@ function SidebarBody({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow-md)]">
-        <BrandLogo compact className="items-center" textClassName="text-[1.7rem]" />
-        <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
-          Navigate the prep workspace, move faster between progress views, and keep account tools close.
+      <div className="border-b border-[var(--border)] px-1 pb-4">
+        <BrandLogo compact className="items-center gap-2" textClassName="text-[1.4rem]" />
+        <p className="mt-3 px-2 text-xs leading-5 text-[var(--text-muted)]">
+          Daily practice, revision, and progress in one calm workspace.
         </p>
       </div>
 
-      <div className="mt-6 flex-1 space-y-5 overflow-y-auto pr-1">
+      <div className="flex-1 space-y-6 overflow-y-auto py-5 pr-1">
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
-            <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-muted)]">
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
               {group.label}
             </p>
-            <div className="mt-3 space-y-2">
+            <div className="mt-2 space-y-1">
               {group.items.map((item) => (
                 <NavLink key={item.href} item={item} location={location} onNavigate={onNavigate} />
               ))}
@@ -144,71 +149,56 @@ function SidebarBody({
         ))}
       </div>
 
-      <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--bg-card)_0%,var(--bg-elevated)_100%)] p-4 shadow-[var(--shadow-md)]">
+      <div className="border-t border-[var(--border)] pt-4">
         {user ? (
-          <>
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12 rounded-[16px] border border-[var(--border)]">
-                <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
-                <AvatarFallback className="rounded-[16px] bg-[var(--brand-subtle)] text-[var(--brand)]">
-                  {displayName.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{displayName}</p>
-                <p className="truncate text-xs text-[var(--text-muted)]">{user.email}</p>
-              </div>
-            </div>
+          <div className="space-y-3">
+            <Link href="/profile">
+              <span
+                onClick={onNavigate}
+                className="flex cursor-pointer items-center gap-3 rounded-[14px] px-3 py-2.5 transition hover:bg-[var(--bg-elevated)]"
+              >
+                <Avatar className="h-9 w-9 rounded-[11px] border border-[var(--border)]">
+                  <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
+                  <AvatarFallback className="rounded-[11px] bg-[var(--brand-subtle)] text-[var(--brand)]">
+                    {displayName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-[var(--text-primary)]">{displayName}</p>
+                  <p className="truncate text-xs text-[var(--text-muted)]">{targetExam}</p>
+                </div>
+              </span>
+            </Link>
 
-            <div className="mt-4 rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                Current focus
-              </p>
-              <p className="mt-2 text-sm font-medium text-[var(--text-primary)]">{targetExam}</p>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Link href="/profile">
-                <span
-                  onClick={onNavigate}
-                  className="inline-flex cursor-pointer items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)]"
-                >
-                  Open profile
-                </span>
-              </Link>
+            <div className="flex items-center justify-between gap-3 px-3">
+              <p className="truncate text-xs text-[var(--text-muted)]">{user.email}</p>
               <button
                 type="button"
                 onClick={() => {
                   onNavigate?.();
                   signOut();
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)]"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] text-[var(--text-muted)] transition hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
+                aria-label="Sign out"
               >
                 <LogOut size={14} />
-                Logout
               </button>
             </div>
-          </>
+          </div>
         ) : (
-          <>
-            <div className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] bg-[var(--brand-subtle)] text-[var(--brand)]">
-              <Sparkles size={18} />
-            </div>
-            <p className="mt-4 text-base font-semibold text-[var(--text-primary)]">
-              Sign in to sync your progress
-            </p>
-            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-              Bookmarks, streaks, and your dashboard become much more useful once they are attached to your account.
+          <div className="space-y-3 px-3">
+            <p className="text-sm leading-6 text-[var(--text-secondary)]">
+              Sign in to keep your progress, bookmarks, and daily streak synced.
             </p>
             <Link href="/">
               <span
                 onClick={onNavigate}
-                className="btn-primary mt-4 inline-flex cursor-pointer rounded-[14px] px-4 py-2.5 text-sm"
+                className="btn-secondary inline-flex cursor-pointer px-4 py-2 text-sm"
               >
                 Go to home
               </span>
             </Link>
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -242,45 +232,45 @@ export default function AppShell({ children, contentClassName }: AppShellProps) 
 
   return (
     <div className="min-h-screen bg-[var(--page-background)]">
-      <div className="lg:grid lg:min-h-screen lg:grid-cols-[292px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[var(--border)] bg-[var(--bg-card)] px-4 py-5 backdrop-blur-2xl lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
+      <div className="lg:grid lg:min-h-screen lg:grid-cols-[228px_minmax(0,1fr)]">
+        <aside className="hidden border-r border-[var(--border)] bg-[rgba(11,11,14,0.78)] px-3 py-4 backdrop-blur-xl lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
           <SidebarBody location={location} />
         </aside>
 
         <div className="min-w-0">
-          <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-card)] backdrop-blur-2xl lg:hidden">
+          <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[rgba(11,11,14,0.82)] backdrop-blur-xl lg:hidden">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
                 <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                   <button
                     type="button"
                     onClick={() => setMobileOpen(true)}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)]"
                     aria-label="Open navigation"
                   >
                     <Menu size={18} />
                   </button>
                   <SheetContent
                     side="left"
-                    className="w-[88vw] max-w-[360px] border-r border-[var(--border)] bg-[var(--bg-base)] p-4 text-[var(--text-primary)]"
+                    className="w-[84vw] max-w-[312px] border-r border-[var(--border)] bg-[rgba(11,11,14,0.96)] p-3 text-[var(--text-primary)]"
                   >
                     <SidebarBody location={location} onNavigate={() => setMobileOpen(false)} />
                   </SheetContent>
                 </Sheet>
 
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
                     Workspace
                   </p>
-                  <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                  <p className="truncate text-sm font-medium text-[var(--text-primary)]">
                     {currentLabel}
                   </p>
                 </div>
               </div>
 
               <Link href={user ? "/profile" : "/"}>
-                <span className="flex cursor-pointer items-center gap-2 rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] px-2.5 py-2">
-                  <Avatar className="h-8 w-8 rounded-[10px] border border-[var(--border)]">
+                <span className="flex cursor-pointer items-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] p-1.5">
+                  <Avatar className="h-8 w-8 rounded-[10px]">
                     <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
                     <AvatarFallback className="rounded-[10px] bg-[var(--brand-subtle)] text-[var(--brand)]">
                       {displayName.charAt(0).toUpperCase()}
@@ -291,8 +281,8 @@ export default function AppShell({ children, contentClassName }: AppShellProps) 
             </div>
           </header>
 
-          <main className="px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
-            <div className={cn("mx-auto w-full max-w-[1380px]", contentClassName)}>{children}</div>
+          <main className="px-4 py-4 md:px-6 md:py-5 lg:px-8 lg:py-7">
+            <div className={cn("mx-auto w-full max-w-[1280px]", contentClassName)}>{children}</div>
           </main>
         </div>
       </div>
