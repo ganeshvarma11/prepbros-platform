@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import type { Question } from "@/data/questions";
-import { createQuestionIdentityIndex, mergeQuestionBanks } from "@/lib/questionIdentity";
+import {
+  createQuestionIdentityIndex,
+  getStoredQuestionId,
+  mergeQuestionBanks,
+} from "@/lib/questionIdentity";
 
 const buildQuestion = (overrides: Partial<Question> = {}): Question => ({
   id: 1,
-  question: "Which Article of the Indian Constitution deals with the Right to Education?",
+  question:
+    "Which Article of the Indian Constitution deals with the Right to Education?",
   options: ["Article 19", "Article 21A", "Article 24", "Article 32"],
   correct: 1,
   explanation: "Article 21A makes education a right.",
@@ -43,10 +48,16 @@ describe("question identity", () => {
       year: 2022,
     });
 
-    const merged = mergeQuestionBanks([sharedLive], [sharedLegacy, fallbackOnly]);
-    const index = createQuestionIdentityIndex(merged, [sharedLegacy, fallbackOnly]);
+    const merged = mergeQuestionBanks(
+      [sharedLive],
+      [sharedLegacy, fallbackOnly]
+    );
+    const index = createQuestionIdentityIndex(merged, [
+      sharedLegacy,
+      fallbackOnly,
+    ]);
 
-    expect(merged.map((question) => question.id)).toEqual(["uuid-rte-1", 42]);
+    expect(merged.map(question => question.id)).toEqual(["uuid-rte-1", 42]);
     expect(index.resolveQuestionId(42)).toBe("42");
   });
 
@@ -60,5 +71,24 @@ describe("question identity", () => {
     const index = createQuestionIdentityIndex(liveQuestions, [legacyQuestion]);
 
     expect(index.resolveQuestionId(1)).toBeNull();
+  });
+
+  it("creates a stable numeric alias for live string ids so saved progress survives refreshes", () => {
+    const liveQuestion = buildQuestion({
+      id: "uuid-space-1",
+      question: "Which planet is closest to the Sun?",
+      options: ["Mercury", "Venus", "Earth", "Mars"],
+      correct: 0,
+      topic: "Science & Technology",
+      subtopic: "Space Science",
+      type: "Conceptual",
+      year: null,
+    });
+
+    const storedId = getStoredQuestionId(liveQuestion);
+    const index = createQuestionIdentityIndex([liveQuestion], []);
+
+    expect(storedId).toMatch(/^\d+$/);
+    expect(index.resolveQuestionId(storedId)).toBe("uuid-space-1");
   });
 });

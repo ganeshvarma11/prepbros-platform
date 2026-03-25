@@ -22,6 +22,7 @@ import { useQuestionBank } from "@/hooks/useQuestionBank";
 import { trackEvent } from "@/lib/analytics";
 import {
   createQuestionIdentityIndex,
+  getStoredQuestionId,
   toQuestionId,
   type QuestionId,
 } from "@/lib/questionIdentity";
@@ -467,9 +468,7 @@ export default function Practice() {
     if (user && questionsSyncing) return;
 
     const isCorrect = index === activeQ.correct;
-    const questionId =
-      resolveStoredQuestionId(toQuestionId(activeQ.id)) ??
-      toQuestionId(activeQ.id);
+    const questionId = getStoredQuestionId(activeQ);
 
     setSelected(index);
     setRawAttempts(current => [
@@ -497,9 +496,7 @@ export default function Practice() {
     if (!activeQ) return;
     if (user && questionsSyncing) return;
 
-    const questionId =
-      resolveStoredQuestionId(toQuestionId(activeQ.id)) ??
-      toQuestionId(activeQ.id);
+    const questionId = getStoredQuestionId(activeQ);
 
     if (user) {
       toggleBookmark(user.id, questionId).then(isBookmarked => {
