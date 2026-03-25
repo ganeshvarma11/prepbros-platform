@@ -1,736 +1,2883 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Plus, Trash2, Edit2, Save, X, CheckCircle2,
-  BookOpen, Link as LinkIcon, FileText, LogOut,
-  ChevronDown, Loader2, AlertCircle, Trophy, Upload
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  Database,
+  Download,
+  Edit2,
+  FileSpreadsheet,
+  FileText,
+  Layers3,
+  Link as LinkIcon,
+  Loader2,
+  LogOut,
+  Plus,
+  RefreshCcw,
+  Search,
+  ShieldCheck,
+  Trash2,
+  Trophy,
+  Upload,
+  X,
+  type LucideIcon,
 } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
-import { supabase } from "../lib/supabase";
-import { chunkQuestions, parseBulkQuestionInput } from "../lib/questionImport";
+
+import type { Difficulty, Exam, QuestionType } from "@/data/questions";
+import { useAuth } from "@/contexts/AuthContext";
+import { chunkQuestions, parseBulkQuestionInput, type ImportedQuestionPayload } from "@/lib/questionImport";
+import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
 const ADMIN_EMAIL = "rakeshmeesa631@gmail.com";
 
-const EXAMS = ["All","UPSC","SSC","TSPSC","APPSC","RRB","IBPS"];
-const DIFFICULTIES = ["Easy","Medium","Hard"];
-const TYPES = ["PYQ","Conceptual","CurrentAffairs","Mock"];
-const TOPICS = ["Polity","History","Geography","Economy","Environment","Science & Technology","Reasoning","Quantitative Aptitude","English Language","Mental Ability","Reading Comprehension","Data Interpretation","Telangana GK","Current Affairs","AP GK"];
-const RESOURCE_TYPES = ["PDF","Book","Video","Link","Notes"];
-const RESOURCE_CATEGORIES = ["Syllabus","Previous Papers","Strategy","Notes","Books","Video Lectures","Current Affairs","State Exam"];
-const CONTEST_STATUSES = ["upcoming", "past"];
+const QUESTION_EXAMS: Exam[] = ["UPSC", "SSC", "TSPSC", "APPSC", "RRB", "IBPS"];
+const FILTER_EXAMS = ["All", ...QUESTION_EXAMS] as const;
+const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
+const QUESTION_TYPES: QuestionType[] = ["PYQ", "Conceptual", "CurrentAffairs", "Mock"];
+const QUESTION_TOPICS = [
+  "Polity",
+  "History",
+  "Geography",
+  "Economy",
+  "Environment",
+  "Science & Technology",
+  "Reasoning",
+  "Quantitative Aptitude",
+  "English Language",
+  "Mental Ability",
+  "Reading Comprehension",
+  "Data Interpretation",
+  "Telangana GK",
+  "Current Affairs",
+  "AP GK",
+] as const;
+const RESOURCE_TYPES = ["PDF", "Book", "Video", "Link", "Notes"] as const;
+const RESOURCE_CATEGORIES = [
+  "Syllabus",
+  "Previous Papers",
+  "Strategy",
+  "Notes",
+  "Books",
+  "Video Lectures",
+  "Current Affairs",
+  "State Exam",
+  "General",
+] as const;
+const RESOURCE_EXAMS = ["All", ...QUESTION_EXAMS] as const;
+const CONTEST_STATUSES = ["upcoming", "past"] as const;
+const STATUS_FILTERS = ["All", "Active", "Inactive"] as const;
+const ADMIN_TABS = ["questions", "resources", "contests", "support"] as const;
 
-const EMPTY_Q = { question:"", option_a:"", option_b:"", option_c:"", option_d:"", correct_option:0, explanation:"", exam:"UPSC", topic:"Polity", subtopic:"", difficulty:"Easy", type:"PYQ", year:"", tags:"" };
-const EMPTY_R = { title:"", description:"", type:"PDF", url:"", exam:"All", category:"Syllabus" };
-const EMPTY_C = { name:"", date:"", duration:"60 minutes", topics:"", prize:"", status:"upcoming", winner:"", your_rank:"" };
 const BULK_IMPORT_TEMPLATE = `question,option_a,option_b,option_c,option_d,correct_option,explanation,exam,topic,subtopic,difficulty,type,year,tags
-Which Article of the Indian Constitution deals with the Right to Education?,Article 19,Article 21A,Article 24,Article 32,1,Article 21A makes free and compulsory education a fundamental right for children aged 6-14.,UPSC,Polity,Fundamental Rights,Easy,PYQ,2019,constitution|education|article-21a`;
+Which Article of the Indian Constitution deals with the Right to Education?,Article 19,Article 21A,Article 24,Article 32,B,Article 21A makes free and compulsory education a fundamental right for children aged 6-14.,UPSC,Polity,Fundamental Rights,Easy,PYQ,2019,constitution|education|article-21a`;
 
-export default function Admin() {
-  const [, navigate] = useLocation();
-  const [activeTab, setActiveTab] = useState<"questions"|"resources"|"contests"|"support">("questions");
-  const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+const BULK_RESOURCE_TEMPLATE = `title,description,type,url,exam,category,is_active
+UPSC Previous Year Papers,Official UPSC previous question papers,PDF,https://upsc.gov.in/examinations/previous-question-papers,UPSC,Previous Papers,true`;
 
-  // Questions state
-  const [dbQuestions, setDbQuestions] = useState<any[]>([]);
-  const [qForm, setQForm] = useState({ ...EMPTY_Q });
-  const [editingQ, setEditingQ] = useState<string | null>(null);
-  const [showQForm, setShowQForm] = useState(false);
-  const [showBulkImport, setShowBulkImport] = useState(false);
-  const [bulkInput, setBulkInput] = useState("");
+type AdminTab = (typeof ADMIN_TABS)[number];
+type FilterExam = (typeof FILTER_EXAMS)[number];
+type StatusFilter = (typeof STATUS_FILTERS)[number];
+type ResourceExam = (typeof RESOURCE_EXAMS)[number];
+type ResourceType = (typeof RESOURCE_TYPES)[number];
+type ResourceCategory = (typeof RESOURCE_CATEGORIES)[number];
+type ContestStatus = (typeof CONTEST_STATUSES)[number];
+type Tone = "orange" | "blue" | "green" | "rose" | "slate";
+type RawRecord = Record<string, unknown>;
 
-  // Resources state
-  const [dbResources, setDbResources] = useState<any[]>([]);
-  const [rForm, setRForm] = useState({ ...EMPTY_R });
-  const [editingR, setEditingR] = useState<string | null>(null);
-  const [showRForm, setShowRForm] = useState(false);
+type QuestionRecord = ImportedQuestionPayload & {
+  id: string | number;
+  created_at?: string | null;
+};
 
-  // Contest state
-  const [dbContests, setDbContests] = useState<any[]>([]);
-  const [cForm, setCForm] = useState({ ...EMPTY_C });
-  const [editingC, setEditingC] = useState<string | null>(null);
-  const [showCForm, setShowCForm] = useState(false);
+type QuestionForm = {
+  question: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: number;
+  explanation: string;
+  exam: Exam;
+  topic: string;
+  subtopic: string;
+  difficulty: Difficulty;
+  type: QuestionType;
+  year: string;
+  tags: string;
+  is_active: boolean;
+};
 
-  // Support state
-  const [supportRequests, setSupportRequests] = useState<any[]>([]);
+type ResourceRecord = {
+  id: string | number;
+  title: string;
+  description?: string | null;
+  type?: string | null;
+  url: string;
+  exam?: string | null;
+  category?: string | null;
+  is_active?: boolean | null;
+  created_at?: string | null;
+};
 
-  // Guard — only admin
- const { user, signOut, loading: authLoading } = useAuth();
+type ResourceForm = {
+  title: string;
+  description: string;
+  type: ResourceType;
+  url: string;
+  exam: ResourceExam;
+  category: ResourceCategory;
+  is_active: boolean;
+};
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) { navigate("/"); return; }
-    if (user.email !== ADMIN_EMAIL) { navigate("/"); return; }
-    loadQuestions();
-    loadResources();
-    loadContests();
-    loadSupportRequests();
-  }, [user, authLoading]);
+type ImportedResourcePayload = {
+  title: string;
+  description: string | null;
+  type: string;
+  url: string;
+  exam: string;
+  category: string;
+  is_active: boolean;
+};
 
-  const showToast = (msg: string, ok = true) => {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 3000);
-  };
+type ContestRecord = {
+  id: string | number;
+  name: string;
+  date: string;
+  duration: string;
+  topics: string;
+  prize: string;
+  status: ContestStatus;
+  winner?: string | null;
+  your_rank?: number | null;
+};
 
-  // ── Questions CRUD ───────────────────────────────────────────────
-  const loadQuestions = async () => {
-    const { data } = await supabase.from("questions_db").select("*").order("created_at", { ascending: false });
-    setDbQuestions(data || []);
-  };
+type ContestForm = {
+  name: string;
+  date: string;
+  duration: string;
+  topics: string;
+  prize: string;
+  status: ContestStatus;
+  winner: string;
+  your_rank: string;
+};
 
-  const saveQuestion = async () => {
-    if (!qForm.question || !qForm.option_a || !qForm.option_b || !qForm.option_c || !qForm.option_d || !qForm.explanation) {
-      showToast("Fill all required fields", false); return;
+type SupportRequest = {
+  id: string | number;
+  email: string;
+  category?: string | null;
+  subject?: string | null;
+  message?: string | null;
+  source?: string | null;
+  created_at?: string | null;
+};
+
+const EMPTY_Q: QuestionForm = {
+  question: "",
+  option_a: "",
+  option_b: "",
+  option_c: "",
+  option_d: "",
+  correct_option: 0,
+  explanation: "",
+  exam: "UPSC",
+  topic: "Polity",
+  subtopic: "",
+  difficulty: "Easy",
+  type: "PYQ",
+  year: "",
+  tags: "",
+  is_active: true,
+};
+
+const EMPTY_R: ResourceForm = {
+  title: "",
+  description: "",
+  type: "PDF",
+  url: "",
+  exam: "All",
+  category: "Syllabus",
+  is_active: true,
+};
+
+const EMPTY_C: ContestForm = {
+  name: "",
+  date: "",
+  duration: "60 minutes",
+  topics: "",
+  prize: "",
+  status: "upcoming",
+  winner: "",
+  your_rank: "",
+};
+
+function toId(value: string | number | null | undefined) {
+  return String(value ?? "");
+}
+
+function normalizeKey(key: string) {
+  return key.trim().toLowerCase().replace(/[\s-]+/g, "_");
+}
+
+function mapRecordKeys(record: RawRecord) {
+  const normalized: RawRecord = {};
+
+  Object.entries(record).forEach(([key, value]) => {
+    normalized[normalizeKey(key)] = value;
+  });
+
+  return normalized;
+}
+
+function parseDelimitedRow(row: string, delimiter: string) {
+  const cells: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let index = 0; index < row.length; index += 1) {
+    const char = row[index];
+    const nextChar = row[index + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        current += '"';
+        index += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
     }
-    setLoading(true);
-    const payload = {
-      ...qForm,
-      correct_option: Number(qForm.correct_option),
-      year: qForm.year ? Number(qForm.year) : null,
-      tags: qForm.tags ? qForm.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
-    };
-    let error;
-    if (editingQ) {
-      ({ error } = await supabase.from("questions_db").update(payload).eq("id", editingQ));
-    } else {
-      ({ error } = await supabase.from("questions_db").insert(payload));
-    }
-    setLoading(false);
-    if (error) { showToast("Error: " + error.message, false); return; }
-    showToast(editingQ ? "Question updated!" : "Question added!");
-    setQForm({ ...EMPTY_Q }); setEditingQ(null); setShowQForm(false);
-    loadQuestions();
-  };
 
-  const importQuestions = async () => {
-    let parsedQuestions;
-
-    try {
-      parsedQuestions = parseBulkQuestionInput(bulkInput);
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : "Could not parse bulk import.", false);
-      return;
+    if (char === delimiter && !inQuotes) {
+      cells.push(current.trim());
+      current = "";
+      continue;
     }
 
-    setLoading(true);
+    current += char;
+  }
 
-    for (const batch of chunkQuestions(parsedQuestions)) {
-      const { error } = await supabase.from("questions_db").insert(batch);
+  cells.push(current.trim());
+  return cells;
+}
 
-      if (error) {
-        setLoading(false);
-        showToast(`Import failed: ${error.message}`, false);
-        return;
+function parseDelimitedInput(input: string, delimiter: string) {
+  const rows = input
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  if (rows.length < 2) {
+    throw new Error("Add a header row and at least one data row.");
+  }
+
+  const headers = parseDelimitedRow(rows[0], delimiter).map(normalizeKey);
+
+  return rows.slice(1).map(row => {
+    const values = parseDelimitedRow(row, delimiter);
+    const record: RawRecord = {};
+
+    headers.forEach((header, index) => {
+      record[header] = values[index] ?? "";
+    });
+
+    return record;
+  });
+}
+
+function parseFlexibleInput(input: string, collectionKey?: string) {
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    throw new Error("Paste or upload data first.");
+  }
+
+  if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    const parsed = JSON.parse(trimmed) as RawRecord | RawRecord[];
+
+    if (Array.isArray(parsed)) {
+      return parsed.map(mapRecordKeys);
+    }
+
+    if (collectionKey) {
+      const collection = parsed[collectionKey];
+      if (Array.isArray(collection)) {
+        return collection.map(record => mapRecordKeys(record as RawRecord));
       }
     }
 
-    setLoading(false);
-    setBulkInput("");
-    setShowBulkImport(false);
-    showToast(`${parsedQuestions.length} questions imported successfully.`);
-    loadQuestions();
-  };
+    throw new Error("JSON must be an array or contain the expected collection field.");
+  }
 
-  const deleteQuestion = async (id: string) => {
-    if (!confirm("Delete this question?")) return;
-    await supabase.from("questions_db").delete().eq("id", id);
-    showToast("Question deleted");
-    loadQuestions();
-  };
+  if (trimmed.includes("\t")) {
+    return parseDelimitedInput(trimmed, "\t").map(mapRecordKeys);
+  }
 
-  const startEditQ = (q: any) => {
-    setQForm({ ...q, year: q.year || "", tags: (q.tags || []).join(", ") });
-    setEditingQ(q.id); setShowQForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  return parseDelimitedInput(trimmed, ",").map(mapRecordKeys);
+}
 
-  // ── Resources CRUD ───────────────────────────────────────────────
-  const loadResources = async () => {
-    const { data } = await supabase.from("resources").select("*").order("created_at", { ascending: false });
-    setDbResources(data || []);
-  };
+function asText(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
 
-  const saveResource = async () => {
-    if (!rForm.title || !rForm.url) { showToast("Title and URL are required", false); return; }
-    setLoading(true);
-    let error;
-    if (editingR) {
-      ({ error } = await supabase.from("resources").update(rForm).eq("id", editingR));
-    } else {
-      ({ error } = await supabase.from("resources").insert(rForm));
+function parseBoolean(value: unknown, fallback = true) {
+  if (typeof value === "boolean") return value;
+
+  const text = String(value ?? "").trim().toLowerCase();
+  if (!text) return fallback;
+  if (["true", "1", "yes", "y", "active"].includes(text)) return true;
+  if (["false", "0", "no", "n", "inactive"].includes(text)) return false;
+  return fallback;
+}
+
+function parseBulkResourceInput(input: string): ImportedResourcePayload[] {
+  const records = parseFlexibleInput(input, "resources");
+
+  if (records.length === 0) {
+    throw new Error("No resources found.");
+  }
+
+  return records.map((record, index) => {
+    const title = asText(record.title);
+    const url = asText(record.url);
+
+    if (!title) {
+      throw new Error(`Row ${index + 1}: title is required.`);
     }
-    setLoading(false);
-    if (error) { showToast("Error: " + error.message, false); return; }
-    showToast(editingR ? "Resource updated!" : "Resource added!");
-    setRForm({ ...EMPTY_R }); setEditingR(null); setShowRForm(false);
-    loadResources();
-  };
 
-  const deleteResource = async (id: string) => {
-    if (!confirm("Delete this resource?")) return;
-    await supabase.from("resources").delete().eq("id", id);
-    showToast("Resource deleted");
-    loadResources();
-  };
-
-  const startEditR = (r: any) => {
-    setRForm({ ...r });
-    setEditingR(r.id); setShowRForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // ── Contests CRUD ───────────────────────────────────────────────
-  const loadContests = async () => {
-    const { data } = await supabase.from("contests").select("*").order("date", { ascending: true });
-    setDbContests(data || []);
-  };
-
-  const saveContest = async () => {
-    if (!cForm.name || !cForm.date || !cForm.topics || !cForm.prize) {
-      showToast("Fill all required contest fields", false); return;
+    if (!url) {
+      throw new Error(`Row ${index + 1}: url is required.`);
     }
-    setLoading(true);
-    const payload = {
-      ...cForm,
-      your_rank: cForm.your_rank ? Number(cForm.your_rank) : null,
+
+    const exam = asText(record.exam) || "All";
+    if (!RESOURCE_EXAMS.includes(exam as ResourceExam)) {
+      throw new Error(`Row ${index + 1}: exam must be one of ${RESOURCE_EXAMS.join(", ")}.`);
+    }
+
+    return {
+      title,
+      description: asText(record.description) || null,
+      type: asText(record.type) || "Link",
+      url,
+      exam,
+      category: asText(record.category) || "General",
+      is_active: parseBoolean(record.is_active, true),
     };
-    let error;
-    if (editingC) {
-      ({ error } = await supabase.from("contests").update(payload).eq("id", editingC));
-    } else {
-      ({ error } = await supabase.from("contests").insert(payload));
-    }
-    setLoading(false);
-    if (error) { showToast("Error: " + error.message, false); return; }
-    showToast(editingC ? "Contest updated!" : "Contest added!");
-    setCForm({ ...EMPTY_C }); setEditingC(null); setShowCForm(false);
-    loadContests();
-  };
+  });
+}
 
-  const deleteContest = async (id: string) => {
-    if (!confirm("Delete this contest?")) return;
-    await supabase.from("contests").delete().eq("id", id);
-    showToast("Contest deleted");
-    loadContests();
-  };
+function chunkItems<T>(items: T[], size = 200) {
+  const chunks: T[][] = [];
 
-  const startEditC = (contest: any) => {
-    setCForm({ ...contest, your_rank: contest.your_rank || "" });
-    setEditingC(contest.id); setShowCForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
 
-  // ── Support requests ────────────────────────────────────────────
-  const loadSupportRequests = async () => {
-    const { data } = await supabase.from("support_requests").select("*").order("created_at", { ascending: false });
-    setSupportRequests(data || []);
-  };
+  return chunks;
+}
 
-  if (!user || user.email !== ADMIN_EMAIL) return null;
+function escapeCsvCell(value: unknown) {
+  const text = Array.isArray(value)
+    ? value.join("|")
+    : value === null || value === undefined
+      ? ""
+      : String(value);
 
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  return text;
+}
+
+function downloadCsv(filename: string, headers: string[], rows: Array<Record<string, unknown>>) {
+  const csv = [
+    headers.join(","),
+    ...rows.map(row => headers.map(header => escapeCsvCell(row[header])).join(",")),
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function matchesText(value: string, query: string) {
+  return value.toLowerCase().includes(query.toLowerCase());
+}
+
+function tagText(tags: string[] | null | undefined) {
+  return (tags || []).join(", ");
+}
+
+function metricToneClasses(tone: Tone) {
+  switch (tone) {
+    case "orange":
+      return "border-orange-200/70 bg-orange-50 text-orange-700 dark:border-orange-900/70 dark:bg-orange-950/30 dark:text-orange-300";
+    case "blue":
+      return "border-sky-200/70 bg-sky-50 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/30 dark:text-sky-300";
+    case "green":
+      return "border-emerald-200/70 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300";
+    case "rose":
+      return "border-rose-200/70 bg-rose-50 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300";
+    default:
+      return "border-slate-200/80 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-300";
+  }
+}
+
+function MetricCard({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  tone = "slate",
+}: {
+  label: string;
+  value: string | number;
+  hint: string;
+  icon: LucideIcon;
+  tone?: Tone;
+}) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${toast.ok ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
-          {toast.ok ? <CheckCircle2 size={15}/> : <AlertCircle size={15}/>}
-          {toast.msg}
+    <div className="rounded-[24px] border border-white/60 bg-white/90 p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur dark:border-white/5 dark:bg-slate-950/70">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+            {label}
+          </p>
+          <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+            {value}
+          </p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{hint}</p>
         </div>
-      )}
-
-      {/* Navbar */}
-      <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 font-bold text-orange-500">
-              <span className="w-7 h-7 bg-orange-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">P</span>
-              PrepBros
-            </Link>
-            <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400 rounded-full font-medium">Admin</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-400">{user.email}</span>
-            <button onClick={() => signOut()} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-500 transition-colors">
-              <LogOut size={13}/> Sign out
-            </button>
-          </div>
+        <div className={cn("inline-flex h-11 w-11 items-center justify-center rounded-2xl border", metricToneClasses(tone))}>
+          <Icon size={18} />
         </div>
-      </nav>
-
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Admin Panel</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Manage questions, resources and platform content</p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {[
-            { label:"DB Questions", value: dbQuestions.length, icon:<BookOpen size={14}/> },
-            { label:"Resources",    value: dbResources.length, icon:<LinkIcon size={14}/> },
-            { label:"Contests",     value: dbContests.length, icon:<ChevronDown size={14}/> },
-            { label:"Support",      value: supportRequests.length, icon:<AlertCircle size={14}/> },
-          ].map((s,i) => (
-            <div key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
-              <div className="text-orange-500 mb-1">{s.icon}</div>
-              <p className="text-xl font-black text-gray-900 dark:text-white">{s.value}</p>
-              <p className="text-xs text-gray-400">{s.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-6 w-fit">
-          {(["questions","resources","contests","support"] as const).map(t => (
-            <button key={t} onClick={() => setActiveTab(t)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg capitalize transition-colors ${activeTab===t?"bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm":"text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}>
-              {t === "questions"
-                ? `Questions (${dbQuestions.length})`
-                : t === "resources"
-                  ? `Resources (${dbResources.length})`
-                  : t === "contests"
-                    ? `Contests (${dbContests.length})`
-                    : `Support (${supportRequests.length})`}
-            </button>
-          ))}
-        </div>
-
-        {/* ── QUESTIONS TAB ── */}
-        {activeTab === "questions" && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-700 dark:text-gray-200">Question Bank</h2>
-              <div className="flex items-center gap-2">
-                <button onClick={() => { setShowBulkImport(current => !current); setShowQForm(false); setEditingQ(null); setQForm({...EMPTY_Q}); }}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-xl transition-colors ${showBulkImport ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white" : "border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>
-                  {showBulkImport ? <><X size={13}/> Close Import</> : <><Upload size={13}/> Bulk Import</>}
-                </button>
-                <button onClick={() => { setQForm({...EMPTY_Q}); setEditingQ(null); setShowQForm(!showQForm); setShowBulkImport(false); }}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-sm rounded-xl hover:bg-orange-600 transition-colors">
-                  {showQForm ? <><X size={13}/> Cancel</> : <><Plus size={13}/> Add Question</>}
-                </button>
-              </div>
-            </div>
-
-            {showBulkImport && (
-              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Bulk Import Questions</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-3xl">
-                      Paste a JSON array, CSV, or tab-separated rows from Google Sheets. This is the fastest way to move from 66 questions to a 2000-question v1.
-                    </p>
-                  </div>
-                  <div className="text-xs text-gray-400 dark:text-gray-500">
-                    Supported fields: <span className="font-mono">question, option_a-d, correct_option, explanation, exam, topic, subtopic, difficulty, type, year, tags</span>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 mt-5 lg:grid-cols-[1.3fr_0.7fr]">
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">Paste question data</label>
-                    <textarea
-                      value={bulkInput}
-                      onChange={(e) => setBulkInput(e.target.value)}
-                      rows={16}
-                      placeholder="Paste JSON / CSV / TSV here..."
-                      className="w-full px-3 py-3 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-100 dark:border-orange-900 p-4">
-                      <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">Import notes</p>
-                      <ul className="mt-2 space-y-2 text-xs text-orange-700/90 dark:text-orange-200/90">
-                        <li>Use 4 options per question.</li>
-                        <li><span className="font-mono">correct_option</span> accepts <span className="font-mono">0-3</span>, <span className="font-mono">1-4</span>, or <span className="font-mono">A-D</span>.</li>
-                        <li><span className="font-mono">tags</span> can be comma-separated or pipe-separated.</li>
-                        <li>If <span className="font-mono">year</span> is empty, it will be saved as conceptual/null.</li>
-                      </ul>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Template</label>
-                      <textarea
-                        readOnly
-                        value={BULK_IMPORT_TEMPLATE}
-                        rows={10}
-                        className="w-full px-3 py-3 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 pt-5">
-                  <button onClick={importQuestions} disabled={loading || !bulkInput.trim()}
-                    className="flex items-center gap-1.5 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors">
-                    {loading ? <Loader2 size={14} className="animate-spin"/> : <Upload size={14}/>}
-                    Import Questions
-                  </button>
-                  <button onClick={() => setBulkInput(BULK_IMPORT_TEMPLATE)}
-                    className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    Fill Example
-                  </button>
-                  <button onClick={() => { setBulkInput(""); setShowBulkImport(false); }}
-                    className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Question Form */}
-            {showQForm && (
-              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{editingQ ? "Edit Question" : "Add New Question"}</h3>
-                <div className="space-y-4">
-                  {/* Question text */}
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">Question *</label>
-                    <textarea value={qForm.question} onChange={e => setQForm(f=>({...f, question:e.target.value}))}
-                      rows={3} placeholder="Enter the question text..."
-                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"/>
-                  </div>
-
-                  {/* Options */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {["a","b","c","d"].map((opt, i) => (
-                      <div key={opt}>
-                        <label className="text-xs font-medium text-gray-500 mb-1 flex items-center gap-2">
-                          Option {opt.toUpperCase()}
-                          <input type="radio" name="correct" checked={qForm.correct_option === i}
-                            onChange={() => setQForm(f=>({...f, correct_option:i}))} className="accent-green-500"/>
-                          <span className="text-green-600 text-xs">{qForm.correct_option === i ? "✓ Correct" : ""}</span>
-                        </label>
-                        <input value={(qForm as any)[`option_${opt}`]} onChange={e => setQForm(f=>({...f, [`option_${opt}`]:e.target.value}))}
-                          placeholder={`Option ${opt.toUpperCase()}`}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Explanation */}
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">Explanation *</label>
-                    <textarea value={qForm.explanation} onChange={e => setQForm(f=>({...f, explanation:e.target.value}))}
-                      rows={2} placeholder="Explain why the correct answer is correct..."
-                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"/>
-                  </div>
-
-                  {/* Metadata */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Exam</label>
-                      <select value={qForm.exam} onChange={e => setQForm(f=>({...f, exam:e.target.value}))}
-                        className="w-full px-2 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400">
-                        {EXAMS.filter(e=>e!=="All").map(e=><option key={e}>{e}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Topic</label>
-                      <select value={qForm.topic} onChange={e => setQForm(f=>({...f, topic:e.target.value}))}
-                        className="w-full px-2 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400">
-                        {TOPICS.map(t=><option key={t}>{t}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Subtopic</label>
-                      <input value={qForm.subtopic} onChange={e => setQForm(f=>({...f, subtopic:e.target.value}))}
-                        placeholder="e.g. Fundamental Rights"
-                        className="w-full px-2 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400"/>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Difficulty</label>
-                      <select value={qForm.difficulty} onChange={e => setQForm(f=>({...f, difficulty:e.target.value}))}
-                        className="w-full px-2 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400">
-                        {DIFFICULTIES.map(d=><option key={d}>{d}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Type</label>
-                      <select value={qForm.type} onChange={e => setQForm(f=>({...f, type:e.target.value}))}
-                        className="w-full px-2 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400">
-                        {TYPES.map(t=><option key={t}>{t}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Year</label>
-                      <input value={qForm.year} onChange={e => setQForm(f=>({...f, year:e.target.value}))}
-                        placeholder="2024"
-                        className="w-full px-2 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400"/>
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">Tags (comma separated)</label>
-                    <input value={qForm.tags} onChange={e => setQForm(f=>({...f, tags:e.target.value}))}
-                      placeholder="e.g. constitution, article-21, fundamental-rights"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                  </div>
-
-                  <div className="flex items-center gap-3 pt-2">
-                    <button onClick={saveQuestion} disabled={loading}
-                      className="flex items-center gap-1.5 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors">
-                      {loading ? <Loader2 size={14} className="animate-spin"/> : <Save size={14}/>}
-                      {editingQ ? "Update Question" : "Save Question"}
-                    </button>
-                    <button onClick={() => { setShowQForm(false); setEditingQ(null); setQForm({...EMPTY_Q}); }}
-                      className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Questions list */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-              {dbQuestions.length === 0 ? (
-                <div className="text-center py-12">
-                  <BookOpen size={28} className="mx-auto text-gray-200 dark:text-gray-700 mb-3"/>
-                  <p className="text-sm text-gray-400">No questions in database yet</p>
-                  <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">Click "Add Question" to get started</p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-[1fr_80px_100px_80px_80px_80px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    <span>Question</span><span>Exam</span><span>Topic</span><span>Difficulty</span><span>Type</span><span>Actions</span>
-                  </div>
-                  {dbQuestions.map(q => (
-                    <div key={q.id} className="grid grid-cols-[1fr_80px_100px_80px_80px_80px] gap-2 px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors items-center">
-                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{q.question.slice(0,70)}...</span>
-                      <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400 w-fit">{q.exam}</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{q.topic}</span>
-                      <span className={`text-xs px-1.5 py-0.5 rounded font-medium w-fit ${q.difficulty==="Easy"?"bg-green-100 text-green-700":"bg-yellow-100 text-yellow-700"}`}>{q.difficulty}</span>
-                      <span className="text-xs text-gray-400">{q.type}</span>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => startEditQ(q)} className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 text-gray-400 hover:text-blue-500 transition-colors"><Edit2 size={13}/></button>
-                        <button onClick={() => deleteQuestion(q.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={13}/></button>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── RESOURCES TAB ── */}
-        {activeTab === "resources" && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-700 dark:text-gray-200">Resources</h2>
-              <button onClick={() => { setRForm({...EMPTY_R}); setEditingR(null); setShowRForm(!showRForm); }}
-                className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-sm rounded-xl hover:bg-orange-600 transition-colors">
-                {showRForm ? <><X size={13}/> Cancel</> : <><Plus size={13}/> Add Resource</>}
-              </button>
-            </div>
-
-            {/* Resource Form */}
-            {showRForm && (
-              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{editingR ? "Edit Resource" : "Add New Resource"}</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Title *</label>
-                      <input value={rForm.title} onChange={e => setRForm(f=>({...f, title:e.target.value}))}
-                        placeholder="e.g. UPSC GS1 Syllabus PDF"
-                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">URL *</label>
-                      <input value={rForm.url} onChange={e => setRForm(f=>({...f, url:e.target.value}))}
-                        placeholder="https://..."
-                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">Description</label>
-                    <input value={rForm.description} onChange={e => setRForm(f=>({...f, description:e.target.value}))}
-                      placeholder="Brief description..."
-                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Type</label>
-                      <select value={rForm.type} onChange={e => setRForm(f=>({...f, type:e.target.value}))}
-                        className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400">
-                        {RESOURCE_TYPES.map(t=><option key={t}>{t}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Exam</label>
-                      <select value={rForm.exam} onChange={e => setRForm(f=>({...f, exam:e.target.value}))}
-                        className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400">
-                        {EXAMS.map(e=><option key={e}>{e}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Category</label>
-                      <select value={rForm.category} onChange={e => setRForm(f=>({...f, category:e.target.value}))}
-                        className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400">
-                        {RESOURCE_CATEGORIES.map(c=><option key={c}>{c}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 pt-2">
-                    <button onClick={saveResource} disabled={loading}
-                      className="flex items-center gap-1.5 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors">
-                      {loading ? <Loader2 size={14} className="animate-spin"/> : <Save size={14}/>}
-                      {editingR ? "Update Resource" : "Save Resource"}
-                    </button>
-                    <button onClick={() => { setShowRForm(false); setEditingR(null); setRForm({...EMPTY_R}); }}
-                      className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Resources list */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-              {dbResources.length === 0 ? (
-                <div className="text-center py-12">
-                  <FileText size={28} className="mx-auto text-gray-200 dark:text-gray-700 mb-3"/>
-                  <p className="text-sm text-gray-400">No resources yet</p>
-                  <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">Add PDFs, books, video links and more</p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-[1fr_80px_80px_100px_80px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    <span>Title</span><span>Type</span><span>Exam</span><span>Category</span><span>Actions</span>
-                  </div>
-                  {dbResources.map(r => (
-                    <div key={r.id} className="grid grid-cols-[1fr_80px_80px_100px_80px] gap-2 px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors items-center">
-                      <div>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 truncate">{r.title}</p>
-                        <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-xs text-orange-500 hover:underline truncate block">{r.url.slice(0,50)}...</a>
-                      </div>
-                      <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 w-fit">{r.type}</span>
-                      <span className="text-xs text-gray-400">{r.exam}</span>
-                      <span className="text-xs text-gray-400">{r.category}</span>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => startEditR(r)} className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 text-gray-400 hover:text-blue-500 transition-colors"><Edit2 size={13}/></button>
-                        <button onClick={() => deleteResource(r.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={13}/></button>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── CONTESTS TAB ── */}
-        {activeTab === "contests" && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-700 dark:text-gray-200">Contests</h2>
-              <button onClick={() => { setCForm({...EMPTY_C}); setEditingC(null); setShowCForm(!showCForm); }}
-                className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-sm rounded-xl hover:bg-orange-600 transition-colors">
-                {showCForm ? <><X size={13}/> Cancel</> : <><Plus size={13}/> Add Contest</>}
-              </button>
-            </div>
-
-            {showCForm && (
-              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{editingC ? "Edit Contest" : "Add New Contest"}</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input value={cForm.name} onChange={e => setCForm(f=>({...f, name:e.target.value}))} placeholder="Contest name" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                    <input value={cForm.date} onChange={e => setCForm(f=>({...f, date:e.target.value}))} placeholder="March 28, 2026" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input value={cForm.duration} onChange={e => setCForm(f=>({...f, duration:e.target.value}))} placeholder="60 minutes" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                    <select value={cForm.status} onChange={e => setCForm(f=>({...f, status:e.target.value}))} className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-400">
-                      {CONTEST_STATUSES.map(status => <option key={status}>{status}</option>)}
-                    </select>
-                  </div>
-                  <input value={cForm.topics} onChange={e => setCForm(f=>({...f, topics:e.target.value}))} placeholder="GS1 + CSAT" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                  <input value={cForm.prize} onChange={e => setCForm(f=>({...f, prize:e.target.value}))} placeholder="Prize / reward" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input value={cForm.winner} onChange={e => setCForm(f=>({...f, winner:e.target.value}))} placeholder="Winner (optional)" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                    <input value={cForm.your_rank} onChange={e => setCForm(f=>({...f, your_rank:e.target.value}))} placeholder="Your rank (optional)" className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                  </div>
-                  <div className="flex items-center gap-3 pt-2">
-                    <button onClick={saveContest} disabled={loading} className="flex items-center gap-1.5 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors">
-                      {loading ? <Loader2 size={14} className="animate-spin"/> : <Save size={14}/>}
-                      {editingC ? "Update Contest" : "Save Contest"}
-                    </button>
-                    <button onClick={() => { setShowCForm(false); setEditingC(null); setCForm({...EMPTY_C}); }} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-              {dbContests.length === 0 ? (
-                <div className="text-center py-12">
-                  <Trophy size={28} className="mx-auto text-gray-200 dark:text-gray-700 mb-3"/>
-                  <p className="text-sm text-gray-400">No contests yet</p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-[1fr_100px_100px_100px_80px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    <span>Name</span><span>Date</span><span>Status</span><span>Prize</span><span>Actions</span>
-                  </div>
-                  {dbContests.map(c => (
-                    <div key={c.id} className="grid grid-cols-[1fr_100px_100px_100px_80px] gap-2 px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors items-center">
-                      <div>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 truncate">{c.name}</p>
-                        <p className="text-xs text-gray-400 truncate">{c.topics}</p>
-                      </div>
-                      <span className="text-xs text-gray-400">{c.date}</span>
-                      <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 w-fit">{c.status}</span>
-                      <span className="text-xs text-gray-400 truncate">{c.prize}</span>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => startEditC(c)} className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 text-gray-400 hover:text-blue-500 transition-colors"><Edit2 size={13}/></button>
-                        <button onClick={() => deleteContest(c.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={13}/></button>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── SUPPORT TAB ── */}
-        {activeTab === "support" && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-            {supportRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <AlertCircle size={28} className="mx-auto text-gray-200 dark:text-gray-700 mb-3"/>
-                <p className="text-sm text-gray-400">No support requests yet</p>
-                <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">Requests submitted from the support page will appear here when the `support_requests` table is available.</p>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-[140px_120px_1fr_120px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  <span>Email</span><span>Category</span><span>Subject</span><span>Date</span>
-                </div>
-                {supportRequests.map((request) => (
-                  <div key={request.id} className="grid grid-cols-[140px_120px_1fr_120px] gap-2 px-4 py-3 border-b border-gray-100 dark:border-gray-800 items-start">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{request.email}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400 w-fit">{request.category}</span>
-                    <div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">{request.subject}</p>
-                      <p className="text-xs text-gray-400 mt-1 line-clamp-2">{request.message}</p>
-                    </div>
-                    <span className="text-xs text-gray-400">{request.created_at ? new Date(request.created_at).toLocaleDateString("en-IN") : "—"}</span>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
 }
+
+function SectionCard({
+  title,
+  description,
+  children,
+  actions,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-[28px] border border-white/60 bg-white/90 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur dark:border-white/5 dark:bg-slate-950/70 md:p-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+            {title}
+          </h2>
+          {description ? (
+            <p className="mt-1 max-w-3xl text-sm text-slate-500 dark:text-slate-400">{description}</p>
+          ) : null}
+        </div>
+        {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+      </div>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
+function Pill({
+  children,
+  tone = "slate",
+}: {
+  children: React.ReactNode;
+  tone?: Tone;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium",
+        metricToneClasses(tone)
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function SmallButton({
+  children,
+  tone = "neutral",
+  onClick,
+  disabled,
+  icon: Icon,
+}: {
+  children: React.ReactNode;
+  tone?: "neutral" | "primary" | "danger";
+  onClick?: () => void;
+  disabled?: boolean;
+  icon?: LucideIcon;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-2xl px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
+        tone === "primary" &&
+          "bg-orange-500 text-white hover:bg-orange-600",
+        tone === "danger" &&
+          "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50",
+        tone === "neutral" &&
+          "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+      )}
+    >
+      {Icon ? <Icon size={15} /> : null}
+      {children}
+    </button>
+  );
+}
+
+function EmptyState({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-[24px] border border-dashed border-slate-200 px-6 py-12 text-center dark:border-slate-800">
+      <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-300">
+        <Icon size={20} />
+      </div>
+      <p className="mt-4 text-base font-semibold text-slate-900 dark:text-white">{title}</p>
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{description}</p>
+    </div>
+  );
+}
+
+function Admin() {
+  const [, navigate] = useLocation();
+  const { user, signOut, loading: authLoading } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<AdminTab>("questions");
+  const [booting, setBooting] = useState(true);
+  const [loadingTarget, setLoadingTarget] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+
+  const [dbQuestions, setDbQuestions] = useState<QuestionRecord[]>([]);
+  const [questionForm, setQuestionForm] = useState<QuestionForm>({ ...EMPTY_Q });
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [showQuestionForm, setShowQuestionForm] = useState(false);
+  const [showQuestionImport, setShowQuestionImport] = useState(true);
+  const [questionImportInput, setQuestionImportInput] = useState("");
+  const [questionImportSource, setQuestionImportSource] = useState("");
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
+  const [questionSearch, setQuestionSearch] = useState("");
+  const [questionExamFilter, setQuestionExamFilter] = useState<FilterExam>("All");
+  const [questionTopicFilter, setQuestionTopicFilter] = useState<string>("All");
+  const [questionTypeFilter, setQuestionTypeFilter] = useState<"All" | QuestionType>("All");
+  const [questionDifficultyFilter, setQuestionDifficultyFilter] = useState<"All" | Difficulty>("All");
+  const [questionStatusFilter, setQuestionStatusFilter] = useState<StatusFilter>("All");
+
+  const [dbResources, setDbResources] = useState<ResourceRecord[]>([]);
+  const [resourceForm, setResourceForm] = useState<ResourceForm>({ ...EMPTY_R });
+  const [editingResourceId, setEditingResourceId] = useState<string | null>(null);
+  const [showResourceForm, setShowResourceForm] = useState(false);
+  const [showResourceImport, setShowResourceImport] = useState(false);
+  const [resourceImportInput, setResourceImportInput] = useState("");
+  const [resourceImportSource, setResourceImportSource] = useState("");
+  const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
+  const [resourceSearch, setResourceSearch] = useState("");
+  const [resourceExamFilter, setResourceExamFilter] = useState<ResourceExam>("All");
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<"All" | ResourceType>("All");
+  const [resourceCategoryFilter, setResourceCategoryFilter] = useState<string>("All");
+  const [resourceStatusFilter, setResourceStatusFilter] = useState<StatusFilter>("All");
+
+  const [dbContests, setDbContests] = useState<ContestRecord[]>([]);
+  const [contestForm, setContestForm] = useState<ContestForm>({ ...EMPTY_C });
+  const [editingContestId, setEditingContestId] = useState<string | null>(null);
+  const [showContestForm, setShowContestForm] = useState(false);
+
+  const [supportRequests, setSupportRequests] = useState<SupportRequest[]>([]);
+  const [supportSearch, setSupportSearch] = useState("");
+
+  const questionFileInputRef = useRef<HTMLInputElement | null>(null);
+  const resourceFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    window.setTimeout(() => setToast(null), 3000);
+  };
+
+  const setBusy = (target: string | null) => {
+    setLoadingTarget(target);
+  };
+
+  const loadQuestions = async () => {
+    const { data, error } = await supabase
+      .from("questions_db")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    setDbQuestions((data || []) as QuestionRecord[]);
+  };
+
+  const loadResources = async () => {
+    const { data, error } = await supabase
+      .from("resources")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    setDbResources((data || []) as ResourceRecord[]);
+  };
+
+  const loadContests = async () => {
+    const { data, error } = await supabase
+      .from("contests")
+      .select("*")
+      .order("date", { ascending: true });
+
+    if (error) throw error;
+    setDbContests((data || []) as ContestRecord[]);
+  };
+
+  const loadSupportRequests = async () => {
+    const { data, error } = await supabase
+      .from("support_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    setSupportRequests((data || []) as SupportRequest[]);
+  };
+
+  const loadAll = async (silent = false) => {
+    if (!silent) setBusy("refresh");
+
+    try {
+      await Promise.all([
+        loadQuestions(),
+        loadResources(),
+        loadContests(),
+        loadSupportRequests(),
+      ]);
+      if (!silent) showToast("Admin data refreshed.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not refresh admin data.";
+      showToast(message, false);
+    } finally {
+      if (!silent) setBusy(null);
+    }
+  };
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      navigate("/");
+      return;
+    }
+
+    if (user.email !== ADMIN_EMAIL) {
+      navigate("/");
+      return;
+    }
+
+    let cancelled = false;
+
+    const boot = async () => {
+      setBooting(true);
+
+      try {
+        await Promise.all([
+          loadQuestions(),
+          loadResources(),
+          loadContests(),
+          loadSupportRequests(),
+        ]);
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : "Could not load admin data.";
+          showToast(message, false);
+        }
+      } finally {
+        if (!cancelled) {
+          setBooting(false);
+        }
+      }
+    };
+
+    void boot();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, navigate, user]);
+
+  const availableQuestionTopics = useMemo(() => {
+    const topics = new Set<string>(QUESTION_TOPICS);
+    dbQuestions.forEach(question => {
+      if (question.topic) topics.add(question.topic);
+    });
+    return ["All", ...Array.from(topics).sort((a, b) => a.localeCompare(b))];
+  }, [dbQuestions]);
+
+  const availableResourceCategories = useMemo(() => {
+    const categories = new Set<string>(RESOURCE_CATEGORIES);
+    dbResources.forEach(resource => {
+      if (resource.category) categories.add(resource.category);
+    });
+    return ["All", ...Array.from(categories).sort((a, b) => a.localeCompare(b))];
+  }, [dbResources]);
+
+  const questionImportPreview: { rows: ImportedQuestionPayload[]; error: string | null } = useMemo(() => {
+    if (!questionImportInput.trim()) {
+      return { rows: [] as ImportedQuestionPayload[], error: null as string | null };
+    }
+
+    try {
+      return { rows: parseBulkQuestionInput(questionImportInput), error: null };
+    } catch (error) {
+      return {
+        rows: [] as ImportedQuestionPayload[],
+        error: error instanceof Error ? error.message : "Could not parse import.",
+      };
+    }
+  }, [questionImportInput]);
+
+  const resourceImportPreview: { rows: ImportedResourcePayload[]; error: string | null } = useMemo(() => {
+    if (!resourceImportInput.trim()) {
+      return { rows: [] as ImportedResourcePayload[], error: null as string | null };
+    }
+
+    try {
+      return { rows: parseBulkResourceInput(resourceImportInput), error: null };
+    } catch (error) {
+      return {
+        rows: [] as ImportedResourcePayload[],
+        error: error instanceof Error ? error.message : "Could not parse import.",
+      };
+    }
+  }, [resourceImportInput]);
+
+  const filteredQuestions = useMemo(() => {
+    const query = questionSearch.trim().toLowerCase();
+
+    return dbQuestions.filter(question => {
+      if (questionExamFilter !== "All" && question.exam !== questionExamFilter) return false;
+      if (questionTopicFilter !== "All" && question.topic !== questionTopicFilter) return false;
+      if (questionTypeFilter !== "All" && question.type !== questionTypeFilter) return false;
+      if (questionDifficultyFilter !== "All" && question.difficulty !== questionDifficultyFilter) return false;
+      if (questionStatusFilter === "Active" && !question.is_active) return false;
+      if (questionStatusFilter === "Inactive" && question.is_active) return false;
+
+      if (!query) return true;
+
+      return [
+        question.question,
+        question.explanation,
+        question.topic,
+        question.subtopic,
+        question.exam,
+        question.type,
+        question.difficulty,
+        String(question.year ?? ""),
+        tagText(question.tags),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    });
+  }, [
+    dbQuestions,
+    questionDifficultyFilter,
+    questionExamFilter,
+    questionSearch,
+    questionStatusFilter,
+    questionTopicFilter,
+    questionTypeFilter,
+  ]);
+
+  const filteredResources = useMemo(() => {
+    const query = resourceSearch.trim().toLowerCase();
+
+    return dbResources.filter(resource => {
+      const exam = resource.exam?.trim() || "All";
+      const type = resource.type?.trim() || "Link";
+      const category = resource.category?.trim() || "General";
+      const active = resource.is_active !== false;
+
+      if (resourceExamFilter !== "All" && exam !== resourceExamFilter) return false;
+      if (resourceTypeFilter !== "All" && type !== resourceTypeFilter) return false;
+      if (resourceCategoryFilter !== "All" && category !== resourceCategoryFilter) return false;
+      if (resourceStatusFilter === "Active" && !active) return false;
+      if (resourceStatusFilter === "Inactive" && active) return false;
+
+      if (!query) return true;
+
+      return [
+        resource.title,
+        resource.description,
+        resource.url,
+        exam,
+        type,
+        category,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    });
+  }, [
+    dbResources,
+    resourceCategoryFilter,
+    resourceExamFilter,
+    resourceSearch,
+    resourceStatusFilter,
+    resourceTypeFilter,
+  ]);
+
+  const filteredSupportRequests = useMemo(() => {
+    const query = supportSearch.trim().toLowerCase();
+    if (!query) return supportRequests;
+
+    return supportRequests.filter(request =>
+      [
+        request.email,
+        request.category,
+        request.subject,
+        request.message,
+        request.source,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    );
+  }, [supportRequests, supportSearch]);
+
+  const questionStats = useMemo(() => {
+    const active = dbQuestions.filter(question => question.is_active).length;
+    const pyq = dbQuestions.filter(question => question.type === "PYQ").length;
+    const upsc = dbQuestions.filter(question => question.exam === "UPSC").length;
+
+    return {
+      total: dbQuestions.length,
+      active,
+      inactive: dbQuestions.length - active,
+      pyq,
+      upsc,
+    };
+  }, [dbQuestions]);
+
+  const resourceStats = useMemo(() => {
+    const active = dbResources.filter(resource => resource.is_active !== false).length;
+    return {
+      total: dbResources.length,
+      active,
+      inactive: dbResources.length - active,
+    };
+  }, [dbResources]);
+
+  const visibleQuestionIds = filteredQuestions.map(question => toId(question.id));
+  const visibleResourceIds = filteredResources.map(resource => toId(resource.id));
+  const allVisibleQuestionsSelected =
+    visibleQuestionIds.length > 0 &&
+    visibleQuestionIds.every(id => selectedQuestionIds.includes(id));
+  const allVisibleResourcesSelected =
+    visibleResourceIds.length > 0 &&
+    visibleResourceIds.every(id => selectedResourceIds.includes(id));
+
+  const resetQuestionForm = () => {
+    setQuestionForm({ ...EMPTY_Q });
+    setEditingQuestionId(null);
+    setShowQuestionForm(false);
+  };
+
+  const resetResourceForm = () => {
+    setResourceForm({ ...EMPTY_R });
+    setEditingResourceId(null);
+    setShowResourceForm(false);
+  };
+
+  const resetContestForm = () => {
+    setContestForm({ ...EMPTY_C });
+    setEditingContestId(null);
+    setShowContestForm(false);
+  };
+
+  const openNewQuestionForm = () => {
+    setQuestionForm({ ...EMPTY_Q });
+    setEditingQuestionId(null);
+    setShowQuestionForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const startEditQuestion = (question: QuestionRecord) => {
+    setQuestionForm({
+      question: question.question,
+      option_a: question.option_a,
+      option_b: question.option_b,
+      option_c: question.option_c,
+      option_d: question.option_d,
+      correct_option: question.correct_option,
+      explanation: question.explanation,
+      exam: question.exam,
+      topic: question.topic,
+      subtopic: question.subtopic,
+      difficulty: question.difficulty,
+      type: question.type,
+      year: question.year ? String(question.year) : "",
+      tags: tagText(question.tags),
+      is_active: question.is_active,
+    });
+    setEditingQuestionId(toId(question.id));
+    setShowQuestionForm(true);
+    setShowQuestionImport(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openNewResourceForm = () => {
+    setResourceForm({ ...EMPTY_R });
+    setEditingResourceId(null);
+    setShowResourceForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const startEditResource = (resource: ResourceRecord) => {
+    setResourceForm({
+      title: resource.title,
+      description: resource.description?.trim() || "",
+      type: (resource.type?.trim() as ResourceType) || "Link",
+      url: resource.url,
+      exam: (resource.exam?.trim() as ResourceExam) || "All",
+      category: (resource.category?.trim() as ResourceCategory) || "General",
+      is_active: resource.is_active !== false,
+    });
+    setEditingResourceId(toId(resource.id));
+    setShowResourceForm(true);
+    setShowResourceImport(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const startEditContest = (contest: ContestRecord) => {
+    setContestForm({
+      name: contest.name,
+      date: contest.date,
+      duration: contest.duration,
+      topics: contest.topics,
+      prize: contest.prize,
+      status: contest.status,
+      winner: contest.winner || "",
+      your_rank: contest.your_rank ? String(contest.your_rank) : "",
+    });
+    setEditingContestId(toId(contest.id));
+    setShowContestForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const saveQuestion = async () => {
+    if (
+      !questionForm.question ||
+      !questionForm.option_a ||
+      !questionForm.option_b ||
+      !questionForm.option_c ||
+      !questionForm.option_d ||
+      !questionForm.explanation
+    ) {
+      showToast("Fill all required question fields.", false);
+      return;
+    }
+
+    setBusy("save-question");
+
+    try {
+      const payload: ImportedQuestionPayload = {
+        question: questionForm.question.trim(),
+        option_a: questionForm.option_a.trim(),
+        option_b: questionForm.option_b.trim(),
+        option_c: questionForm.option_c.trim(),
+        option_d: questionForm.option_d.trim(),
+        correct_option: Number(questionForm.correct_option),
+        explanation: questionForm.explanation.trim(),
+        exam: questionForm.exam,
+        topic: questionForm.topic.trim(),
+        subtopic: questionForm.subtopic.trim(),
+        difficulty: questionForm.difficulty,
+        type: questionForm.type,
+        year: questionForm.year ? Number(questionForm.year) : null,
+        tags: questionForm.tags
+          .split(/[|,]/)
+          .map(tag => tag.trim())
+          .filter(Boolean),
+        is_active: questionForm.is_active,
+      };
+
+      const query = editingQuestionId
+        ? supabase.from("questions_db").update(payload).eq("id", editingQuestionId)
+        : supabase.from("questions_db").insert(payload);
+
+      const { error } = await query;
+      if (error) throw error;
+
+      await loadQuestions();
+      resetQuestionForm();
+      showToast(editingQuestionId ? "Question updated." : "Question saved.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save question.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const saveResource = async () => {
+    if (!resourceForm.title || !resourceForm.url) {
+      showToast("Title and URL are required.", false);
+      return;
+    }
+
+    setBusy("save-resource");
+
+    try {
+      const payload = {
+        title: resourceForm.title.trim(),
+        description: resourceForm.description.trim() || null,
+        type: resourceForm.type,
+        url: resourceForm.url.trim(),
+        exam: resourceForm.exam,
+        category: resourceForm.category,
+        is_active: resourceForm.is_active,
+      };
+
+      const query = editingResourceId
+        ? supabase.from("resources").update(payload).eq("id", editingResourceId)
+        : supabase.from("resources").insert(payload);
+
+      const { error } = await query;
+      if (error) throw error;
+
+      await loadResources();
+      resetResourceForm();
+      showToast(editingResourceId ? "Resource updated." : "Resource saved.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save resource.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const saveContest = async () => {
+    if (!contestForm.name || !contestForm.date || !contestForm.topics || !contestForm.prize) {
+      showToast("Fill all required contest fields.", false);
+      return;
+    }
+
+    setBusy("save-contest");
+
+    try {
+      const payload = {
+        ...contestForm,
+        your_rank: contestForm.your_rank ? Number(contestForm.your_rank) : null,
+        winner: contestForm.winner.trim() || null,
+      };
+
+      const query = editingContestId
+        ? supabase.from("contests").update(payload).eq("id", editingContestId)
+        : supabase.from("contests").insert(payload);
+
+      const { error } = await query;
+      if (error) throw error;
+
+      await loadContests();
+      resetContestForm();
+      showToast(editingContestId ? "Contest updated." : "Contest saved.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save contest.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const clearQuestionImportState = () => {
+    setQuestionImportInput("");
+    setQuestionImportSource("");
+  };
+
+  const importQuestions = async () => {
+    if (questionImportPreview.error) {
+      showToast(questionImportPreview.error, false);
+      return;
+    }
+
+    if (questionImportPreview.rows.length === 0) {
+      showToast("Paste or upload questions first.", false);
+      return;
+    }
+
+    setBusy("import-questions");
+
+    try {
+      for (const batch of chunkQuestions(questionImportPreview.rows)) {
+        const { error } = await supabase.from("questions_db").insert(batch);
+        if (error) throw error;
+      }
+
+      await loadQuestions();
+      clearQuestionImportState();
+      setSelectedQuestionIds([]);
+      showToast(`${questionImportPreview.rows.length} questions imported.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not import questions.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const replaceFilteredQuestionsWithImport = async () => {
+    if (questionImportPreview.error) {
+      showToast(questionImportPreview.error, false);
+      return;
+    }
+
+    if (questionImportPreview.rows.length === 0) {
+      showToast("Paste or upload questions first.", false);
+      return;
+    }
+
+    if (filteredQuestions.length === 0) {
+      showToast("Adjust filters first so there are questions to replace.", false);
+      return;
+    }
+
+    const filteredIds = filteredQuestions.map(question => toId(question.id));
+    const confirmation = window.confirm(
+      `Replace ${filteredQuestions.length} filtered question${filteredQuestions.length === 1 ? "" : "s"} with ${questionImportPreview.rows.length} imported row${questionImportPreview.rows.length === 1 ? "" : "s"}?\n\nThis will permanently delete the currently filtered rows before importing the new batch.`
+    );
+
+    if (!confirmation) return;
+
+    setBusy("replace-filtered-questions");
+
+    try {
+      for (const batch of chunkItems(filteredIds, 200)) {
+        const { error } = await supabase.from("questions_db").delete().in("id", batch);
+        if (error) throw error;
+      }
+
+      for (const batch of chunkQuestions(questionImportPreview.rows)) {
+        const { error } = await supabase.from("questions_db").insert(batch);
+        if (error) throw error;
+      }
+
+      await loadQuestions();
+      clearQuestionImportState();
+      setSelectedQuestionIds([]);
+      showToast(
+        `Replaced ${filteredQuestions.length} filtered question${filteredQuestions.length === 1 ? "" : "s"} with ${questionImportPreview.rows.length} imported row${questionImportPreview.rows.length === 1 ? "" : "s"}.`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not replace filtered questions.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const importResources = async () => {
+    if (resourceImportPreview.error) {
+      showToast(resourceImportPreview.error, false);
+      return;
+    }
+
+    if (resourceImportPreview.rows.length === 0) {
+      showToast("Paste or upload resources first.", false);
+      return;
+    }
+
+    setBusy("import-resources");
+
+    try {
+      for (const batch of chunkItems(resourceImportPreview.rows, 200)) {
+        const { error } = await supabase.from("resources").insert(batch);
+        if (error) throw error;
+      }
+
+      await loadResources();
+      setResourceImportInput("");
+      setResourceImportSource("");
+      setSelectedResourceIds([]);
+      showToast(`${resourceImportPreview.rows.length} resources imported.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not import resources.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const updateQuestionsActiveState = async (ids: string[], isActive: boolean) => {
+    if (ids.length === 0) {
+      showToast("Select questions first.", false);
+      return;
+    }
+
+    setBusy(isActive ? "activate-questions" : "deactivate-questions");
+
+    try {
+      for (const batch of chunkItems(ids, 200)) {
+        const { error } = await supabase.from("questions_db").update({ is_active: isActive }).in("id", batch);
+        if (error) throw error;
+      }
+
+      await loadQuestions();
+      setSelectedQuestionIds(current => current.filter(id => !ids.includes(id)));
+      showToast(isActive ? "Selected questions activated." : "Selected questions deactivated.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not update selected questions.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const deleteQuestions = async (ids: string[]) => {
+    if (ids.length === 0) {
+      showToast("Select questions first.", false);
+      return;
+    }
+
+    if (!window.confirm(`Delete ${ids.length} question${ids.length === 1 ? "" : "s"} permanently?`)) {
+      return;
+    }
+
+    setBusy("delete-questions");
+
+    try {
+      for (const batch of chunkItems(ids, 200)) {
+        const { error } = await supabase.from("questions_db").delete().in("id", batch);
+        if (error) throw error;
+      }
+
+      await loadQuestions();
+      setSelectedQuestionIds(current => current.filter(id => !ids.includes(id)));
+      showToast(`${ids.length} question${ids.length === 1 ? "" : "s"} deleted.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not delete selected questions.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const updateResourcesActiveState = async (ids: string[], isActive: boolean) => {
+    if (ids.length === 0) {
+      showToast("Select resources first.", false);
+      return;
+    }
+
+    setBusy(isActive ? "activate-resources" : "deactivate-resources");
+
+    try {
+      for (const batch of chunkItems(ids, 200)) {
+        const { error } = await supabase.from("resources").update({ is_active: isActive }).in("id", batch);
+        if (error) throw error;
+      }
+
+      await loadResources();
+      setSelectedResourceIds(current => current.filter(id => !ids.includes(id)));
+      showToast(isActive ? "Selected resources activated." : "Selected resources deactivated.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not update selected resources.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const deleteResources = async (ids: string[]) => {
+    if (ids.length === 0) {
+      showToast("Select resources first.", false);
+      return;
+    }
+
+    if (!window.confirm(`Delete ${ids.length} resource${ids.length === 1 ? "" : "s"} permanently?`)) {
+      return;
+    }
+
+    setBusy("delete-resources");
+
+    try {
+      for (const batch of chunkItems(ids, 200)) {
+        const { error } = await supabase.from("resources").delete().in("id", batch);
+        if (error) throw error;
+      }
+
+      await loadResources();
+      setSelectedResourceIds(current => current.filter(id => !ids.includes(id)));
+      showToast(`${ids.length} resource${ids.length === 1 ? "" : "s"} deleted.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not delete selected resources.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const deleteContest = async (id: string) => {
+    if (!window.confirm("Delete this contest?")) return;
+
+    setBusy("delete-contest");
+
+    try {
+      const { error } = await supabase.from("contests").delete().eq("id", id);
+      if (error) throw error;
+
+      await loadContests();
+      showToast("Contest deleted.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not delete contest.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const toggleQuestionSelection = (id: string) => {
+    setSelectedQuestionIds(current =>
+      current.includes(id) ? current.filter(item => item !== id) : [...current, id]
+    );
+  };
+
+  const toggleResourceSelection = (id: string) => {
+    setSelectedResourceIds(current =>
+      current.includes(id) ? current.filter(item => item !== id) : [...current, id]
+    );
+  };
+
+  const toggleSelectVisibleQuestions = () => {
+    setSelectedQuestionIds(current => {
+      if (allVisibleQuestionsSelected) {
+        return current.filter(id => !visibleQuestionIds.includes(id));
+      }
+
+      return Array.from(new Set([...current, ...visibleQuestionIds]));
+    });
+  };
+
+  const toggleSelectVisibleResources = () => {
+    setSelectedResourceIds(current => {
+      if (allVisibleResourcesSelected) {
+        return current.filter(id => !visibleResourceIds.includes(id));
+      }
+
+      return Array.from(new Set([...current, ...visibleResourceIds]));
+    });
+  };
+
+  const exportFilteredQuestions = () => {
+    downloadCsv(
+      "prepbros-questions-export.csv",
+      [
+        "question",
+        "option_a",
+        "option_b",
+        "option_c",
+        "option_d",
+        "correct_option",
+        "explanation",
+        "exam",
+        "topic",
+        "subtopic",
+        "difficulty",
+        "type",
+        "year",
+        "tags",
+        "is_active",
+      ],
+      filteredQuestions.map(question => ({
+        question: question.question,
+        option_a: question.option_a,
+        option_b: question.option_b,
+        option_c: question.option_c,
+        option_d: question.option_d,
+        correct_option: question.correct_option,
+        explanation: question.explanation,
+        exam: question.exam,
+        topic: question.topic,
+        subtopic: question.subtopic,
+        difficulty: question.difficulty,
+        type: question.type,
+        year: question.year ?? "",
+        tags: question.tags,
+        is_active: question.is_active,
+      }))
+    );
+    showToast(`${filteredQuestions.length} questions exported.`);
+  };
+
+  const exportFilteredResources = () => {
+    downloadCsv(
+      "prepbros-resources-export.csv",
+      ["title", "description", "type", "url", "exam", "category", "is_active"],
+      filteredResources.map(resource => ({
+        title: resource.title,
+        description: resource.description || "",
+        type: resource.type || "Link",
+        url: resource.url,
+        exam: resource.exam || "All",
+        category: resource.category || "General",
+        is_active: resource.is_active !== false,
+      }))
+    );
+    showToast(`${filteredResources.length} resources exported.`);
+  };
+
+  const handleQuestionFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      setQuestionImportInput(text);
+      setQuestionImportSource(file.name);
+      setShowQuestionImport(true);
+      showToast(`Loaded ${file.name}`);
+    } catch {
+      showToast("Could not read the selected file.", false);
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const handleResourceFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      setResourceImportInput(text);
+      setResourceImportSource(file.name);
+      setShowResourceImport(true);
+      showToast(`Loaded ${file.name}`);
+    } catch {
+      showToast("Could not read the selected file.", false);
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  if (authLoading || booting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#fff7ed_0%,#f8fafc_55%,#eef2ff_100%)] dark:bg-[linear-gradient(180deg,#020617_0%,#0f172a_55%,#111827_100%)]">
+        <div className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+          <Loader2 size={16} className="animate-spin" />
+          Preparing admin workspace...
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || user.email !== ADMIN_EMAIL) return null;
+
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#fff7ed_0%,#f8fafc_48%,#eef2ff_100%)] text-slate-900 dark:bg-[linear-gradient(180deg,#020617_0%,#0f172a_48%,#111827_100%)] dark:text-white">
+      {toast ? (
+        <div
+          className={cn(
+            "fixed right-4 top-4 z-50 flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium shadow-lg",
+            toast.ok ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+          )}
+        >
+          {toast.ok ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
+          {toast.msg}
+        </div>
+      ) : null}
+
+      <nav className="sticky top-0 z-40 border-b border-white/50 bg-white/70 backdrop-blur-xl dark:border-white/5 dark:bg-slate-950/75">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="inline-flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-500 text-sm font-bold text-white shadow-[0_12px_30px_rgba(249,115,22,0.35)]">
+                P
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-950 dark:text-white">PrepBros Admin</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Operations, imports, and content control</p>
+              </div>
+            </Link>
+            <Pill tone="orange">Admin access</Pill>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="hidden text-xs text-slate-500 dark:text-slate-400 md:inline">{user.email}</span>
+            <SmallButton
+              icon={RefreshCcw}
+              onClick={() => void loadAll()}
+              disabled={loadingTarget !== null}
+            >
+              {loadingTarget === "refresh" ? "Refreshing..." : "Refresh"}
+            </SmallButton>
+            <SmallButton icon={LogOut} onClick={() => signOut()}>
+              Sign out
+            </SmallButton>
+          </div>
+        </div>
+      </nav>
+
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
+        <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-[linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.92)_45%,rgba(249,115,22,0.95)_100%)] px-6 py-7 text-white shadow-[0_30px_90px_rgba(15,23,42,0.18)] md:px-8 md:py-8">
+          <div className="absolute inset-y-0 right-0 hidden w-[42%] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_58%)] lg:block" />
+          <div className="relative grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-100/80">
+                Control Center
+              </p>
+              <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.06em] md:text-5xl">
+                Redesigning admin work around bulk operations instead of one-off edits.
+              </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-white/75 md:text-base">
+                Import question banks from copy-paste, CSV, TSV, or JSON. Filter aggressively, bulk
+                remove or deactivate bad rows, export clean slices, and keep resources, contests,
+                and support in one operational panel.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/practice"
+                  className="inline-flex items-center rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/16"
+                >
+                  Review practice surface
+                </Link>
+                <Link
+                  href="/resources"
+                  className="inline-flex items-center rounded-2xl border border-white/12 bg-black/10 px-4 py-2.5 text-sm font-medium text-white/90 transition hover:bg-black/20"
+                >
+                  Review resources
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="rounded-[24px] border border-white/12 bg-white/10 p-4 backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Question bank</p>
+                <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">{questionStats.total}</p>
+                <p className="mt-2 text-sm text-white/70">
+                  {questionStats.active} active, {questionStats.inactive} inactive, {questionStats.pyq} PYQs
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-white/12 bg-white/10 p-4 backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Resources</p>
+                <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">{resourceStats.total}</p>
+                <p className="mt-2 text-sm text-white/70">
+                  {resourceStats.active} active, {dbContests.length} contests, {supportRequests.length} support items
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Questions" value={questionStats.total} hint="Live rows available to manage" icon={Database} tone="orange" />
+          <MetricCard label="UPSC Rows" value={questionStats.upsc} hint="Useful when replacing PYQ banks" icon={ShieldCheck} tone="blue" />
+          <MetricCard label="Resources" value={resourceStats.total} hint="Study links, PDFs, books, and videos" icon={Layers3} tone="green" />
+          <MetricCard label="Support" value={supportRequests.length} hint="User issues waiting for triage" icon={AlertCircle} tone="rose" />
+        </section>
+
+        <section className="mt-6 flex flex-wrap gap-2 rounded-[24px] border border-white/60 bg-white/80 p-2 backdrop-blur dark:border-white/5 dark:bg-slate-950/70">
+          {ADMIN_TABS.map(tab => {
+            const label =
+              tab === "questions"
+                ? `Questions (${dbQuestions.length})`
+                : tab === "resources"
+                  ? `Resources (${dbResources.length})`
+                  : tab === "contests"
+                    ? `Contests (${dbContests.length})`
+                    : `Support (${supportRequests.length})`;
+
+            const active = activeTab === tab;
+
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "rounded-2xl px-4 py-2.5 text-sm font-medium transition",
+                  active
+                    ? "bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900"
+                )}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </section>
+
+        <div className="mt-6 space-y-6">
+          {activeTab === "questions" ? (
+            <>
+              <SectionCard
+                title="Question Operations"
+                description="Use filters to isolate bad rows, then select visible results for bulk deactivate or hard delete. Import accepts pasted Sheets rows, CSV, TSV, and JSON."
+                actions={
+                  <>
+                    <SmallButton icon={Upload} onClick={() => setShowQuestionImport(current => !current)}>
+                      {showQuestionImport ? "Hide import" : "Open import"}
+                    </SmallButton>
+                    <SmallButton icon={Plus} tone="primary" onClick={openNewQuestionForm}>
+                      Add question
+                    </SmallButton>
+                  </>
+                }
+              >
+                <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+                  <div className="space-y-4">
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                      <label className="xl:col-span-2">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Search
+                        </span>
+                        <div className="relative">
+                          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input
+                            value={questionSearch}
+                            onChange={event => setQuestionSearch(event.target.value)}
+                            placeholder="Question text, explanation, tags, topic..."
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-10 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </div>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Exam
+                        </span>
+                        <select
+                          value={questionExamFilter}
+                          onChange={event => setQuestionExamFilter(event.target.value as FilterExam)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {FILTER_EXAMS.map(exam => (
+                            <option key={exam} value={exam}>
+                              {exam}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Topic
+                        </span>
+                        <select
+                          value={questionTopicFilter}
+                          onChange={event => setQuestionTopicFilter(event.target.value)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {availableQuestionTopics.map(topic => (
+                            <option key={topic} value={topic}>
+                              {topic}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Type
+                        </span>
+                        <select
+                          value={questionTypeFilter}
+                          onChange={event => setQuestionTypeFilter(event.target.value as "All" | QuestionType)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          <option value="All">All</option>
+                          {QUESTION_TYPES.map(type => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-4">
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Difficulty
+                        </span>
+                        <select
+                          value={questionDifficultyFilter}
+                          onChange={event => setQuestionDifficultyFilter(event.target.value as "All" | Difficulty)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          <option value="All">All</option>
+                          {DIFFICULTIES.map(difficulty => (
+                            <option key={difficulty} value={difficulty}>
+                              {difficulty}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Status
+                        </span>
+                        <select
+                          value={questionStatusFilter}
+                          onChange={event => setQuestionStatusFilter(event.target.value as StatusFilter)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {STATUS_FILTERS.map(status => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Filtered
+                        </p>
+                        <p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                          {filteredQuestions.length}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Selected
+                        </p>
+                        <p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                          {selectedQuestionIds.length}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <SmallButton icon={CheckCircle2} onClick={toggleSelectVisibleQuestions}>
+                        {allVisibleQuestionsSelected ? "Unselect visible" : "Select visible"}
+                      </SmallButton>
+                      <SmallButton
+                        icon={ShieldCheck}
+                        onClick={() => void updateQuestionsActiveState(selectedQuestionIds, false)}
+                        disabled={selectedQuestionIds.length === 0 || loadingTarget !== null}
+                      >
+                        Deactivate selected
+                      </SmallButton>
+                      <SmallButton
+                        icon={ShieldCheck}
+                        onClick={() => void updateQuestionsActiveState(selectedQuestionIds, true)}
+                        disabled={selectedQuestionIds.length === 0 || loadingTarget !== null}
+                      >
+                        Activate selected
+                      </SmallButton>
+                      <SmallButton
+                        icon={Trash2}
+                        tone="danger"
+                        onClick={() => void deleteQuestions(selectedQuestionIds)}
+                        disabled={selectedQuestionIds.length === 0 || loadingTarget !== null}
+                      >
+                        Delete selected
+                      </SmallButton>
+                      <SmallButton
+                        icon={Download}
+                        onClick={exportFilteredQuestions}
+                        disabled={filteredQuestions.length === 0}
+                      >
+                        Export filtered
+                      </SmallButton>
+                    </div>
+                  </div>
+
+                  {showQuestionImport ? (
+                    <div className="rounded-[24px] border border-orange-200/70 bg-orange-50/80 p-4 dark:border-orange-900/60 dark:bg-orange-950/20">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                            Bulk question import
+                          </p>
+                          <p className="mt-1 text-sm text-orange-700/80 dark:text-orange-200/70">
+                            Paste from Google Sheets, or upload a CSV, TSV, TXT, or JSON file.
+                          </p>
+                        </div>
+                        <input
+                          ref={questionFileInputRef}
+                          type="file"
+                          accept=".csv,.tsv,.txt,.json"
+                          className="hidden"
+                          onChange={handleQuestionFileUpload}
+                        />
+                        <SmallButton
+                          icon={FileSpreadsheet}
+                          onClick={() => questionFileInputRef.current?.click()}
+                        >
+                          Upload file
+                        </SmallButton>
+                      </div>
+
+                      <textarea
+                        value={questionImportInput}
+                        onChange={event => setQuestionImportInput(event.target.value)}
+                        rows={13}
+                        placeholder="Paste JSON, CSV, or tab-separated rows here..."
+                        className="mt-4 w-full rounded-[22px] border border-orange-200 bg-white px-4 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-orange-300 dark:border-orange-900/70 dark:bg-slate-950 dark:text-white"
+                      />
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <SmallButton
+                          icon={Upload}
+                          tone="primary"
+                          onClick={() => void importQuestions()}
+                          disabled={Boolean(questionImportPreview.error) || questionImportPreview.rows.length === 0 || loadingTarget !== null}
+                        >
+                          {loadingTarget === "import-questions" ? "Importing..." : "Import rows"}
+                        </SmallButton>
+                        <SmallButton
+                          icon={RefreshCcw}
+                          tone="danger"
+                          onClick={() => void replaceFilteredQuestionsWithImport()}
+                          disabled={
+                            Boolean(questionImportPreview.error) ||
+                            questionImportPreview.rows.length === 0 ||
+                            filteredQuestions.length === 0 ||
+                            loadingTarget !== null
+                          }
+                        >
+                          {loadingTarget === "replace-filtered-questions"
+                            ? "Replacing..."
+                            : `Replace filtered (${filteredQuestions.length})`}
+                        </SmallButton>
+                        <SmallButton onClick={() => setQuestionImportInput(BULK_IMPORT_TEMPLATE)}>
+                          Fill template
+                        </SmallButton>
+                        <SmallButton
+                          onClick={() => {
+                            clearQuestionImportState();
+                          }}
+                        >
+                          Clear
+                        </SmallButton>
+                      </div>
+
+                      <div className="mt-4 rounded-2xl border border-orange-200 bg-white/90 p-4 text-sm dark:border-orange-900/70 dark:bg-slate-950/70">
+                        {questionImportPreview.error ? (
+                          <p className="text-rose-600 dark:text-rose-300">{questionImportPreview.error}</p>
+                        ) : questionImportPreview.rows.length > 0 ? (
+                          <div className="space-y-3">
+                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                              {questionImportPreview.rows.length} row{questionImportPreview.rows.length === 1 ? "" : "s"} ready
+                              {questionImportSource ? ` from ${questionImportSource}` : ""}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              Current filters match {filteredQuestions.length} existing question{filteredQuestions.length === 1 ? "" : "s"}.
+                              Use "Replace filtered" to swap that exact slice in one step.
+                            </p>
+                            {questionImportPreview.rows.slice(0, 2).map((row, index) => (
+                              <div key={`${row.question}-${index}`} className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
+                                <p className="line-clamp-2 text-sm font-medium text-slate-900 dark:text-white">{row.question}</p>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <Pill tone="slate">{row.exam}</Pill>
+                                  <Pill tone="orange">{row.topic}</Pill>
+                                  <Pill tone="blue">{row.type}</Pill>
+                                  <Pill tone={row.is_active ? "green" : "rose"}>{row.is_active ? "Active" : "Inactive"}</Pill>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-slate-500 dark:text-slate-400">
+                            Supported fields: question, option_a-d, correct_option, explanation, exam, topic, subtopic, difficulty, type, year, tags, is_active.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </SectionCard>
+
+              {showQuestionForm ? (
+                <SectionCard
+                  title={editingQuestionId ? "Edit Question" : "Create Question"}
+                  description="Use this for precise manual edits when the bulk tool is too heavy."
+                  actions={
+                    <SmallButton onClick={resetQuestionForm} icon={X}>
+                      Close editor
+                    </SmallButton>
+                  }
+                >
+                  <div className="space-y-4">
+                    <label className="block">
+                      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Question
+                      </span>
+                      <textarea
+                        value={questionForm.question}
+                        onChange={event => setQuestionForm(current => ({ ...current, question: event.target.value }))}
+                        rows={3}
+                        className="w-full rounded-[22px] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                      />
+                    </label>
+
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {(["a", "b", "c", "d"] as const).map((optionKey, index) => (
+                        <label key={optionKey} className="block">
+                          <span className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                            Option {optionKey.toUpperCase()}
+                            <input
+                              type="radio"
+                              name="correct-option"
+                              checked={questionForm.correct_option === index}
+                              onChange={() => setQuestionForm(current => ({ ...current, correct_option: index }))}
+                              className="accent-orange-500"
+                            />
+                            <span className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                              {questionForm.correct_option === index ? "Correct" : ""}
+                            </span>
+                          </span>
+                          <input
+                            value={questionForm[`option_${optionKey}`]}
+                            onChange={event =>
+                              setQuestionForm(current => ({
+                                ...current,
+                                [`option_${optionKey}`]: event.target.value,
+                              }))
+                            }
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </label>
+                      ))}
+                    </div>
+
+                    <label className="block">
+                      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Explanation
+                      </span>
+                      <textarea
+                        value={questionForm.explanation}
+                        onChange={event => setQuestionForm(current => ({ ...current, explanation: event.target.value }))}
+                        rows={3}
+                        className="w-full rounded-[22px] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                      />
+                    </label>
+
+                    <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Exam
+                        </span>
+                        <select
+                          value={questionForm.exam}
+                          onChange={event => setQuestionForm(current => ({ ...current, exam: event.target.value as Exam }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {QUESTION_EXAMS.map(exam => (
+                            <option key={exam} value={exam}>
+                              {exam}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Topic
+                        </span>
+                        <select
+                          value={questionForm.topic}
+                          onChange={event => setQuestionForm(current => ({ ...current, topic: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {availableQuestionTopics.filter(topic => topic !== "All").map(topic => (
+                            <option key={topic} value={topic}>
+                              {topic}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Subtopic
+                        </span>
+                        <input
+                          value={questionForm.subtopic}
+                          onChange={event => setQuestionForm(current => ({ ...current, subtopic: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Difficulty
+                        </span>
+                        <select
+                          value={questionForm.difficulty}
+                          onChange={event => setQuestionForm(current => ({ ...current, difficulty: event.target.value as Difficulty }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {DIFFICULTIES.map(difficulty => (
+                            <option key={difficulty} value={difficulty}>
+                              {difficulty}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Type
+                        </span>
+                        <select
+                          value={questionForm.type}
+                          onChange={event => setQuestionForm(current => ({ ...current, type: event.target.value as QuestionType }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {QUESTION_TYPES.map(type => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Year
+                        </span>
+                        <input
+                          value={questionForm.year}
+                          onChange={event => setQuestionForm(current => ({ ...current, year: event.target.value }))}
+                          placeholder="2024"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Tags
+                        </span>
+                        <input
+                          value={questionForm.tags}
+                          onChange={event => setQuestionForm(current => ({ ...current, tags: event.target.value }))}
+                          placeholder="constitution, article-21a, education"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+
+                      <label className="flex items-end gap-2 rounded-2xl border border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <input
+                          type="checkbox"
+                          checked={questionForm.is_active}
+                          onChange={event => setQuestionForm(current => ({ ...current, is_active: event.target.checked }))}
+                          className="accent-orange-500"
+                        />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Active row</span>
+                      </label>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <SmallButton
+                        tone="primary"
+                        icon={CheckCircle2}
+                        onClick={() => void saveQuestion()}
+                        disabled={loadingTarget !== null}
+                      >
+                        {loadingTarget === "save-question"
+                          ? "Saving..."
+                          : editingQuestionId
+                            ? "Update question"
+                            : "Save question"}
+                      </SmallButton>
+                      <SmallButton onClick={resetQuestionForm}>Cancel</SmallButton>
+                    </div>
+                  </div>
+                </SectionCard>
+              ) : null}
+
+              <SectionCard
+                title="Question Inventory"
+                description="This list is optimized for cleanup. Filter first, select visible results, then bulk deactivate or delete."
+              >
+                {filteredQuestions.length === 0 ? (
+                  <EmptyState
+                    icon={BookOpen}
+                    title="No questions match the current filters"
+                    description="Widen the filters or import more rows."
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {filteredQuestions.map(question => {
+                      const questionId = toId(question.id);
+                      const selected = selectedQuestionIds.includes(questionId);
+
+                      return (
+                        <div
+                          key={questionId}
+                          className={cn(
+                            "rounded-[24px] border p-4 transition",
+                            selected
+                              ? "border-orange-300 bg-orange-50/60 dark:border-orange-900 dark:bg-orange-950/10"
+                              : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
+                          )}
+                        >
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="flex gap-3">
+                              <input
+                                type="checkbox"
+                                checked={selected}
+                                onChange={() => toggleQuestionSelection(questionId)}
+                                className="mt-1 h-4 w-4 rounded accent-orange-500"
+                              />
+                              <div>
+                                <p className="text-base font-medium leading-7 text-slate-950 dark:text-white">
+                                  {question.question}
+                                </p>
+                                <p className="mt-2 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">
+                                  {question.explanation}
+                                </p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  <Pill tone="orange">{question.exam}</Pill>
+                                  <Pill tone="blue">{question.type}</Pill>
+                                  <Pill tone="slate">{question.topic}</Pill>
+                                  <Pill tone="green">{question.difficulty}</Pill>
+                                  <Pill tone={question.is_active ? "green" : "rose"}>
+                                    {question.is_active ? "Active" : "Inactive"}
+                                  </Pill>
+                                  {question.year ? <Pill tone="slate">PYQ {question.year}</Pill> : null}
+                                </div>
+                                <div className="mt-3 grid gap-2 md:grid-cols-2">
+                                  {[question.option_a, question.option_b, question.option_c, question.option_d].map(
+                                    (option, index) => (
+                                      <div
+                                        key={`${questionId}-${index}`}
+                                        className={cn(
+                                          "rounded-2xl border px-3 py-2 text-sm",
+                                          question.correct_option === index
+                                            ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-300"
+                                            : "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                                        )}
+                                      >
+                                        {String.fromCharCode(65 + index)}. {option}
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
+                              <SmallButton icon={Edit2} onClick={() => startEditQuestion(question)}>
+                                Edit
+                              </SmallButton>
+                              <SmallButton
+                                icon={ShieldCheck}
+                                onClick={() => void updateQuestionsActiveState([questionId], !question.is_active)}
+                                disabled={loadingTarget !== null}
+                              >
+                                {question.is_active ? "Deactivate" : "Activate"}
+                              </SmallButton>
+                              <SmallButton
+                                icon={Trash2}
+                                tone="danger"
+                                onClick={() => void deleteQuestions([questionId])}
+                                disabled={loadingTarget !== null}
+                              >
+                                Delete
+                              </SmallButton>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </SectionCard>
+            </>
+          ) : null}
+
+          {activeTab === "resources" ? (
+            <>
+              <SectionCard
+                title="Resource Operations"
+                description="Keep PDFs, books, notes, and video links clean. You can bulk import, filter by exam or category, and toggle active status without leaving the panel."
+                actions={
+                  <>
+                    <SmallButton icon={Upload} onClick={() => setShowResourceImport(current => !current)}>
+                      {showResourceImport ? "Hide import" : "Open import"}
+                    </SmallButton>
+                    <SmallButton icon={Plus} tone="primary" onClick={openNewResourceForm}>
+                      Add resource
+                    </SmallButton>
+                  </>
+                }
+              >
+                <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+                  <div className="space-y-4">
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                      <label className="xl:col-span-2">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Search
+                        </span>
+                        <div className="relative">
+                          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input
+                            value={resourceSearch}
+                            onChange={event => setResourceSearch(event.target.value)}
+                            placeholder="Title, URL, description..."
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-10 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </div>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Exam
+                        </span>
+                        <select
+                          value={resourceExamFilter}
+                          onChange={event => setResourceExamFilter(event.target.value as ResourceExam)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {RESOURCE_EXAMS.map(exam => (
+                            <option key={exam} value={exam}>
+                              {exam}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Type
+                        </span>
+                        <select
+                          value={resourceTypeFilter}
+                          onChange={event => setResourceTypeFilter(event.target.value as "All" | ResourceType)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          <option value="All">All</option>
+                          {RESOURCE_TYPES.map(type => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Category
+                        </span>
+                        <select
+                          value={resourceCategoryFilter}
+                          onChange={event => setResourceCategoryFilter(event.target.value)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {availableResourceCategories.map(category => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-4">
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Status
+                        </span>
+                        <select
+                          value={resourceStatusFilter}
+                          onChange={event => setResourceStatusFilter(event.target.value as StatusFilter)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {STATUS_FILTERS.map(status => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Filtered
+                        </p>
+                        <p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                          {filteredResources.length}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Selected
+                        </p>
+                        <p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                          {selectedResourceIds.length}
+                        </p>
+                      </div>
+
+                      <div className="flex items-end">
+                        <SmallButton icon={Download} onClick={exportFilteredResources} disabled={filteredResources.length === 0}>
+                          Export filtered
+                        </SmallButton>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <SmallButton icon={CheckCircle2} onClick={toggleSelectVisibleResources}>
+                        {allVisibleResourcesSelected ? "Unselect visible" : "Select visible"}
+                      </SmallButton>
+                      <SmallButton
+                        icon={ShieldCheck}
+                        onClick={() => void updateResourcesActiveState(selectedResourceIds, false)}
+                        disabled={selectedResourceIds.length === 0 || loadingTarget !== null}
+                      >
+                        Deactivate selected
+                      </SmallButton>
+                      <SmallButton
+                        icon={ShieldCheck}
+                        onClick={() => void updateResourcesActiveState(selectedResourceIds, true)}
+                        disabled={selectedResourceIds.length === 0 || loadingTarget !== null}
+                      >
+                        Activate selected
+                      </SmallButton>
+                      <SmallButton
+                        icon={Trash2}
+                        tone="danger"
+                        onClick={() => void deleteResources(selectedResourceIds)}
+                        disabled={selectedResourceIds.length === 0 || loadingTarget !== null}
+                      >
+                        Delete selected
+                      </SmallButton>
+                    </div>
+                  </div>
+
+                  {showResourceImport ? (
+                    <div className="rounded-[24px] border border-sky-200/70 bg-sky-50/70 p-4 dark:border-sky-900/60 dark:bg-sky-950/20">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-sky-800 dark:text-sky-200">Bulk resource import</p>
+                          <p className="mt-1 text-sm text-sky-700/80 dark:text-sky-200/70">
+                            Useful when you want to load PDF libraries, playlists, or notes in one pass.
+                          </p>
+                        </div>
+                        <input
+                          ref={resourceFileInputRef}
+                          type="file"
+                          accept=".csv,.tsv,.txt,.json"
+                          className="hidden"
+                          onChange={handleResourceFileUpload}
+                        />
+                        <SmallButton icon={FileSpreadsheet} onClick={() => resourceFileInputRef.current?.click()}>
+                          Upload file
+                        </SmallButton>
+                      </div>
+
+                      <textarea
+                        value={resourceImportInput}
+                        onChange={event => setResourceImportInput(event.target.value)}
+                        rows={11}
+                        placeholder="Paste resource data here..."
+                        className="mt-4 w-full rounded-[22px] border border-sky-200 bg-white px-4 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-sky-300 dark:border-sky-900/70 dark:bg-slate-950 dark:text-white"
+                      />
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <SmallButton
+                          tone="primary"
+                          icon={Upload}
+                          onClick={() => void importResources()}
+                          disabled={Boolean(resourceImportPreview.error) || resourceImportPreview.rows.length === 0 || loadingTarget !== null}
+                        >
+                          {loadingTarget === "import-resources" ? "Importing..." : "Import rows"}
+                        </SmallButton>
+                        <SmallButton onClick={() => setResourceImportInput(BULK_RESOURCE_TEMPLATE)}>
+                          Fill template
+                        </SmallButton>
+                        <SmallButton
+                          onClick={() => {
+                            setResourceImportInput("");
+                            setResourceImportSource("");
+                          }}
+                        >
+                          Clear
+                        </SmallButton>
+                      </div>
+
+                      <div className="mt-4 rounded-2xl border border-sky-200 bg-white/90 p-4 text-sm dark:border-sky-900/70 dark:bg-slate-950/70">
+                        {resourceImportPreview.error ? (
+                          <p className="text-rose-600 dark:text-rose-300">{resourceImportPreview.error}</p>
+                        ) : resourceImportPreview.rows.length > 0 ? (
+                          <div className="space-y-3">
+                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                              {resourceImportPreview.rows.length} row{resourceImportPreview.rows.length === 1 ? "" : "s"} ready
+                              {resourceImportSource ? ` from ${resourceImportSource}` : ""}
+                            </p>
+                            {resourceImportPreview.rows.slice(0, 2).map((row, index) => (
+                              <div key={`${row.title}-${index}`} className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
+                                <p className="text-sm font-medium text-slate-900 dark:text-white">{row.title}</p>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <Pill tone="blue">{row.type}</Pill>
+                                  <Pill tone="orange">{row.exam}</Pill>
+                                  <Pill tone="slate">{row.category}</Pill>
+                                  <Pill tone={row.is_active ? "green" : "rose"}>{row.is_active ? "Active" : "Inactive"}</Pill>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-slate-500 dark:text-slate-400">
+                            Supported fields: title, description, type, url, exam, category, is_active.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </SectionCard>
+
+              {showResourceForm ? (
+                <SectionCard
+                  title={editingResourceId ? "Edit Resource" : "Create Resource"}
+                  description="Add or tune a single resource when the bulk tool is overkill."
+                  actions={
+                    <SmallButton onClick={resetResourceForm} icon={X}>
+                      Close editor
+                    </SmallButton>
+                  }
+                >
+                  <div className="space-y-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Title
+                        </span>
+                        <input
+                          value={resourceForm.title}
+                          onChange={event => setResourceForm(current => ({ ...current, title: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          URL
+                        </span>
+                        <input
+                          value={resourceForm.url}
+                          onChange={event => setResourceForm(current => ({ ...current, url: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+                    </div>
+
+                    <label className="block">
+                      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Description
+                      </span>
+                      <textarea
+                        value={resourceForm.description}
+                        onChange={event => setResourceForm(current => ({ ...current, description: event.target.value }))}
+                        rows={3}
+                        className="w-full rounded-[22px] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                      />
+                    </label>
+
+                    <div className="grid gap-3 md:grid-cols-4">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Type
+                        </span>
+                        <select
+                          value={resourceForm.type}
+                          onChange={event => setResourceForm(current => ({ ...current, type: event.target.value as ResourceType }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {RESOURCE_TYPES.map(type => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Exam
+                        </span>
+                        <select
+                          value={resourceForm.exam}
+                          onChange={event => setResourceForm(current => ({ ...current, exam: event.target.value as ResourceExam }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {RESOURCE_EXAMS.map(exam => (
+                            <option key={exam} value={exam}>
+                              {exam}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Category
+                        </span>
+                        <select
+                          value={resourceForm.category}
+                          onChange={event => setResourceForm(current => ({ ...current, category: event.target.value as ResourceCategory }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {availableResourceCategories.filter(category => category !== "All").map(category => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="flex items-end gap-2 rounded-2xl border border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <input
+                          type="checkbox"
+                          checked={resourceForm.is_active}
+                          onChange={event => setResourceForm(current => ({ ...current, is_active: event.target.checked }))}
+                          className="accent-orange-500"
+                        />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Active row</span>
+                      </label>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <SmallButton
+                        tone="primary"
+                        icon={CheckCircle2}
+                        onClick={() => void saveResource()}
+                        disabled={loadingTarget !== null}
+                      >
+                        {loadingTarget === "save-resource"
+                          ? "Saving..."
+                          : editingResourceId
+                            ? "Update resource"
+                            : "Save resource"}
+                      </SmallButton>
+                      <SmallButton onClick={resetResourceForm}>Cancel</SmallButton>
+                    </div>
+                  </div>
+                </SectionCard>
+              ) : null}
+
+              <SectionCard
+                title="Resource Inventory"
+                description="Keep the public resource page trustworthy by archiving stale links and exporting clean subsets."
+              >
+                {filteredResources.length === 0 ? (
+                  <EmptyState
+                    icon={FileText}
+                    title="No resources match the current filters"
+                    description="Widen the filters or import a new batch."
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {filteredResources.map(resource => {
+                      const resourceId = toId(resource.id);
+                      const selected = selectedResourceIds.includes(resourceId);
+                      const active = resource.is_active !== false;
+
+                      return (
+                        <div
+                          key={resourceId}
+                          className={cn(
+                            "rounded-[24px] border p-4 transition",
+                            selected
+                              ? "border-sky-300 bg-sky-50/60 dark:border-sky-900 dark:bg-sky-950/10"
+                              : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
+                          )}
+                        >
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="flex gap-3">
+                              <input
+                                type="checkbox"
+                                checked={selected}
+                                onChange={() => toggleResourceSelection(resourceId)}
+                                className="mt-1 h-4 w-4 rounded accent-orange-500"
+                              />
+                              <div>
+                                <p className="text-base font-medium text-slate-950 dark:text-white">{resource.title}</p>
+                                {resource.description ? (
+                                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{resource.description}</p>
+                                ) : null}
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  <Pill tone="blue">{resource.type || "Link"}</Pill>
+                                  <Pill tone="orange">{resource.exam || "All"}</Pill>
+                                  <Pill tone="slate">{resource.category || "General"}</Pill>
+                                  <Pill tone={active ? "green" : "rose"}>{active ? "Active" : "Inactive"}</Pill>
+                                </div>
+                                <a
+                                  href={resource.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="mt-3 inline-flex items-center gap-2 text-sm text-orange-600 hover:underline dark:text-orange-300"
+                                >
+                                  <LinkIcon size={14} />
+                                  {resource.url}
+                                </a>
+                              </div>
+                            </div>
+
+                            <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
+                              <SmallButton icon={Edit2} onClick={() => startEditResource(resource)}>
+                                Edit
+                              </SmallButton>
+                              <SmallButton
+                                icon={ShieldCheck}
+                                onClick={() => void updateResourcesActiveState([resourceId], !active)}
+                                disabled={loadingTarget !== null}
+                              >
+                                {active ? "Deactivate" : "Activate"}
+                              </SmallButton>
+                              <SmallButton
+                                icon={Trash2}
+                                tone="danger"
+                                onClick={() => void deleteResources([resourceId])}
+                                disabled={loadingTarget !== null}
+                              >
+                                Delete
+                              </SmallButton>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </SectionCard>
+            </>
+          ) : null}
+
+          {activeTab === "contests" ? (
+            <>
+              <SectionCard
+                title="Contest Manager"
+                description="Keep upcoming and past contests current so the public contests page stays credible."
+                actions={
+                  <SmallButton icon={Plus} tone="primary" onClick={() => setShowContestForm(current => !current)}>
+                    {showContestForm ? "Close editor" : "Add contest"}
+                  </SmallButton>
+                }
+              >
+                <div className="grid gap-4 md:grid-cols-3">
+                  <MetricCard label="Upcoming" value={dbContests.filter(contest => contest.status === "upcoming").length} hint="Visible contests users can prepare for" icon={Trophy} tone="orange" />
+                  <MetricCard label="Past" value={dbContests.filter(contest => contest.status === "past").length} hint="Completed contests with winners or ranks" icon={Layers3} tone="blue" />
+                  <MetricCard label="Total" value={dbContests.length} hint="All live contest rows in Supabase" icon={Database} tone="green" />
+                </div>
+              </SectionCard>
+
+              {showContestForm ? (
+                <SectionCard
+                  title={editingContestId ? "Edit Contest" : "Create Contest"}
+                  description="Use this to keep dates, prizes, and topic scope aligned with what the public page shows."
+                  actions={<SmallButton onClick={resetContestForm} icon={X}>Close editor</SmallButton>}
+                >
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <input
+                      value={contestForm.name}
+                      onChange={event => setContestForm(current => ({ ...current, name: event.target.value }))}
+                      placeholder="Contest name"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                    <input
+                      value={contestForm.date}
+                      onChange={event => setContestForm(current => ({ ...current, date: event.target.value }))}
+                      placeholder="March 28, 2026"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                    <input
+                      value={contestForm.duration}
+                      onChange={event => setContestForm(current => ({ ...current, duration: event.target.value }))}
+                      placeholder="60 minutes"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                    <select
+                      value={contestForm.status}
+                      onChange={event => setContestForm(current => ({ ...current, status: event.target.value as ContestStatus }))}
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                    >
+                      {CONTEST_STATUSES.map(status => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      value={contestForm.topics}
+                      onChange={event => setContestForm(current => ({ ...current, topics: event.target.value }))}
+                      placeholder="GS1 + CSAT"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                    <input
+                      value={contestForm.prize}
+                      onChange={event => setContestForm(current => ({ ...current, prize: event.target.value }))}
+                      placeholder="Prize"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                    <input
+                      value={contestForm.winner}
+                      onChange={event => setContestForm(current => ({ ...current, winner: event.target.value }))}
+                      placeholder="Winner (optional)"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                    <input
+                      value={contestForm.your_rank}
+                      onChange={event => setContestForm(current => ({ ...current, your_rank: event.target.value }))}
+                      placeholder="Your rank (optional)"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <SmallButton tone="primary" icon={CheckCircle2} onClick={() => void saveContest()} disabled={loadingTarget !== null}>
+                      {loadingTarget === "save-contest"
+                        ? "Saving..."
+                        : editingContestId
+                          ? "Update contest"
+                          : "Save contest"}
+                    </SmallButton>
+                    <SmallButton onClick={resetContestForm}>Cancel</SmallButton>
+                  </div>
+                </SectionCard>
+              ) : null}
+
+              <SectionCard title="Contest Inventory" description="Quickly update schedule changes or clean out outdated entries.">
+                {dbContests.length === 0 ? (
+                  <EmptyState
+                    icon={Trophy}
+                    title="No contests yet"
+                    description="Add the first contest row to populate the public page."
+                  />
+                ) : (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {dbContests.map(contest => (
+                      <div key={toId(contest.id)} className="rounded-[24px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-base font-medium text-slate-950 dark:text-white">{contest.name}</p>
+                            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{contest.topics}</p>
+                          </div>
+                          <Pill tone={contest.status === "upcoming" ? "orange" : "blue"}>{contest.status}</Pill>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <Pill tone="slate">{contest.date}</Pill>
+                          <Pill tone="green">{contest.duration}</Pill>
+                          <Pill tone="slate">{contest.prize}</Pill>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <SmallButton icon={Edit2} onClick={() => startEditContest(contest)}>
+                            Edit
+                          </SmallButton>
+                          <SmallButton icon={Trash2} tone="danger" onClick={() => void deleteContest(toId(contest.id))}>
+                            Delete
+                          </SmallButton>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </SectionCard>
+            </>
+          ) : null}
+
+          {activeTab === "support" ? (
+            <SectionCard
+              title="Support Inbox"
+              description="Use search to triage recurring issues, broken questions, or billing complaints without hopping between tools."
+            >
+              <div className="mb-5 max-w-xl">
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                    Search
+                  </span>
+                  <div className="relative">
+                    <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      value={supportSearch}
+                      onChange={event => setSupportSearch(event.target.value)}
+                      placeholder="Email, category, subject, or message..."
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-10 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                  </div>
+                </label>
+              </div>
+
+              {filteredSupportRequests.length === 0 ? (
+                <EmptyState
+                  icon={AlertCircle}
+                  title="No support requests found"
+                  description="New messages from the support form will show up here."
+                />
+              ) : (
+                <div className="space-y-3">
+                  {filteredSupportRequests.map(request => (
+                    <div key={toId(request.id)} className="rounded-[24px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <div className="flex flex-wrap gap-2">
+                            <Pill tone="orange">{request.category || "General support"}</Pill>
+                            <Pill tone="slate">{request.email}</Pill>
+                            <Pill tone="blue">{request.source || "support_page_direct"}</Pill>
+                          </div>
+                          <p className="mt-3 text-base font-medium text-slate-950 dark:text-white">
+                            {request.subject || "No subject"}
+                          </p>
+                          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600 dark:text-slate-300">
+                            {request.message || "No message provided."}
+                          </p>
+                        </div>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">{formatDate(request.created_at)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </SectionCard>
+          ) : null}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default Admin;
