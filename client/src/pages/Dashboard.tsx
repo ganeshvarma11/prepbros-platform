@@ -256,7 +256,7 @@ export default function Dashboard() {
     solvedCoverage.totalQuestions > 0
       ? clampPercent(Math.round((solvedCoverage.totalSolved / solvedCoverage.totalQuestions) * 100))
       : 0;
-  const ringRadius = 84;
+  const ringRadius = 62;
   const ringCircumference = 2 * Math.PI * ringRadius;
   const ringOffset = ringCircumference - (ringCircumference * solvedPercent) / 100;
 
@@ -387,149 +387,209 @@ export default function Dashboard() {
           ))}
         </section>
 
-        <section className="space-y-6 text-center">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-              Solved Progress
-            </p>
-            <p className="mt-2 text-sm text-[var(--text-muted)]">
-              Total solved coverage across your question bank.
-            </p>
-          </div>
+        <section className="grid gap-10 border-b border-white/6 pb-10 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:items-start">
+          <div className="space-y-6">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
+                Solved Progress
+              </p>
+              <p className="mt-2 max-w-[28ch] text-sm text-[var(--text-muted)]">
+                Total solved coverage across your question bank.
+              </p>
+            </div>
 
-          <div className="relative mx-auto flex w-full max-w-[360px] items-center justify-center">
-            <div className="absolute h-40 w-40 rounded-full bg-[rgba(255,161,22,0.08)] blur-3xl" />
-            <div className="relative h-[240px] w-[240px]">
-              <svg viewBox="0 0 220 220" className="h-full w-full -rotate-90">
-                <circle
-                  cx="110"
-                  cy="110"
-                  r={ringRadius}
-                  fill="none"
-                  stroke="rgba(255,255,255,0.08)"
-                  strokeWidth="12"
-                />
-                <circle
-                  cx="110"
-                  cy="110"
-                  r={ringRadius}
-                  fill="none"
-                  stroke="var(--brand)"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeDasharray={ringCircumference}
-                  strokeDashoffset={ringOffset}
-                />
-              </svg>
+            <div className="flex items-center gap-5">
+              <div className="relative flex h-[176px] w-[176px] shrink-0 items-center justify-center">
+                <div className="absolute h-24 w-24 rounded-full bg-[rgba(255,161,22,0.08)] blur-2xl" />
+                <svg viewBox="0 0 180 180" className="h-full w-full -rotate-90">
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r={ringRadius}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.08)"
+                    strokeWidth="10"
+                  />
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r={ringRadius}
+                    fill="none"
+                    stroke="var(--brand)"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray={ringCircumference}
+                    strokeDashoffset={ringOffset}
+                  />
+                </svg>
 
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="text-[3rem] font-semibold tracking-[-0.08em] text-[var(--text-primary)]">
-                  {formatCount(solvedCoverage.totalSolved)}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <p className="text-[2.5rem] font-semibold tracking-[-0.08em] text-[var(--text-primary)]">
+                    {formatCount(solvedCoverage.totalSolved)}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                    solved
+                  </p>
+                </div>
+              </div>
+
+              <div className="min-w-0 space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                  Coverage
                 </p>
-                <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                  {solvedCoverage.totalQuestions > 0
-                    ? `${solvedPercent}% of ${formatCount(solvedCoverage.totalQuestions)}`
-                    : "Question bank syncing"}
+                <p className="text-2xl font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                  {solvedPercent}%
+                </p>
+                <p className="text-sm text-[var(--text-muted)]">
+                  {formatCount(solvedCoverage.totalSolved)} of {formatCount(solvedCoverage.totalQuestions)} questions
                 </p>
               </div>
             </div>
+
+            <div className="space-y-3 border-t border-white/6 pt-5">
+              {solvedCoverage.byDifficulty.map((item) => (
+                <div key={item.difficulty} className="flex items-center justify-between gap-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                    {item.difficulty}
+                  </p>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">
+                    {formatCount(item.solved)} / {formatCount(item.total)}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="mx-auto grid w-full max-w-3xl gap-4 md:grid-cols-3">
-            {solvedCoverage.byDifficulty.map((item) => (
-              <div key={item.difficulty} className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
-                  {item.difficulty}
-                </p>
-                <p className="text-base font-medium text-[var(--text-primary)]">
-                  {formatCount(item.solved)} / {formatCount(item.total)}
-                </p>
+          <div className="grid gap-8 md:grid-cols-2 md:gap-x-10 md:gap-y-9">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
+                Weak Topics
+              </p>
+              <div className="mt-4 space-y-4">
+                {weakTopics.length > 0 ? (
+                  weakTopics.map((topic) => (
+                    <Link key={topic.topic} href={buildPracticeHref({ topic: topic.topic, incorrect: true })}>
+                      <span className="group block cursor-pointer">
+                        <span className="block text-sm font-medium text-[var(--text-primary)] transition group-hover:text-[var(--brand)]">
+                          {topic.topic}
+                        </span>
+                        <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                          {topic.accuracy}% accuracy across {topic.total} attempt{topic.total === 1 ? "" : "s"}
+                        </span>
+                      </span>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Weak topics will show up once you build more history.
+                  </p>
+                )}
               </div>
-            ))}
+            </div>
+
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
+                Focus Areas
+              </p>
+              <div className="mt-4 space-y-4">
+                {focusAreas.length > 0 ? (
+                  focusAreas.map((item) => (
+                    <Link key={item.title} href={item.href}>
+                      <span className="group block cursor-pointer">
+                        <span className="block text-sm font-medium text-[var(--text-primary)] transition group-hover:text-[var(--brand)]">
+                          {item.title}
+                        </span>
+                        <span className="mt-1 block text-xs text-[var(--text-muted)]">{item.detail}</span>
+                      </span>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Your next focus areas will appear after a few more answers.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
+                Recent Activity
+              </p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {recentSessions.length > 0 ? (
+                  recentSessions.map((session) => (
+                    <Link
+                      key={`${session.id}-${session.date}`}
+                      href={buildPracticeHref({
+                        questionId: session.id,
+                        topic: session.topic,
+                        exam: session.exam !== "General" ? session.exam : undefined,
+                      })}
+                    >
+                      <span className="group block cursor-pointer border-b border-white/6 pb-4">
+                        <span className="block text-sm font-medium text-[var(--text-primary)] transition group-hover:text-[var(--brand)]">
+                          {session.topic}
+                        </span>
+                        <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                          {session.correct ? "Correct" : "Needs review"} / {session.date}
+                        </span>
+                      </span>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Recent activity will appear after your next practice session.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="grid gap-8 lg:grid-cols-3 lg:gap-10">
+        <section className="grid gap-8 md:grid-cols-3 md:gap-10">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-              Weak Topics
+              Daily Goal
             </p>
             <div className="mt-4 space-y-4">
-              {weakTopics.length > 0 ? (
-                weakTopics.map((topic) => (
-                  <Link key={topic.topic} href={buildPracticeHref({ topic: topic.topic, incorrect: true })}>
-                    <span className="group block cursor-pointer">
-                      <span className="block text-sm font-medium text-[var(--text-primary)] transition group-hover:text-[var(--brand)]">
-                        {topic.topic}
-                      </span>
-                      <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                        {topic.accuracy}% accuracy across {topic.total} attempt{topic.total === 1 ? "" : "s"}
-                      </span>
-                    </span>
-                  </Link>
-                ))
-              ) : (
-                <p className="text-sm text-[var(--text-muted)]">
-                  Weak topics will show up once you build more history.
-                </p>
-              )}
+              <p className="text-[1.8rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                {todayAttempts} / {dailyGoal}
+              </p>
+              <p className="text-sm text-[var(--text-muted)]">
+                {dailyRemaining > 0
+                  ? `${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} left to finish today`
+                  : "Today's target is complete"}
+              </p>
             </div>
           </div>
 
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-              Focus Areas
+              Target Exam
             </p>
             <div className="mt-4 space-y-4">
-              {focusAreas.length > 0 ? (
-                focusAreas.map((item) => (
-                  <Link key={item.title} href={item.href}>
-                    <span className="group block cursor-pointer">
-                      <span className="block text-sm font-medium text-[var(--text-primary)] transition group-hover:text-[var(--brand)]">
-                        {item.title}
-                      </span>
-                      <span className="mt-1 block text-xs text-[var(--text-muted)]">{item.detail}</span>
-                    </span>
-                  </Link>
-                ))
-              ) : (
-                <p className="text-sm text-[var(--text-muted)]">
-                  Your next focus areas will appear after a few more answers.
-                </p>
-              )}
+              <p className="text-[1.8rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                {targetExam}
+              </p>
+              <p className="text-sm text-[var(--text-muted)]">
+                Keep this dashboard focused on your current exam path.
+              </p>
             </div>
           </div>
 
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-              Recent Activity
+              Next Step
             </p>
             <div className="mt-4 space-y-4">
-              {recentSessions.length > 0 ? (
-                recentSessions.map((session) => (
-                  <Link
-                    key={`${session.id}-${session.date}`}
-                    href={buildPracticeHref({
-                      questionId: session.id,
-                      topic: session.topic,
-                      exam: session.exam !== "General" ? session.exam : undefined,
-                    })}
-                  >
-                    <span className="group block cursor-pointer">
-                      <span className="block text-sm font-medium text-[var(--text-primary)] transition group-hover:text-[var(--brand)]">
-                        {session.topic}
-                      </span>
-                      <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                        {session.correct ? "Correct" : "Needs review"} / {session.date}
-                      </span>
-                    </span>
-                  </Link>
-                ))
-              ) : (
-                <p className="text-sm text-[var(--text-muted)]">
-                  Recent activity will appear after your next practice session.
-                </p>
-              )}
+              <p className="text-[1.8rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                {dailyRemaining > 0 ? "Continue practice" : "Review weak topics"}
+              </p>
+              <p className="text-sm text-[var(--text-muted)]">
+                {dailyRemaining > 0
+                  ? "Pick up your next set and keep the streak active."
+                  : "Use a short review session to lock in accuracy."}
+              </p>
             </div>
           </div>
         </section>
