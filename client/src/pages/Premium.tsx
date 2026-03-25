@@ -1,20 +1,6 @@
-import {
-  Check,
-  CreditCard,
-  ExternalLink,
-  Mail,
-  ShieldCheck,
-  Sparkles,
-  Zap,
-} from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 import AppShell from "@/components/AppShell";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { trackEvent } from "@/lib/analytics";
 import {
   getPremiumCheckoutUrl,
@@ -27,9 +13,7 @@ type PremiumPlanKey = "free" | "monthly" | "annual";
 type Plan = {
   name: string;
   price: string;
-  period: string;
-  priceNote?: string;
-  description: string;
+  period?: string;
   cta: string;
   planKey: PremiumPlanKey;
   highlighted: boolean;
@@ -40,95 +24,64 @@ const plans: Plan[] = [
   {
     name: "Free",
     price: "₹0",
-    period: "forever",
-    priceNote: "Good for getting started",
-    description: "Light daily practice with your basic progress tools.",
-    cta: "Current free plan",
+    cta: "Current plan",
     planKey: "free",
     highlighted: false,
-    features: [
-      "10 daily MCQ questions",
-      "Bookmarks and streaks",
-      "Basic dashboard stats",
-      "Resources and contests",
-    ],
+    features: ["Daily practice access", "Limited analytics", "Basic resources"],
   },
   {
     name: "Pro",
     price: "₹199",
-    period: "per month",
-    priceNote: "Flexible monthly access",
-    description:
-      "For serious aspirants who want more volume, review depth, and support.",
-    cta: "Start monthly checkout",
+    period: "/ month",
+    cta: "Upgrade Now",
     planKey: "monthly",
     highlighted: true,
     features: [
       "Unlimited question access",
-      "Deeper analytics",
+      "Better analytics",
       "Priority support",
       "Study planning",
-      "Cleaner premium workspace",
     ],
   },
   {
     name: "Annual",
     price: "₹999",
-    period: "per year",
-    priceNote: "About ₹83 per month effective",
-    description:
-      "Best value for longer preparation cycles and sustained revision.",
-    cta: "Start annual checkout",
+    period: "/ year",
+    cta: "Upgrade Now",
     planKey: "annual",
     highlighted: false,
     features: [
       "Everything in Pro",
-      "Lower effective monthly cost",
-      "Best for 6-12 month prep",
-      "Priority feature access later",
+      "Lower effective cost",
+      "Best for long-term prep",
     ],
   },
 ];
 
-const billingNotes = [
-  "Paid plans use hosted checkout links with final taxes and pricing shown during payment.",
-  "If a checkout link is not configured yet, we send you directly to billing support instead of showing a dead CTA.",
-  "Your answers, streaks, bookmarks, and dashboard data stay on the same account after upgrading.",
+const trustPoints = [
+  "Secure checkout",
+  "Taxes shown at payment",
+  "Progress stays after upgrading",
 ];
 
 const faqs = [
   {
-    question: "Will my existing progress carry over if I upgrade?",
-    answer:
-      "Yes. Your answers, streaks, dashboard progress, bookmarks, and account data remain tied to your profile.",
-  },
-  {
     question: "Can I cancel anytime?",
     answer:
-      "Billing terms, renewal behavior, and refund handling are described in the Terms page. If you need help with a payment or access issue, billing support is available by email.",
+      "Billing terms, renewals, and refund handling are shown during checkout and in the Terms page.",
   },
   {
-    question: "Why pay if the core product is already useful?",
+    question: "Will my progress stay?",
     answer:
-      "Premium should add more volume, richer analytics, planning help, and a stronger serious-aspirant workflow rather than locking the entire product behind a paywall.",
-  },
-];
-
-const compactStats = [
-  {
-    label: "Checkout",
-    value: "Hosted links",
-    detail: "Clean path when billing is ready.",
+      "Yes. Answers, streaks, bookmarks, and dashboard progress remain tied to your account.",
   },
   {
-    label: "Fallback",
-    value: "Direct support",
-    detail: "No fake buttons or broken flows.",
+    question: "How does billing work?",
+    answer: `Paid plans use ${siteConfig.paymentProviderLabel}. Final pricing is shown during checkout.`,
   },
   {
-    label: "Best value",
-    value: "Annual plan",
-    detail: "Lower effective monthly cost.",
+    question: "Need billing help?",
+    answer: `Email ${siteConfig.billingEmail} and we will help with access or payment questions.`,
   },
 ];
 
@@ -151,247 +104,136 @@ export default function Premium() {
 
   return (
     <AppShell>
-      <div className="container-shell space-y-6">
-        <section className="rounded-[22px] border border-[var(--border)] bg-[linear-gradient(180deg,#181818_0%,#121212_100%)] p-5 md:p-7">
-          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-light)]">
-                <Sparkles size={12} />
-                PrepBros Pro
-              </div>
-              <h1 className="mt-4 max-w-2xl text-3xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-5xl">
-                Cleaner pricing for focused prep.
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] md:text-base">
-                Compare plans quickly, choose your upgrade, and move straight
-                into checkout or support without turning the screen into a wall
-                of heavy cards.
-              </p>
-            </div>
+      <div className="container-shell py-4 md:py-8">
+        <div className="mx-auto max-w-6xl rounded-[28px] border border-white/6 bg-[radial-gradient(circle_at_top,rgba(246,140,33,0.08),transparent_22%),linear-gradient(180deg,#121014_0%,#0d0b11_100%)] px-5 py-10 md:px-10 md:py-16">
+          <header className="mx-auto max-w-2xl text-center">
+            <h1 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-6xl">
+              Premium
+            </h1>
+            <p className="mt-4 text-base leading-7 text-[var(--text-secondary)] md:text-xl">
+              Choose a plan that fits your preparation cycle.
+            </p>
+          </header>
 
-            <div className="grid gap-3 sm:grid-cols-3 xl:w-[420px]">
-              {compactStats.map(item => (
-                <div
-                  key={item.label}
-                  className="rounded-[16px] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3"
+          <section className="mx-auto mt-12 grid max-w-6xl gap-5 lg:grid-cols-3">
+            {plans.map(plan => {
+              const paidPlanKey =
+                plan.planKey === "monthly" || plan.planKey === "annual"
+                  ? plan.planKey
+                  : null;
+
+              return (
+                <article
+                  key={plan.name}
+                  className={`relative rounded-[24px] border px-7 py-7 ${
+                    plan.highlighted
+                      ? "border-[rgba(246,140,33,0.28)] bg-[linear-gradient(180deg,rgba(29,23,24,0.98)_0%,rgba(18,15,19,0.98)_100%)] shadow-[0_18px_40px_-30px_rgba(246,140,33,0.35)]"
+                      : "border-white/8 bg-[linear-gradient(180deg,rgba(25,21,28,0.94)_0%,rgba(18,15,21,0.94)_100%)]"
+                  }`}
                 >
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                    {item.label}
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">
-                    {item.value}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
-                    {item.detail}
+                  {plan.highlighted ? (
+                    <div className="absolute inset-x-0 top-0 rounded-t-[24px] border-b border-[rgba(246,140,33,0.16)] bg-[linear-gradient(90deg,rgba(246,140,33,0.18),rgba(246,140,33,0.04))] px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--brand-light)]">
+                      Most Popular
+                    </div>
+                  ) : null}
+
+                  <div className={plan.highlighted ? "pt-10" : ""}>
+                    <h2 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                      {plan.name}
+                    </h2>
+
+                    <div className="mt-5 flex items-end gap-2">
+                      <span className="text-6xl font-semibold tracking-[-0.07em] text-[var(--text-primary)]">
+                        {plan.price}
+                      </span>
+                      {plan.period ? (
+                        <span className="pb-2 text-base text-[var(--text-muted)]">
+                          {plan.period}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-5 h-px bg-white/8" />
+
+                    <div className="mt-6 space-y-4">
+                      {plan.features.map(feature => (
+                        <div key={feature} className="flex items-start gap-3">
+                          <Check
+                            size={18}
+                            className={
+                              plan.highlighted
+                                ? "mt-0.5 text-[var(--brand)]"
+                                : "mt-0.5 text-[#7fd36e]"
+                            }
+                          />
+                          <span className="text-sm leading-7 text-[var(--text-secondary)] md:text-[1.02rem]">
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={plan.planKey === "free"}
+                      onClick={() => {
+                        if (paidPlanKey) handlePlanClick(paidPlanKey);
+                      }}
+                      className={
+                        plan.highlighted
+                          ? "btn-primary mt-10 w-full py-3.5 text-base"
+                          : "btn-secondary mt-10 w-full border-white/8 bg-transparent py-3.5 text-base text-[var(--text-primary)] hover:bg-white/4"
+                      }
+                    >
+                      {plan.cta}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+
+          <section className="mx-auto mt-8 max-w-4xl">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center text-sm leading-6 text-[var(--text-muted)] md:text-base">
+              {trustPoints.map((item, index) => (
+                <div key={item} className="inline-flex items-center gap-4">
+                  {index > 0 ? (
+                    <span className="hidden text-white/20 md:inline">•</span>
+                  ) : null}
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mx-auto mt-10 max-w-5xl border-y border-white/6 px-1 py-7">
+            <div className="grid gap-1 md:grid-cols-2 md:gap-x-10">
+              {faqs.map((item, index) => (
+                <div
+                  key={item.question}
+                  className={`py-4 ${
+                    index < faqs.length - 2
+                      ? "border-b border-white/6 md:border-b-0"
+                      : ""
+                  } ${index % 2 === 0 ? "md:border-r md:border-white/6 md:pr-10" : "md:pl-10"}`}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-lg font-medium tracking-[-0.03em] text-[var(--text-primary)]">
+                      {item.question}
+                    </p>
+                    <ArrowRight
+                      size={16}
+                      className="shrink-0 text-[var(--text-muted)]"
+                    />
+                  </div>
+                  <p className="mt-3 max-w-[34ch] text-sm leading-7 text-[var(--text-secondary)]">
+                    {item.answer}
                   </p>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.9fr)]">
-          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-4 md:p-5">
-            <div className="flex flex-col gap-2 border-b border-[var(--border)] pb-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                  Plans
-                </p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                  Small, clear comparison
-                </h2>
-              </div>
-              <p className="max-w-md text-sm leading-6 text-[var(--text-secondary)]">
-                Pick the access level that matches your prep cycle. Paid plans
-                keep the same account and move you straight into checkout or
-                support.
-              </p>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {plans.map(plan => {
-                const paidPlanKey =
-                  plan.planKey === "monthly" || plan.planKey === "annual"
-                    ? plan.planKey
-                    : null;
-                const checkoutReady =
-                  paidPlanKey !== null
-                    ? Boolean(getPremiumCheckoutUrl(paidPlanKey))
-                    : false;
-
-                return (
-                  <div
-                    key={plan.name}
-                    className={`rounded-[18px] border px-4 py-4 ${
-                      plan.highlighted
-                        ? "border-[var(--brand-muted)] bg-[linear-gradient(180deg,rgba(246,140,33,0.08)_0%,rgba(255,255,255,0.02)_100%)]"
-                        : "border-[var(--border)] bg-[rgba(255,255,255,0.02)]"
-                    }`}
-                  >
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {plan.highlighted ? (
-                            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-light)]">
-                              <Zap size={11} />
-                              Most popular
-                            </div>
-                          ) : null}
-
-                          {plan.planKey === "annual" ? (
-                            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
-                              <ShieldCheck size={11} />
-                              Best value
-                            </div>
-                          ) : null}
-
-                          {paidPlanKey !== null ? (
-                            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
-                              <CreditCard size={11} />
-                              {checkoutReady
-                                ? "Checkout ready"
-                                : "Support fallback"}
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className="mt-3">
-                          <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
-                            <p className="text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                              {plan.name}
-                            </p>
-                            {plan.priceNote ? (
-                              <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                                {plan.priceNote}
-                              </p>
-                            ) : null}
-                          </div>
-                          <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-                            {plan.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-3 lg:min-w-[250px] lg:items-end">
-                        <div className="flex items-end gap-2 lg:justify-end">
-                          <span className="text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
-                            {plan.price}
-                          </span>
-                          <span className="pb-1 text-sm text-[var(--text-muted)]">
-                            {plan.period}
-                          </span>
-                        </div>
-
-                        {plan.planKey === "free" ? (
-                          <button
-                            className="btn-secondary w-full py-2.5 sm:w-auto sm:px-5"
-                            disabled
-                          >
-                            {plan.cta}
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (paidPlanKey) handlePlanClick(paidPlanKey);
-                            }}
-                            className={
-                              plan.highlighted
-                                ? "btn-primary w-full py-2.5 sm:w-auto sm:px-5"
-                                : "btn-secondary w-full py-2.5 sm:w-auto sm:px-5"
-                            }
-                          >
-                            <span className="inline-flex items-center gap-2">
-                              {checkoutReady
-                                ? plan.cta
-                                : "Contact billing support"}
-                              <ExternalLink size={15} />
-                            </span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {plan.features.map(feature => (
-                        <div
-                          key={feature}
-                          className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-3 py-1.5 text-xs text-[var(--text-secondary)]"
-                        >
-                          <Check size={12} className="text-[var(--accent)]" />
-                          {feature}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="grid content-start gap-4">
-            <section className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                <ShieldCheck size={13} />
-                Billing notes
-              </div>
-              <div className="mt-4 space-y-3">
-                {billingNotes.map(item => (
-                  <div
-                    key={item}
-                    className="rounded-[14px] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] px-4 py-3"
-                  >
-                    <p className="text-sm leading-6 text-[var(--text-secondary)]">
-                      {item}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <a
-                href={`mailto:${siteConfig.billingEmail}`}
-                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--brand)] transition hover:opacity-80"
-              >
-                <Mail size={14} />
-                {siteConfig.billingEmail}
-              </a>
-            </section>
-          </div>
-        </section>
-
-        <section className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-4 md:p-5">
-          <div className="flex flex-col gap-2 border-b border-[var(--border)] pb-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                FAQs
-              </p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-                Common pricing questions
-              </h2>
-            </div>
-            <p className="max-w-md text-sm leading-6 text-[var(--text-secondary)]">
-              Everything important is here, without turning the lower half of
-              the page into another stack of large cards.
-            </p>
-          </div>
-
-          <Accordion type="single" collapsible className="mt-2">
-            {faqs.map((item, index) => (
-              <AccordionItem
-                key={item.question}
-                value={`faq-${index}`}
-                className="border-[var(--border)]"
-              >
-                <AccordionTrigger className="py-4 text-base font-semibold text-[var(--text-primary)] hover:no-underline">
-                  {item.question}
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 text-sm leading-7 text-[var(--text-secondary)]">
-                  {item.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </section>
+          </section>
+        </div>
       </div>
     </AppShell>
   );
