@@ -6,8 +6,16 @@ import AppShell from "@/components/AppShell";
 import OnboardingModal from "@/components/OnboardingModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
-import { createQuestionIdentityIndex, toQuestionId, type QuestionId } from "@/lib/questionIdentity";
-import { getAnswerAttempts } from "@/lib/userProgress";
+import {
+  createQuestionIdentityIndex,
+  toQuestionId,
+  type QuestionId,
+} from "@/lib/questionIdentity";
+import {
+  buildQuestionProgress,
+  countCurrentStreak,
+  getAnswerAttempts,
+} from "@/lib/userProgress";
 import { supabase } from "@/lib/supabase";
 
 type AnswerRow = {
@@ -18,8 +26,6 @@ type AnswerRow = {
 
 type ProfileRow = {
   full_name?: string;
-  streak?: number;
-  accuracy?: number;
   target_exam?: string;
 };
 
@@ -31,12 +37,16 @@ type TopicPerformance = {
   accuracy: number;
 };
 
-const signInPanelClassName = "rounded-[24px] bg-[rgba(255,255,255,0.03)] p-8 text-center md:p-12";
+const signInPanelClassName =
+  "rounded-[24px] bg-[rgba(255,255,255,0.03)] p-8 text-center md:p-12";
 
-const toDateKey = (value: Date | string) => new Date(value).toLocaleDateString("en-CA");
+const toDateKey = (value: Date | string) =>
+  new Date(value).toLocaleDateString("en-CA");
 
-const clampPercent = (value: number) => Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
-const formatCount = (value: number) => new Intl.NumberFormat("en-IN").format(value);
+const clampPercent = (value: number) =>
+  Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+const formatCount = (value: number) =>
+  new Intl.NumberFormat("en-IN").format(value);
 
 const formatActivityStamp = (value: string) =>
   new Date(value).toLocaleString("en-IN", {
@@ -72,7 +82,9 @@ export default function Dashboard() {
   const [answers, setAnswers] = useState<AnswerRow[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [dailyGoalOverride, setDailyGoalOverride] = useState<number | null>(null);
+  const [dailyGoalOverride, setDailyGoalOverride] = useState<number | null>(
+    null
+  );
   const { questions, syncing: questionsSyncing } = useQuestionBank();
 
   useEffect(() => {
@@ -91,14 +103,17 @@ export default function Dashboard() {
 
       setProfile(profileData || null);
       setAnswers(
-        (answersData || []).map((item) => ({
+        (answersData || []).map(item => ({
           ...item,
           answered_at: item.answered_at ?? new Date(0).toISOString(),
-        })),
+        }))
       );
 
       const metadata = user.user_metadata || {};
-      if (!metadata.onboarding_completed_at && (answersData?.length ?? 0) === 0) {
+      if (
+        !metadata.onboarding_completed_at &&
+        (answersData?.length ?? 0) === 0
+      ) {
         setShowOnboarding(true);
       }
 
@@ -108,54 +123,78 @@ export default function Dashboard() {
     load();
   }, [loading, user]);
 
-  const questionIdentity = useMemo(() => createQuestionIdentityIndex(questions), [questions]);
+  const questionIdentity = useMemo(
+    () => createQuestionIdentityIndex(questions),
+    [questions]
+  );
   const questionLookup = questionIdentity.questionLookup;
 
   const resolvedAnswers = useMemo(
     () =>
       answers
-        .map((item) => {
-          const questionId = questionIdentity.resolveQuestionId(item.question_id);
+        .map(item => {
+          const questionId = questionIdentity.resolveQuestionId(
+            item.question_id
+          );
           if (!questionId) return null;
           return { ...item, question_id: questionId };
         })
         .filter((item): item is AnswerRow => Boolean(item)),
-    [answers, questionIdentity],
+    [answers, questionIdentity]
+  );
+
+  const questionProgress = useMemo(
+    () => Object.values(buildQuestionProgress(resolvedAnswers)),
+    [resolvedAnswers]
   );
 
   const solvedIds = useMemo(
-    () => new Set(resolvedAnswers.map((item) => item.question_id)),
-    [resolvedAnswers],
+    () =>
+      new Set(
+        questionProgress
+          .filter(item => item.status === "correct")
+          .map(item => item.question_id)
+      ),
+    [questionProgress]
+  );
+
+  const attemptedIds = useMemo(
+    () => new Set(questionProgress.map(item => item.question_id)),
+    [questionProgress]
   );
 
   const sortedAnswers = useMemo(
     () =>
       [...resolvedAnswers].sort(
-        (a, b) => new Date(b.answered_at).getTime() - new Date(a.answered_at).getTime(),
+        (a, b) =>
+          new Date(b.answered_at).getTime() - new Date(a.answered_at).getTime()
       ),
-    [resolvedAnswers],
+    [resolvedAnswers]
   );
 
-  const totalAttempts = resolvedAnswers.length;
-  const correctAttempts = resolvedAnswers.filter((item) => item.is_correct).length;
+  const totalAttempts = attemptedIds.size;
+  const totalSolved = solvedIds.size;
+  const totalRetry = Math.max(0, totalAttempts - totalSolved);
+  const totalUnattempted = Math.max(0, questions.length - totalAttempts);
   const accuracy =
-    totalAttempts > 0
-      ? Math.round((correctAttempts / totalAttempts) * 100)
-      : profile?.accuracy ?? 0;
-
-  const streak = profile?.streak ?? 0;
-  const targetExam = profile?.target_exam || user?.user_metadata?.target_exam || "UPSC CSE 2026";
+    totalAttempts > 0 ? Math.round((totalSolved / totalAttempts) * 100) : 0;
+  const streak = countCurrentStreak(sortedAnswers);
+  const targetExam =
+    profile?.target_exam || user?.user_metadata?.target_exam || "UPSC CSE 2026";
 
   const dailyGoal =
     dailyGoalOverride ??
-    (Number.parseInt(String(user?.user_metadata?.daily_goal || "12"), 10) || 12);
+    (Number.parseInt(String(user?.user_metadata?.daily_goal || "12"), 10) ||
+      12);
   const todayKey = toDateKey(new Date());
-  const todayAnswers = sortedAnswers.filter((item) => toDateKey(item.answered_at) === todayKey);
+  const todayAnswers = sortedAnswers.filter(
+    item => toDateKey(item.answered_at) === todayKey
+  );
   const todayAttempts = todayAnswers.length;
   const dailyRemaining = Math.max(0, dailyGoal - todayAttempts);
 
   const topicPerformance = useMemo(() => {
-    const grouped = resolvedAnswers.reduce<
+    const grouped = questionProgress.reduce<
       Record<
         string,
         {
@@ -177,7 +216,7 @@ export default function Dashboard() {
       };
 
       current.total += 1;
-      if (item.is_correct) {
+      if (item.status === "correct") {
         current.correct += 1;
       } else {
         current.incorrect += 1;
@@ -188,7 +227,7 @@ export default function Dashboard() {
     }, {});
 
     return Object.values(grouped)
-      .map((item) => ({
+      .map(item => ({
         topic: item.topic,
         correct: item.correct,
         total: item.total,
@@ -202,18 +241,21 @@ export default function Dashboard() {
         if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
         return b.total - a.total;
       });
-  }, [resolvedAnswers, questionLookup]);
+  }, [questionLookup, questionProgress]);
 
-  const weakTopics: TopicPerformance[] = topicPerformance.slice(0, 3);
+  const weakTopics: TopicPerformance[] = topicPerformance
+    .filter(topic => topic.incorrect > 0)
+    .slice(0, 3);
   const focusAreas = useMemo(() => {
-    const reviewTopics = [...topicPerformance]
+    const reviewTopics = topicPerformance
+      .filter(topic => topic.incorrect > 0)
       .sort((a, b) => {
         if (a.incorrect !== b.incorrect) return b.incorrect - a.incorrect;
         if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
         return b.total - a.total;
       })
       .slice(0, 2)
-      .map((topic) => ({
+      .map(topic => ({
         title: `Practice ${topic.topic}`,
         detail: `${topic.incorrect} missed question${topic.incorrect === 1 ? "" : "s"} ready to revisit`,
         href: buildPracticeHref({ topic: topic.topic, incorrect: true }),
@@ -237,11 +279,15 @@ export default function Dashboard() {
     const order = ["Easy", "Medium", "Hard"] as const;
 
     return {
-      totalSolved: solvedIds.size,
+      totalSolved,
       totalQuestions: questions.length,
-      byDifficulty: order.map((difficulty) => {
-        const pool = questions.filter((question) => question.difficulty === difficulty);
-        const solved = pool.filter((question) => solvedIds.has(toQuestionId(question.id))).length;
+      byDifficulty: order.map(difficulty => {
+        const pool = questions.filter(
+          question => question.difficulty === difficulty
+        );
+        const solved = pool.filter(question =>
+          solvedIds.has(toQuestionId(question.id))
+        ).length;
 
         return {
           difficulty,
@@ -250,19 +296,24 @@ export default function Dashboard() {
         };
       }),
     };
-  }, [questions, solvedIds]);
+  }, [questions, solvedIds, totalSolved]);
 
   const solvedPercent =
     solvedCoverage.totalQuestions > 0
-      ? clampPercent(Math.round((solvedCoverage.totalSolved / solvedCoverage.totalQuestions) * 100))
+      ? clampPercent(
+          Math.round(
+            (solvedCoverage.totalSolved / solvedCoverage.totalQuestions) * 100
+          )
+        )
       : 0;
   const ringRadius = 62;
   const ringCircumference = 2 * Math.PI * ringRadius;
-  const ringOffset = ringCircumference - (ringCircumference * solvedPercent) / 100;
+  const ringOffset =
+    ringCircumference - (ringCircumference * solvedPercent) / 100;
 
   const recentSessions = useMemo(
     () =>
-      sortedAnswers.slice(0, 2).map((item) => {
+      sortedAnswers.slice(0, 2).map(item => {
         const question = questionLookup.get(item.question_id);
         return {
           id: item.question_id,
@@ -272,7 +323,7 @@ export default function Dashboard() {
           date: formatActivityStamp(item.answered_at),
         };
       }),
-    [questionLookup, sortedAnswers],
+    [questionLookup, sortedAnswers]
   );
 
   const subtitle =
@@ -305,7 +356,8 @@ export default function Dashboard() {
               Sign in to unlock your prep workspace.
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm text-[var(--text-secondary)] md:text-base">
-              Your dashboard ties together practice history, streak, and focus areas once your progress is attached to an account.
+              Your dashboard ties together practice history, streak, and focus
+              areas once your progress is attached to an account.
             </p>
             <Link href="/">
               <span className="btn-primary mt-8 inline-flex cursor-pointer px-6 py-3">
@@ -326,7 +378,10 @@ export default function Dashboard() {
         userId={user.id}
         defaultExam={targetExam}
         onClose={() => setShowOnboarding(false)}
-        onComplete={({ targetExam: nextTargetExam, dailyGoal: nextDailyGoal }) => {
+        onComplete={({
+          targetExam: nextTargetExam,
+          dailyGoal: nextDailyGoal,
+        }) => {
           setProfile((current: ProfileRow | null) => ({
             ...(current || {}),
             target_exam: nextTargetExam,
@@ -360,21 +415,27 @@ export default function Dashboard() {
         <section className="grid gap-5 border-y border-white/6 py-5 md:grid-cols-3 md:gap-8">
           {[
             {
-              label: "Questions Solved",
-              value: `${formatCount(solvedCoverage.totalSolved)} / ${formatCount(solvedCoverage.totalQuestions)}`,
-              meta: `${formatCount(totalAttempts)} attempts logged`,
+              label: "Total Solved",
+              value: formatCount(totalSolved),
+              meta:
+                totalAttempts > 0
+                  ? `${accuracy}% accuracy across ${formatCount(totalAttempts)} attempted`
+                  : "Solved count will appear after your first attempt",
             },
             {
-              label: "Accuracy",
-              value: `${accuracy}%`,
-              meta: totalAttempts > 0 ? "Overall answer accuracy" : "Accuracy will appear after practice",
+              label: "Total Attempted",
+              value: formatCount(totalAttempts),
+              meta:
+                totalAttempts > 0
+                  ? `${formatCount(totalRetry)} question${totalRetry === 1 ? "" : "s"} in retry`
+                  : "Attempted questions will show here",
             },
             {
-              label: "Streak",
-              value: `${streak} day${streak === 1 ? "" : "s"}`,
-              meta: dailyRemaining > 0 ? `${dailyRemaining} left today` : "Daily goal complete",
+              label: "Total Unattempted",
+              value: formatCount(totalUnattempted),
+              meta: `${formatCount(questions.length)} questions in your current bank`,
             },
-          ].map((item) => (
+          ].map(item => (
             <div key={item.label}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
                 {item.label}
@@ -382,7 +443,9 @@ export default function Dashboard() {
               <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[1.65rem]">
                 {item.value}
               </p>
-              <p className="mt-1.5 text-xs text-[var(--text-muted)]">{item.meta}</p>
+              <p className="mt-1.5 text-xs text-[var(--text-muted)]">
+                {item.meta}
+              </p>
             </div>
           ))}
         </section>
@@ -441,14 +504,18 @@ export default function Dashboard() {
                   {solvedPercent}%
                 </p>
                 <p className="text-sm text-[var(--text-muted)]">
-                  {formatCount(solvedCoverage.totalSolved)} of {formatCount(solvedCoverage.totalQuestions)} questions
+                  {formatCount(totalAttempts)} attempted ·{" "}
+                  {formatCount(totalUnattempted)} unattempted
                 </p>
               </div>
             </div>
 
             <div className="space-y-3 border-t border-white/6 pt-5">
-              {solvedCoverage.byDifficulty.map((item) => (
-                <div key={item.difficulty} className="flex items-center justify-between gap-4">
+              {solvedCoverage.byDifficulty.map(item => (
+                <div
+                  key={item.difficulty}
+                  className="flex items-center justify-between gap-4"
+                >
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                     {item.difficulty}
                   </p>
@@ -467,14 +534,21 @@ export default function Dashboard() {
               </p>
               <div className="mt-4 space-y-4">
                 {weakTopics.length > 0 ? (
-                  weakTopics.map((topic) => (
-                    <Link key={topic.topic} href={buildPracticeHref({ topic: topic.topic, incorrect: true })}>
+                  weakTopics.map(topic => (
+                    <Link
+                      key={topic.topic}
+                      href={buildPracticeHref({
+                        topic: topic.topic,
+                        incorrect: true,
+                      })}
+                    >
                       <span className="group block cursor-pointer">
                         <span className="block text-sm font-medium text-[var(--text-primary)] transition group-hover:text-[var(--brand)]">
                           {topic.topic}
                         </span>
                         <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                          {topic.accuracy}% accuracy across {topic.total} attempt{topic.total === 1 ? "" : "s"}
+                          {topic.accuracy}% accuracy across {topic.total}{" "}
+                          attempt{topic.total === 1 ? "" : "s"}
                         </span>
                       </span>
                     </Link>
@@ -493,13 +567,15 @@ export default function Dashboard() {
               </p>
               <div className="mt-4 space-y-4">
                 {focusAreas.length > 0 ? (
-                  focusAreas.map((item) => (
+                  focusAreas.map(item => (
                     <Link key={item.title} href={item.href}>
                       <span className="group block cursor-pointer">
                         <span className="block text-sm font-medium text-[var(--text-primary)] transition group-hover:text-[var(--brand)]">
                           {item.title}
                         </span>
-                        <span className="mt-1 block text-xs text-[var(--text-muted)]">{item.detail}</span>
+                        <span className="mt-1 block text-xs text-[var(--text-muted)]">
+                          {item.detail}
+                        </span>
                       </span>
                     </Link>
                   ))
@@ -517,13 +593,14 @@ export default function Dashboard() {
               </p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {recentSessions.length > 0 ? (
-                  recentSessions.map((session) => (
+                  recentSessions.map(session => (
                     <Link
                       key={`${session.id}-${session.date}`}
                       href={buildPracticeHref({
                         questionId: session.id,
                         topic: session.topic,
-                        exam: session.exam !== "General" ? session.exam : undefined,
+                        exam:
+                          session.exam !== "General" ? session.exam : undefined,
                       })}
                     >
                       <span className="group block cursor-pointer border-b border-white/6 pb-4">
@@ -531,14 +608,16 @@ export default function Dashboard() {
                           {session.topic}
                         </span>
                         <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                          {session.correct ? "Correct" : "Needs review"} / {session.date}
+                          {session.correct ? "Correct" : "Retry"} /{" "}
+                          {session.date}
                         </span>
                       </span>
                     </Link>
                   ))
                 ) : (
                   <p className="text-sm text-[var(--text-muted)]">
-                    Recent activity will appear after your next practice session.
+                    Recent activity will appear after your next practice
+                    session.
                   </p>
                 )}
               </div>
@@ -549,7 +628,7 @@ export default function Dashboard() {
         <section className="grid gap-8 md:grid-cols-3 md:gap-10">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-              Daily Goal
+              Daily Progress
             </p>
             <div className="mt-4 space-y-4">
               <p className="text-[1.8rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
@@ -565,30 +644,32 @@ export default function Dashboard() {
 
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-              Target Exam
+              Accuracy
             </p>
             <div className="mt-4 space-y-4">
               <p className="text-[1.8rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
-                {targetExam}
+                {accuracy}%
               </p>
               <p className="text-sm text-[var(--text-muted)]">
-                Keep this dashboard focused on your current exam path.
+                {totalAttempts > 0
+                  ? `${formatCount(totalSolved)} solved out of ${formatCount(totalAttempts)} attempted`
+                  : "Accuracy will start updating after your first attempt"}
               </p>
             </div>
           </div>
 
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-              Next Step
+              Current Streak
             </p>
             <div className="mt-4 space-y-4">
               <p className="text-[1.8rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
-                {dailyRemaining > 0 ? "Continue practice" : "Review weak topics"}
+                {streak} day{streak === 1 ? "" : "s"}
               </p>
               <p className="text-sm text-[var(--text-muted)]">
                 {dailyRemaining > 0
-                  ? "Pick up your next set and keep the streak active."
-                  : "Use a short review session to lock in accuracy."}
+                  ? `${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} left today to stay on pace`
+                  : "Daily goal complete for today"}
               </p>
             </div>
           </div>

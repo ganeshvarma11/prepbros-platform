@@ -257,7 +257,10 @@ export default function Practice() {
   }, [rawAttempts, questionIdentity]);
 
   const solvedIds = useMemo(
-    () => Object.keys(answerStatuses),
+    () =>
+      Object.entries(answerStatuses)
+        .filter(([, status]) => status === "correct")
+        .map(([questionId]) => questionId),
     [answerStatuses]
   );
   const solvedSet = useMemo(() => new Set(solvedIds), [solvedIds]);
@@ -475,7 +478,7 @@ export default function Practice() {
         is_correct: isCorrect,
         answered_at: new Date().toISOString(),
       },
-      ...current.filter(attempt => attempt.question_id !== questionId),
+      ...current,
     ]);
 
     trackEvent("practice_answered", {
