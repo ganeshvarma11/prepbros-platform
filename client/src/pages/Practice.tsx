@@ -1149,13 +1149,13 @@ export default function Practice() {
               ) : null}
             </div>
 
-            <div className="mt-5 rounded-[24px] border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.025)] px-5 py-5 md:px-7 md:py-6">
+            <div className="mt-5 rounded-[24px] border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.025)] px-5 py-5 md:px-6 md:py-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                 Question
               </p>
-              <h1 className="mt-3 max-w-[44ch] whitespace-pre-line text-[1.16rem] font-medium leading-[1.72] tracking-[-0.025em] text-[var(--text-primary)] md:text-[1.34rem] md:leading-[1.76] lg:text-[1.5rem]">
+              <div className="mt-3 max-w-[52ch] whitespace-pre-line text-[0.98rem] font-medium leading-[1.62] tracking-[-0.012em] text-[var(--text-primary)] md:text-[1.05rem] lg:text-[1.12rem]">
                 {formattedActiveQuestion}
-              </h1>
+              </div>
             </div>
 
             <div className="mt-6 grid gap-3">
