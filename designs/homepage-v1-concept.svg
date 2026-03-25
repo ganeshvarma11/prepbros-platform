@@ -1,0 +1,412 @@
+<svg width="1600" height="5200" viewBox="0 0 1600 5200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="5200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1220"/>
+      <stop offset="0.45" stop-color="#111A2C"/>
+      <stop offset="1" stop-color="#0A0F19"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="238" y1="118" x2="1362" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#121C31"/>
+      <stop offset="1" stop-color="#0E1525"/>
+    </linearGradient>
+    <linearGradient id="heroCard" x1="942" y1="278" x2="1320" y2="1280" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#182540"/>
+      <stop offset="1" stop-color="#10192A"/>
+    </linearGradient>
+    <linearGradient id="warm" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFB347"/>
+      <stop offset="1" stop-color="#FF7A18"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#34D399"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+    <filter id="shadow" x="-100" y="-100" width="1800" height="5400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="32" flood-color="#000000" flood-opacity="0.32"/>
+    </filter>
+    <filter id="soft" x="-100" y="-100" width="1800" height="5400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="40"/>
+    </filter>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" stroke="#20314F" stroke-opacity="0.55"/>
+    </pattern>
+    <style>
+      .display { font: 700 66px 'Inter', 'Segoe UI', sans-serif; letter-spacing: -2.5px; fill: #F8FAFC; }
+      .h1 { font: 700 44px 'Inter', 'Segoe UI', sans-serif; letter-spacing: -1.5px; fill: #F8FAFC; }
+      .h2 { font: 700 30px 'Inter', 'Segoe UI', sans-serif; letter-spacing: -0.8px; fill: #F8FAFC; }
+      .h3 { font: 700 22px 'Inter', 'Segoe UI', sans-serif; letter-spacing: -0.4px; fill: #F8FAFC; }
+      .body { font: 500 22px 'Inter', 'Segoe UI', sans-serif; fill: #94A3B8; }
+      .bodySmall { font: 500 18px 'Inter', 'Segoe UI', sans-serif; fill: #94A3B8; }
+      .label { font: 700 14px 'Inter', 'Segoe UI', sans-serif; letter-spacing: 2.4px; text-transform: uppercase; fill: #FFB347; }
+      .chip { font: 700 15px 'Inter', 'Segoe UI', sans-serif; fill: #E2E8F0; }
+      .nav { font: 600 17px 'Inter', 'Segoe UI', sans-serif; fill: #CBD5E1; }
+      .metric { font: 700 38px 'Inter', 'Segoe UI', sans-serif; letter-spacing: -1px; fill: #F8FAFC; }
+      .metricLabel { font: 600 15px 'Inter', 'Segoe UI', sans-serif; fill: #7D8BA6; text-transform: uppercase; letter-spacing: 1.8px; }
+      .button { font: 700 18px 'Inter', 'Segoe UI', sans-serif; fill: #07111F; }
+      .buttonSecondary { font: 700 18px 'Inter', 'Segoe UI', sans-serif; fill: #E2E8F0; }
+      .caption { font: 600 16px 'Inter', 'Segoe UI', sans-serif; fill: #A7B5CC; }
+      .small { font: 600 14px 'Inter', 'Segoe UI', sans-serif; fill: #7F90AA; }
+      .tiny { font: 700 12px 'Inter', 'Segoe UI', sans-serif; letter-spacing: 1.5px; text-transform: uppercase; fill: #7F90AA; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="5200" fill="url(#bg)"/>
+  <rect width="1600" height="5200" fill="url(#grid)" opacity="0.22"/>
+
+  <g opacity="0.9" filter="url(#soft)">
+    <circle cx="1180" cy="480" r="220" fill="#1D4ED8"/>
+    <circle cx="1260" cy="540" r="170" fill="#F97316"/>
+    <circle cx="280" cy="980" r="180" fill="#0EA5E9"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="56" y="42" width="1488" height="5116" rx="34" fill="#09111E" stroke="#17253B"/>
+  </g>
+
+  <rect x="96" y="84" width="1408" height="74" rx="20" fill="#0F182A" stroke="#1C2B44"/>
+  <rect x="120" y="102" width="46" height="38" rx="12" fill="url(#warm)"/>
+  <text x="134" y="127" class="h3" font-size="20" fill="#07111F">P</text>
+  <text x="182" y="127" class="h3" font-size="24">PrepBros</text>
+
+  <text x="650" y="128" class="nav">Practice</text>
+  <text x="760" y="128" class="nav">Dashboard</text>
+  <text x="890" y="128" class="nav">Review</text>
+  <text x="985" y="128" class="nav">Support</text>
+
+  <rect x="1252" y="98" width="108" height="44" rx="14" fill="#111F34" stroke="#273858"/>
+  <text x="1284" y="126" class="buttonSecondary" font-size="16">Log in</text>
+  <rect x="1376" y="98" width="104" height="44" rx="14" fill="url(#warm)"/>
+  <text x="1400" y="126" class="button">Start free</text>
+
+  <rect x="96" y="190" width="1408" height="960" rx="32" fill="url(#panel)" stroke="#1A2941"/>
+
+  <rect x="132" y="226" width="210" height="34" rx="17" fill="#1C2941" stroke="#314767"/>
+  <circle cx="158" cy="243" r="6" fill="#34D399"/>
+  <text x="176" y="248" class="chip" font-size="14">V1 focus: practice + progress</text>
+
+  <text x="132" y="366" class="display">
+    <tspan x="132" dy="0">Daily exam practice</tspan>
+    <tspan x="132" dy="80">that actually helps</tspan>
+    <tspan x="132" dy="80">you improve.</tspan>
+  </text>
+
+  <text x="132" y="638" class="body">
+    <tspan x="132" dy="0">Solve PYQs and topic-wise questions, save your progress,</tspan>
+    <tspan x="132" dy="34">track daily goals, and know exactly what to revise next.</tspan>
+    <tspan x="132" dy="34">Built for aspirants who want clarity, not clutter.</tspan>
+  </text>
+
+  <rect x="132" y="736" width="210" height="62" rx="18" fill="url(#warm)"/>
+  <text x="178" y="776" class="button">Start practicing</text>
+  <rect x="360" y="736" width="174" height="62" rx="18" fill="#132039" stroke="#2A3F62"/>
+  <text x="410" y="776" class="buttonSecondary">See dashboard</text>
+
+  <g>
+    <rect x="132" y="850" width="154" height="42" rx="16" fill="#122139" stroke="#273A5B"/>
+    <text x="158" y="876" class="chip" font-size="14">UPSC</text>
+    <rect x="304" y="850" width="154" height="42" rx="16" fill="#122139" stroke="#273A5B"/>
+    <text x="334" y="876" class="chip" font-size="14">SSC</text>
+    <rect x="476" y="850" width="170" height="42" rx="16" fill="#122139" stroke="#273A5B"/>
+    <text x="508" y="876" class="chip" font-size="14">State exams</text>
+  </g>
+
+  <g>
+    <rect x="132" y="954" width="182" height="136" rx="20" fill="#101B2E" stroke="#223653"/>
+    <text x="156" y="992" class="metric">4,200+</text>
+    <text x="156" y="1024" class="metricLabel">Questions</text>
+    <text x="156" y="1062" class="caption">Practice volume that feels real from day one.</text>
+
+    <rect x="332" y="954" width="182" height="136" rx="20" fill="#101B2E" stroke="#223653"/>
+    <text x="356" y="992" class="metric">92%</text>
+    <text x="356" y="1024" class="metricLabel">Clarity score</text>
+    <text x="356" y="1062" class="caption">Users understand what to do the moment they land.</text>
+
+    <rect x="532" y="954" width="182" height="136" rx="20" fill="#101B2E" stroke="#223653"/>
+    <text x="556" y="992" class="metric">10 min</text>
+    <text x="556" y="1024" class="metricLabel">Daily loop</text>
+    <text x="556" y="1062" class="caption">Small sessions that fit real prep routines.</text>
+  </g>
+
+  <g>
+    <rect x="874" y="246" width="566" height="838" rx="30" fill="url(#heroCard)" stroke="#263A5E"/>
+    <rect x="910" y="282" width="494" height="74" rx="20" fill="#0E1829" stroke="#243654"/>
+    <text x="946" y="327" class="h3" font-size="24">Today’s Prep Snapshot</text>
+    <rect x="1238" y="302" width="134" height="34" rx="17" fill="#17263F" stroke="#314767"/>
+    <text x="1267" y="324" class="chip" font-size="13">UPSC CSE 2026</text>
+
+    <rect x="910" y="388" width="222" height="148" rx="24" fill="#0F1A2C" stroke="#243654"/>
+    <text x="940" y="428" class="tiny">Daily goal</text>
+    <text x="940" y="486" class="metric">8 / 12</text>
+    <rect x="940" y="504" width="162" height="14" rx="7" fill="#17253D"/>
+    <rect x="940" y="504" width="108" height="14" rx="7" fill="url(#warm)"/>
+    <text x="940" y="556" class="caption">4 more questions to hit today’s target.</text>
+
+    <rect x="1150" y="388" width="254" height="148" rx="24" fill="#0F1A2C" stroke="#243654"/>
+    <text x="1180" y="428" class="tiny">Performance</text>
+    <text x="1180" y="486" class="metric">74%</text>
+    <text x="1180" y="518" class="caption">Accuracy this week</text>
+    <text x="1300" y="486" class="metric" font-size="28">19</text>
+    <text x="1300" y="518" class="caption">Bookmarks</text>
+
+    <rect x="910" y="568" width="494" height="234" rx="24" fill="#0F1A2C" stroke="#243654"/>
+    <text x="940" y="608" class="tiny">Weak topics</text>
+    <text x="940" y="650" class="h3" font-size="28">What to revise next</text>
+
+    <text x="940" y="708" class="chip" font-size="16">Polity</text>
+    <rect x="1040" y="695" width="280" height="12" rx="6" fill="#1B2B44"/>
+    <rect x="1040" y="695" width="124" height="12" rx="6" fill="url(#blue)"/>
+    <text x="1340" y="705" class="small">44% accuracy</text>
+
+    <text x="940" y="754" class="chip" font-size="16">Economy</text>
+    <rect x="1040" y="741" width="280" height="12" rx="6" fill="#1B2B44"/>
+    <rect x="1040" y="741" width="148" height="12" rx="6" fill="url(#blue)"/>
+    <text x="1340" y="751" class="small">53% accuracy</text>
+
+    <text x="940" y="800" class="chip" font-size="16">History</text>
+    <rect x="1040" y="787" width="280" height="12" rx="6" fill="#1B2B44"/>
+    <rect x="1040" y="787" width="166" height="12" rx="6" fill="url(#blue)"/>
+    <text x="1340" y="797" class="small">59% accuracy</text>
+
+    <rect x="910" y="828" width="494" height="220" rx="24" fill="#0F1A2C" stroke="#243654"/>
+    <text x="940" y="868" class="tiny">Live question</text>
+    <text x="940" y="912" class="h3" font-size="27">Which Article deals with the Right to Education?</text>
+    <rect x="940" y="946" width="206" height="40" rx="14" fill="#172740" stroke="#314766"/>
+    <text x="970" y="971" class="chip" font-size="14">A. Article 19</text>
+    <rect x="1164" y="946" width="206" height="40" rx="14" fill="#103323" stroke="#1F6A4A"/>
+    <text x="1194" y="971" class="chip" font-size="14">B. Article 21A</text>
+    <rect x="940" y="998" width="206" height="40" rx="14" fill="#172740" stroke="#314766"/>
+    <text x="970" y="1023" class="chip" font-size="14">C. Article 24</text>
+    <rect x="1164" y="998" width="206" height="40" rx="14" fill="#172740" stroke="#314766"/>
+    <text x="1194" y="1023" class="chip" font-size="14">D. Article 32</text>
+  </g>
+
+  <text x="132" y="1288" class="label">Why this homepage wins</text>
+  <text x="132" y="1362" class="h1">
+    <tspan x="132" dy="0">The homepage should sell the loop,</tspan>
+    <tspan x="132" dy="54">not the feature list.</tspan>
+  </text>
+  <text x="132" y="1472" class="body">
+    <tspan x="132" dy="0">Aspirants need to feel three things fast: this is serious, this is simple,</tspan>
+    <tspan x="132" dy="34">and this will help me study consistently.</tspan>
+  </text>
+
+  <g>
+    <rect x="132" y="1552" width="430" height="250" rx="26" fill="#0F182A" stroke="#223653"/>
+    <circle cx="188" cy="1610" r="22" fill="url(#warm)"/>
+    <text x="180" y="1618" class="h3" font-size="18" fill="#07111F">1</text>
+    <text x="228" y="1620" class="h3">Single clear promise</text>
+    <text x="164" y="1680" class="bodySmall">
+      <tspan x="164" dy="0">The hero is about practice, progress,</tspan>
+      <tspan x="164" dy="30">and revision. No noisy “all features”</tspan>
+      <tspan x="164" dy="30">positioning.</tspan>
+    </text>
+  </g>
+
+  <g>
+    <rect x="586" y="1552" width="430" height="250" rx="26" fill="#0F182A" stroke="#223653"/>
+    <circle cx="642" cy="1610" r="22" fill="url(#blue)"/>
+    <text x="634" y="1618" class="h3" font-size="18">2</text>
+    <text x="682" y="1620" class="h3">Proof, not hype</text>
+    <text x="618" y="1680" class="bodySmall">
+      <tspan x="618" dy="0">The right-side product preview shows</tspan>
+      <tspan x="618" dy="30">dashboard value immediately instead of</tspan>
+      <tspan x="618" dy="30">abstract marketing copy.</tspan>
+    </text>
+  </g>
+
+  <g>
+    <rect x="1040" y="1552" width="430" height="250" rx="26" fill="#0F182A" stroke="#223653"/>
+    <circle cx="1096" cy="1610" r="22" fill="url(#green)"/>
+    <text x="1088" y="1618" class="h3" font-size="18">3</text>
+    <text x="1136" y="1620" class="h3">Fast user entry</text>
+    <text x="1072" y="1680" class="bodySmall">
+      <tspan x="1072" dy="0">Exam chips, one main CTA, and visible</tspan>
+      <tspan x="1072" dy="30">daily-goal value reduce hesitation in the</tspan>
+      <tspan x="1072" dy="30">first session.</tspan>
+    </text>
+  </g>
+
+  <rect x="96" y="1884" width="1408" height="760" rx="32" fill="#0E1727" stroke="#1B2A41"/>
+  <text x="132" y="1952" class="label">Sections</text>
+  <text x="132" y="2020" class="h1">Suggested homepage structure for V1</text>
+
+  <g>
+    <rect x="132" y="2084" width="300" height="228" rx="26" fill="#101B2E" stroke="#223653"/>
+    <text x="160" y="2130" class="tiny">Section 01</text>
+    <text x="160" y="2172" class="h3">Hero</text>
+    <text x="160" y="2214" class="bodySmall">
+      <tspan x="160" dy="0">Promise, CTA, exam chips,</tspan>
+      <tspan x="160" dy="30">and product preview.</tspan>
+    </text>
+  </g>
+
+  <g>
+    <rect x="454" y="2084" width="300" height="228" rx="26" fill="#101B2E" stroke="#223653"/>
+    <text x="482" y="2130" class="tiny">Section 02</text>
+    <text x="482" y="2172" class="h3">How It Works</text>
+    <text x="482" y="2214" class="bodySmall">
+      <tspan x="482" dy="0">Practice - track progress -</tspan>
+      <tspan x="482" dy="30">revise weak topics.</tspan>
+    </text>
+  </g>
+
+  <g>
+    <rect x="776" y="2084" width="300" height="228" rx="26" fill="#101B2E" stroke="#223653"/>
+    <text x="804" y="2130" class="tiny">Section 03</text>
+    <text x="804" y="2172" class="h3">Benefits</text>
+    <text x="804" y="2214" class="bodySmall">
+      <tspan x="804" dy="0">Daily consistency, focused</tspan>
+      <tspan x="804" dy="30">revision, cleaner prep flow.</tspan>
+    </text>
+  </g>
+
+  <g>
+    <rect x="1098" y="2084" width="300" height="228" rx="26" fill="#101B2E" stroke="#223653"/>
+    <text x="1126" y="2130" class="tiny">Section 04</text>
+    <text x="1126" y="2172" class="h3">Trust</text>
+    <text x="1126" y="2214" class="bodySmall">
+      <tspan x="1126" dy="0">Support, privacy, terms,</tspan>
+      <tspan x="1126" dy="30">and real contact details.</tspan>
+    </text>
+  </g>
+
+  <rect x="132" y="2374" width="1266" height="214" rx="28" fill="#121F36" stroke="#2A3E5F"/>
+  <text x="168" y="2434" class="tiny">Key message</text>
+  <text x="168" y="2490" class="h2">PrepBros should feel like a focused command center for daily prep.</text>
+  <text x="168" y="2540" class="bodySmall">
+    <tspan x="168" dy="0">Not a marketplace, not a coaching portal, and not a feature museum.</tspan>
+  </text>
+
+  <rect x="96" y="2700" width="1408" height="1080" rx="32" fill="#0E1727" stroke="#1B2A41"/>
+  <text x="132" y="2770" class="label">Visual direction</text>
+  <text x="132" y="2838" class="h1">A warmer, more premium study product look</text>
+
+  <g>
+    <rect x="132" y="2908" width="300" height="820" rx="28" fill="#101B2E" stroke="#223653"/>
+    <text x="160" y="2958" class="tiny">Palette</text>
+    <rect x="160" y="3002" width="244" height="90" rx="22" fill="#0B1220"/>
+    <text x="178" y="3058" class="chip">Midnight base</text>
+    <rect x="160" y="3112" width="244" height="90" rx="22" fill="#FF8A1F"/>
+    <text x="178" y="3168" class="chip" fill="#07111F">Signal orange</text>
+    <rect x="160" y="3222" width="244" height="90" rx="22" fill="#2563EB"/>
+    <text x="178" y="3278" class="chip">Progress blue</text>
+    <rect x="160" y="3332" width="244" height="90" rx="22" fill="#059669"/>
+    <text x="178" y="3388" class="chip">Correct green</text>
+    <text x="160" y="3480" class="bodySmall">
+      <tspan x="160" dy="0">Use orange as signal color,</tspan>
+      <tspan x="160" dy="30">not everywhere. Blue and green</tspan>
+      <tspan x="160" dy="30">support progress states.</tspan>
+    </text>
+  </g>
+
+  <g>
+    <rect x="456" y="2908" width="456" height="820" rx="28" fill="#101B2E" stroke="#223653"/>
+    <text x="486" y="2958" class="tiny">Components</text>
+    <rect x="486" y="3012" width="396" height="118" rx="24" fill="#0F1A2C" stroke="#243654"/>
+    <text x="516" y="3058" class="h3">Compact stats cards</text>
+    <text x="516" y="3098" class="caption">Clear numbers, one message, no clutter.</text>
+
+    <rect x="486" y="3160" width="396" height="168" rx="24" fill="#0F1A2C" stroke="#243654"/>
+    <text x="516" y="3206" class="h3">Question preview card</text>
+    <rect x="516" y="3244" width="150" height="34" rx="14" fill="#172740" stroke="#314766"/>
+    <text x="544" y="3266" class="small">UPSC</text>
+    <rect x="676" y="3244" width="150" height="34" rx="14" fill="#172740" stroke="#314766"/>
+    <text x="706" y="3266" class="small">Polity</text>
+    <text x="516" y="3310" class="caption">Show real product behavior on the homepage.</text>
+
+    <rect x="486" y="3358" width="396" height="150" rx="24" fill="#0F1A2C" stroke="#243654"/>
+    <text x="516" y="3404" class="h3">Progress bars</text>
+    <rect x="516" y="3442" width="300" height="12" rx="6" fill="#192842"/>
+    <rect x="516" y="3442" width="204" height="12" rx="6" fill="url(#warm)"/>
+    <text x="516" y="3494" class="caption">Daily goal and weak-topic visuals should feel native.</text>
+
+    <rect x="486" y="3538" width="396" height="150" rx="24" fill="#0F1A2C" stroke="#243654"/>
+    <text x="516" y="3584" class="h3">Soft glass panels</text>
+    <text x="516" y="3634" class="caption">Serious but modern. Avoid generic SaaS white cards.</text>
+  </g>
+
+  <g>
+    <rect x="936" y="2908" width="462" height="820" rx="28" fill="#101B2E" stroke="#223653"/>
+    <text x="966" y="2958" class="tiny">Tone</text>
+    <text x="966" y="3020" class="h3">What the homepage should say</text>
+    <text x="966" y="3090" class="bodySmall">
+      <tspan x="966" dy="0">“Daily exam practice that actually helps</tspan>
+      <tspan x="966" dy="30">you improve.”</tspan>
+    </text>
+    <text x="966" y="3186" class="h3">What it should avoid</text>
+    <text x="966" y="3254" class="bodySmall">
+      <tspan x="966" dy="0">“All resources, contests, leaderboard,</tspan>
+      <tspan x="966" dy="30">premium, explore, and more...”</tspan>
+    </text>
+    <text x="966" y="3350" class="h3">Emotional effect</text>
+    <text x="966" y="3418" class="bodySmall">
+      <tspan x="966" dy="0">Calm confidence. Users should feel:</tspan>
+      <tspan x="966" dy="30">“This looks serious, clear, and useful.”</tspan>
+    </text>
+    <rect x="966" y="3506" width="402" height="170" rx="24" fill="#15243C" stroke="#314766"/>
+    <text x="994" y="3552" class="tiny">Launch note</text>
+    <text x="994" y="3602" class="bodySmall">
+      <tspan x="994" dy="0">You do not need to show every feature.</tspan>
+      <tspan x="994" dy="30">You need to make the core loop feel</tspan>
+      <tspan x="994" dy="30">valuable and believable.</tspan>
+    </text>
+  </g>
+
+  <rect x="96" y="3898" width="1408" height="622" rx="32" fill="#0E1727" stroke="#1B2A41"/>
+  <text x="132" y="3970" class="label">Recommended nav</text>
+  <text x="132" y="4038" class="h1">Simplified V1 navigation shown inside the concept</text>
+
+  <rect x="132" y="4112" width="1268" height="118" rx="28" fill="#111D31" stroke="#25395A"/>
+  <rect x="164" y="4140" width="46" height="38" rx="12" fill="url(#warm)"/>
+  <text x="178" y="4165" class="h3" font-size="20" fill="#07111F">P</text>
+  <text x="226" y="4165" class="h3" font-size="24">PrepBros</text>
+  <text x="650" y="4165" class="nav">Practice</text>
+  <text x="770" y="4165" class="nav">Dashboard</text>
+  <text x="900" y="4165" class="nav">Review</text>
+  <text x="1004" y="4165" class="nav">Support</text>
+  <rect x="1208" y="4136" width="168" height="48" rx="16" fill="url(#warm)"/>
+  <text x="1248" y="4166" class="button">Start free</text>
+
+  <g>
+    <rect x="132" y="4280" width="402" height="188" rx="26" fill="#101B2E" stroke="#223653"/>
+    <text x="162" y="4328" class="h3">Top nav</text>
+    <text x="162" y="4380" class="bodySmall">
+      <tspan x="162" dy="0">Practice, Dashboard, Review, Support.</tspan>
+      <tspan x="162" dy="30">That is enough for launch.</tspan>
+    </text>
+  </g>
+
+  <g>
+    <rect x="566" y="4280" width="402" height="188" rx="26" fill="#101B2E" stroke="#223653"/>
+    <text x="596" y="4328" class="h3">Footer</text>
+    <text x="596" y="4380" class="bodySmall">
+      <tspan x="596" dy="0">Privacy, Terms, Support, maybe Resources.</tspan>
+      <tspan x="596" dy="30">Keep trust links here, not in the hero.</tspan>
+    </text>
+  </g>
+
+  <g>
+    <rect x="1000" y="4280" width="400" height="188" rx="26" fill="#101B2E" stroke="#223653"/>
+    <text x="1030" y="4328" class="h3">Hide for now</text>
+    <text x="1030" y="4380" class="bodySmall">
+      <tspan x="1030" dy="0">Contests, Leaderboard, Premium, Explore,</tspan>
+      <tspan x="1030" dy="30">Aptitude, Status.</tspan>
+    </text>
+  </g>
+
+  <rect x="96" y="4638" width="1408" height="430" rx="32" fill="#0F182A" stroke="#1B2A41"/>
+  <text x="132" y="4708" class="label">Final direction</text>
+  <text x="132" y="4784" class="h1">Homepage concept for a sharper PrepBros V1</text>
+  <text x="132" y="4866" class="body">
+    <tspan x="132" dy="0">This direction keeps the brand serious, premium, and exam-focused while making the core loop obvious:</tspan>
+    <tspan x="132" dy="36">start practicing, save progress, review weak areas, come back daily.</tspan>
+  </text>
+  <rect x="132" y="4944" width="250" height="64" rx="18" fill="url(#warm)"/>
+  <text x="182" y="4985" class="button">Build this homepage</text>
+  <rect x="402" y="4944" width="246" height="64" rx="18" fill="#132039" stroke="#2A3F62"/>
+  <text x="450" y="4985" class="buttonSecondary">Create mobile version</text>
+</svg>

@@ -1,14 +1,34 @@
-import { Check, Sparkles, Zap } from "lucide-react";
+import { Check, ExternalLink, ShieldCheck, Sparkles, Zap } from "lucide-react";
 
 import AppShell from "@/components/AppShell";
+import { trackEvent } from "@/lib/analytics";
+import {
+  getPremiumCheckoutUrl,
+  getPremiumSupportUrl,
+  siteConfig,
+} from "@/lib/siteConfig";
 
-const plans = [
+type PremiumPlanKey = "free" | "monthly" | "annual";
+
+type Plan = {
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  cta: string;
+  planKey: PremiumPlanKey;
+  highlighted: boolean;
+  features: string[];
+};
+
+const plans: Plan[] = [
   {
     name: "Free",
     price: "₹0",
     period: "forever",
     description: "Good for early practice and habit building.",
     cta: "Current free plan",
+    planKey: "free",
     highlighted: false,
     features: [
       "10 daily MCQ questions",
@@ -22,7 +42,8 @@ const plans = [
     price: "₹199",
     period: "per month",
     description: "For serious aspirants who want more volume and richer feedback.",
-    cta: "Upgrade to Pro",
+    cta: "Start monthly checkout",
+    planKey: "monthly",
     highlighted: true,
     features: [
       "Unlimited question access",
@@ -37,7 +58,8 @@ const plans = [
     price: "₹999",
     period: "per year",
     description: "The best-value option for long preparation cycles.",
-    cta: "Choose annual",
+    cta: "Start annual checkout",
+    planKey: "annual",
     highlighted: false,
     features: [
       "Everything in Pro",
@@ -57,7 +79,7 @@ const faqs = [
   {
     question: "Can I cancel anytime?",
     answer:
-      "Yes. The cancellation flow should be explicit once payments are connected. Until then, this page acts as your pricing and packaging layer.",
+      "Billing terms, renewal behavior, and refund handling are described in the Terms page. If you need help with a payment or access issue, billing support is available by email.",
   },
   {
     question: "Why pay if the core product is already useful?",
@@ -67,28 +89,54 @@ const faqs = [
 ];
 
 export default function Premium() {
+  const handlePlanClick = (plan: "monthly" | "annual") => {
+    const checkoutUrl = getPremiumCheckoutUrl(plan);
+
+    if (checkoutUrl) {
+      trackEvent("premium_checkout_started", {
+        plan,
+        provider: siteConfig.paymentProviderLabel,
+      });
+      window.location.assign(checkoutUrl);
+      return;
+    }
+
+    trackEvent("premium_checkout_fallback_opened", { plan });
+    window.location.assign(getPremiumSupportUrl(plan));
+  };
+
   return (
     <AppShell>
       <div className="container-shell space-y-8">
-          <section className="rounded-[24px] border border-[var(--border)] bg-[linear-gradient(180deg,#1b1b1b_0%,#151515_100%)] p-6 md:p-10">
-            <div className="max-w-4xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-light)]">
-                <Sparkles size={12} />
-                PrepBros Pro
-              </div>
-              <h1 className="mt-5 text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-6xl">
-                Premium tools for longer, more serious preparation.
-              </h1>
-              <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--text-secondary)]">
-                The free layer should be genuinely useful. Pro should feel like the upgrade for
-                aspirants who want higher question volume, better feedback loops, and a cleaner,
-                more committed prep experience.
-              </p>
+        <section className="rounded-[24px] border border-[var(--border)] bg-[linear-gradient(180deg,#1b1b1b_0%,#151515_100%)] p-6 md:p-10">
+          <div className="max-w-4xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-light)]">
+              <Sparkles size={12} />
+              PrepBros Pro
             </div>
-          </section>
+            <h1 className="mt-5 text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-6xl">
+              Simple plans and a clean checkout path for serious prep.
+            </h1>
+            <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--text-secondary)]">
+              Paid checkout on PrepBros uses hosted payment links. If a checkout link has not been
+              configured for a plan yet, we send the user straight to billing support instead of
+              showing a dead button.
+            </p>
+          </div>
+        </section>
 
-          <section className="grid gap-5 lg:grid-cols-3">
-            {plans.map((plan) => (
+        <section className="grid gap-5 lg:grid-cols-3">
+          {plans.map((plan) => {
+            const paidPlanKey =
+              plan.planKey === "monthly" || plan.planKey === "annual"
+                ? plan.planKey
+                : null;
+            const checkoutReady =
+              paidPlanKey !== null
+                ? Boolean(getPremiumCheckoutUrl(paidPlanKey))
+                : false;
+
+            return (
               <div
                 key={plan.name}
                 className={`rounded-[20px] border p-6 ${
@@ -97,12 +145,22 @@ export default function Premium() {
                     : "border-[var(--border)] bg-[var(--bg-card)]"
                 }`}
               >
-                {plan.highlighted ? (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-light)]">
-                    <Zap size={12} />
-                    Most popular
-                  </div>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  {plan.highlighted ? (
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-light)]">
+                      <Zap size={12} />
+                      Most popular
+                    </div>
+                  ) : null}
+
+                  {paidPlanKey !== null ? (
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
+                      <ShieldCheck size={12} />
+                      {checkoutReady ? "Checkout ready" : "Support fallback"}
+                    </div>
+                  ) : null}
+                </div>
+
                 <p className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                   {plan.name}
                 </p>
@@ -113,9 +171,25 @@ export default function Premium() {
                   </span>
                   <span className="pb-2 text-sm text-[var(--text-muted)]">{plan.period}</span>
                 </div>
-                <button className={plan.highlighted ? "btn-primary mt-6 w-full py-3" : "btn-secondary mt-6 w-full py-3"}>
-                  {plan.cta}
-                </button>
+
+                {plan.planKey === "free" ? (
+                  <button className="btn-secondary mt-6 w-full py-3" disabled>
+                    {plan.cta}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (paidPlanKey) handlePlanClick(paidPlanKey);
+                    }}
+                    className={plan.highlighted ? "btn-primary mt-6 w-full py-3" : "btn-secondary mt-6 w-full py-3"}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      {checkoutReady ? plan.cta : "Contact billing support"}
+                      <ExternalLink size={15} />
+                    </span>
+                  </button>
+                )}
 
                 <div className="mt-6 space-y-3">
                   {plan.features.map((feature) => (
@@ -126,10 +200,37 @@ export default function Premium() {
                   ))}
                 </div>
               </div>
-            ))}
-          </section>
+            );
+          })}
+        </section>
 
-          <section className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-8">
+        <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-8">
+            <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+              Billing and checkout
+            </h2>
+            <div className="mt-6 space-y-4 text-sm leading-7 text-[var(--text-secondary)]">
+              <p>
+                Paid plans use {siteConfig.paymentProviderLabel}. Taxes, final pricing, renewal
+                details, and payment confirmation are shown during checkout.
+              </p>
+              <p>
+                If checkout is not configured for a plan yet, PrepBros routes the user to billing
+                support instead of pretending billing is live.
+              </p>
+              <p>
+                Billing help:{" "}
+                <a
+                  href={`mailto:${siteConfig.billingEmail}`}
+                  className="text-[var(--brand)] transition hover:opacity-80"
+                >
+                  {siteConfig.billingEmail}
+                </a>
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-6 md:p-8">
             <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
               Pricing FAQs
             </h2>
@@ -141,7 +242,8 @@ export default function Premium() {
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+        </section>
       </div>
     </AppShell>
   );

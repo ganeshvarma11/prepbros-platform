@@ -1,27 +1,36 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import SectionHeader from "@/components/SectionHeader";
+import { siteConfig } from "@/lib/siteConfig";
 
 const sections = [
   {
     title: "Use of the platform",
-    body: "PrepBros is intended for exam preparation, self-study, and practice. Users should not misuse the platform, attempt unauthorized access, or interfere with service availability.",
+    body: "PrepBros is provided for exam preparation, self-study, and educational practice. You agree not to misuse the service, bypass access controls, scrape protected content, interfere with platform availability, or use the service for unlawful activity.",
   },
   {
     title: "Accounts and access",
-    body: "Users are responsible for account security and the activity that happens under their login. You may suspend or remove abusive, fraudulent, or harmful accounts.",
+    body: "You are responsible for keeping your login credentials secure and for activity that happens under your account. PrepBros may suspend, restrict, or remove accounts involved in abuse, fraud, payment disputes, platform attacks, or harmful conduct.",
   },
   {
     title: "Content and accuracy",
-    body: "Although PrepBros aims for high-quality educational content, users should not treat every explanation, resource, or ranking signal as an official or legally binding source.",
+    body: "PrepBros aims to provide high-quality educational content, but explanations, rankings, recommendations, and resources are provided for study support only. They are not official exam authority statements, legal advice, or guarantees of success.",
   },
   {
     title: "Premium and payments",
-    body: "If you later introduce paid plans, refunds, billing terms, and renewal rules must be explicitly added here. Do not market paid offerings without updating this section first.",
+    body: "Paid plans, if offered, are billed through hosted checkout links or another approved checkout flow. Plan pricing, taxes, billing intervals, renewal behavior, and any applicable checkout terms are shown at checkout. Access to paid features may be limited, paused, or revoked for failed payments, abuse, fraud review, or chargebacks.",
+  },
+  {
+    title: "Cancellations, refunds, and billing support",
+    body: "If a paid plan renews automatically, you are responsible for cancelling before the next billing cycle if you do not want to continue. Except where required by law, fees already paid are generally non-refundable once a billing period begins, though PrepBros may review clear duplicate charges, accidental purchases, or billing errors in good faith. Billing help is available at the support email listed below.",
+  },
+  {
+    title: "Intellectual property and copyright",
+    body: "The PrepBros name, branding, UI, question formatting, explanations, analytics presentation, and original educational materials are owned by PrepBros or its licensors and are protected by copyright and other applicable laws. You may not copy, resell, republish, or systematically extract protected content without written permission. If you believe material on the platform infringes your rights, contact support with the relevant details.",
   },
   {
     title: "Limitation of liability",
-    body: "PrepBros is provided on an as-available basis. Before launch, this section should be reviewed properly if you expect scale, revenue, or reliance on the product for paid users.",
+    body: "PrepBros is provided on an as-available and as-is basis. To the maximum extent permitted by applicable law, PrepBros is not liable for indirect, incidental, special, consequential, or punitive damages, or for loss of data, revenue, or study outcomes arising from your use of the service.",
   },
 ];
 
@@ -34,8 +43,8 @@ export default function Terms() {
           <div className="glass-panel rounded-[32px] px-6 py-8 md:px-8 md:py-10">
             <SectionHeader
               eyebrow="Terms of service"
-              title="You need real operating terms before you market publicly."
-              description="This gives you a clear product-facing structure. Before launch, replace or refine anything that needs legal review based on your actual plans for payments, content, and support."
+              title="The rules, rights, and billing terms that apply to using PrepBros."
+              description={`Effective ${siteConfig.legalEffectiveDate}. These terms govern access to ${siteConfig.siteName}, including free and paid product surfaces.`}
             />
           </div>
 
@@ -49,6 +58,28 @@ export default function Terms() {
                   <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">{section.body}</p>
                 </section>
               ))}
+
+              <section className="rounded-[28px] border border-[var(--border)] bg-[var(--bg-card-strong)] p-5">
+                <h2 className="text-xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
+                  Governing law and contact
+                </h2>
+                <div className="mt-3 space-y-3 text-sm leading-7 text-[var(--text-secondary)]">
+                  <p>
+                    These terms are governed by the laws of {siteConfig.governingLaw}, unless
+                    applicable law requires otherwise.
+                  </p>
+                  <p>
+                    For support, billing, copyright, or legal notices, contact{" "}
+                    <a
+                      href={`mailto:${siteConfig.supportEmail}`}
+                      className="text-[var(--brand)] transition hover:opacity-80"
+                    >
+                      {siteConfig.supportEmail}
+                    </a>
+                    .
+                  </p>
+                </div>
+              </section>
             </div>
           </div>
         </div>

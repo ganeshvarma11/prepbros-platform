@@ -14,6 +14,7 @@ import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trackEvent } from "@/lib/analytics";
+import { getPolicyUrl } from "@/lib/siteConfig";
 import { cn } from "@/lib/utils";
 
 interface AuthModalProps {
@@ -441,8 +442,25 @@ export default function AuthModal({
                     </p>
 
                     <p className="text-center text-xs text-[var(--text-faint)]">
-                      By continuing, you agree to PrepBros' Terms and consent to receive account
-                      emails.
+                      By continuing, you agree to PrepBros&apos;{" "}
+                      <a
+                        href={getPolicyUrl("/terms")}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[var(--brand)] transition hover:opacity-80"
+                      >
+                        Terms
+                      </a>{" "}
+                      and{" "}
+                      <a
+                        href={getPolicyUrl("/privacy")}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[var(--brand)] transition hover:opacity-80"
+                      >
+                        Privacy Policy
+                      </a>
+                      , and consent to receive account emails.
                     </p>
                   </form>
                 )}

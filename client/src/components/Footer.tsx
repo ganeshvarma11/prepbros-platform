@@ -2,12 +2,15 @@ import { ArrowRight, Mail } from "lucide-react";
 import { Link } from "wouter";
 
 import BrandLogo from "@/components/BrandLogo";
+import { siteConfig } from "@/lib/siteConfig";
 
 const FOOTER_LINKS = [
   { label: "Practice", href: "/practice" },
   { label: "Dashboard", href: "/dashboard" },
+  { label: "Premium", href: "/premium" },
   { label: "Support", href: "/support" },
   { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
 ];
 
 export default function Footer() {
@@ -33,11 +36,11 @@ export default function Footer() {
               </span>
             </Link>
             <a
-              href="mailto:hello@prepbros.com"
+              href={`mailto:${siteConfig.supportEmail}`}
               className="inline-flex items-center gap-2 rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(32,30,45,0.7)] px-5 py-3 text-sm font-medium text-[var(--text-primary)]"
             >
               <Mail size={14} className="text-[var(--brand)]" />
-              hello@prepbros.com
+              {siteConfig.supportEmail}
             </a>
           </div>
         </div>
@@ -52,7 +55,9 @@ export default function Footer() {
               </Link>
             ))}
           </div>
-          <p className="text-sm text-[var(--text-muted)]">© {year} PrepBros</p>
+          <p className="text-sm text-[var(--text-muted)]">
+            © {year} {siteConfig.legalEntity}. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

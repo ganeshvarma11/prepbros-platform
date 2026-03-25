@@ -3,7 +3,7 @@ export type Difficulty = "Easy" | "Medium" | "Hard";
 export type QuestionType = "PYQ" | "Conceptual" | "CurrentAffairs" | "Mock";
 
 export interface Question {
-  id: number;
+  id: string | number;
   question: string;
   options: string[];
   correct: number;

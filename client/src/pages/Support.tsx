@@ -2,20 +2,41 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import AppShell from "@/components/AppShell";
+import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
 import { supabase } from "@/lib/supabase";
 
 const fieldClassName =
   "w-full rounded-2xl border border-white/10 bg-white/4 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/18 focus:bg-white/6";
 
+async function saveSupportRequestDirectly(form: { email: string; issue: string; message: string }) {
+  const { error } = await supabase.from("support_requests").insert({
+    email: form.email,
+    category: "General support",
+    subject: form.issue,
+    message: form.message,
+    source: "support_page_direct",
+  });
+
+  return { error };
+}
+
 export default function Support() {
+  const { user } = useAuth();
   const [form, setForm] = useState({
     email: "",
     issue: "",
     message: "",
+    website: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<null | { ok: boolean; message: string }>(null);
+
+  useEffect(() => {
+    if (!user?.email) return;
+
+    setForm((current) => (current.email ? current : { ...current, email: user.email || "" }));
+  }, [user?.email]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -37,28 +58,64 @@ export default function Support() {
     setSubmitting(true);
     setResult(null);
 
-    const { error } = await supabase.from("support_requests").insert({
-      email: form.email,
-      category: "General support",
-      subject: form.issue,
-      message: form.message,
-      source: "support_page",
-    });
+    let successMessage = "Request submitted. We'll get back to you by email as soon as possible.";
 
-    if (error) {
-      setResult({
-        ok: false,
-        message:
-          "We couldn't save your request here. Please email hello@prepbros.com directly and we'll help from there.",
+    try {
+      const response = await fetch("/api/support", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
       });
-    } else {
-      trackEvent("support_request_submitted", { category: "General support" });
-      setResult({
-        ok: true,
-        message: "Request submitted. We'll get back to you by email as soon as possible.",
-      });
-      setForm({ email: "", issue: "", message: "" });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { ok?: boolean; message?: string }
+        | null;
+
+      if (!response.ok || !payload?.ok) {
+        if (response.status < 500) {
+          setResult({
+            ok: false,
+            message: payload?.message || "We couldn't submit your request. Please check the form and try again.",
+          });
+          setSubmitting(false);
+          return;
+        }
+
+        throw new Error(payload?.message || "Support API request failed");
+      }
+
+      successMessage = payload.message || successMessage;
+    } catch (apiError) {
+      const { error } = await saveSupportRequestDirectly(form);
+
+      if (error) {
+        setResult({
+          ok: false,
+          message:
+            "We couldn't deliver your request right now. Please email hello@prepbros.com directly and we'll help from there.",
+        });
+        setSubmitting(false);
+        return;
+      }
+
+      console.warn("Support API unavailable, saved request directly instead.", apiError);
+      successMessage =
+        "Request saved successfully. If you need an urgent reply, email hello@prepbros.com directly too.";
     }
+
+    trackEvent("support_request_submitted", { category: "General support" });
+    setResult({
+      ok: true,
+      message: successMessage,
+    });
+    setForm({
+      email: user?.email || "",
+      issue: "",
+      message: "",
+      website: "",
+    });
 
     setSubmitting(false);
   };
@@ -96,6 +153,17 @@ export default function Support() {
           </div>
 
           <form onSubmit={submitRequest} className="mt-10 space-y-5">
+            <input
+              type="text"
+              name="website"
+              value={form.website}
+              onChange={(event) => setForm((current) => ({ ...current, website: event.target.value }))}
+              tabIndex={-1}
+              autoComplete="off"
+              className="hidden"
+              aria-hidden="true"
+            />
+
             <div className="space-y-2">
               <label htmlFor="support-email" className="text-sm text-white/60">
                 Email
