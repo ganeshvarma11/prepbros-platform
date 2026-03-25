@@ -2,13 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   ArrowRight,
-  Check,
   LayoutDashboard,
   LogOut,
   Menu,
-  Monitor,
-  Moon,
-  Sun,
   User,
   X,
 } from "lucide-react";
@@ -16,18 +12,8 @@ import {
 import AuthModal from "@/components/AuthModal";
 import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme, type Theme } from "@/contexts/ThemeContext";
 import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const DEFAULT_NAV_LINKS = [
   { href: "/practice", label: "Practice" },
@@ -55,7 +41,6 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
   const [authTab, setAuthTab] = useState<"login" | "signup">("login");
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
-  const { theme, setTheme, resolvedTheme } = useTheme();
   const [location] = useLocation();
 
   useEffect(() => {
@@ -84,13 +69,6 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
   const displayName =
     user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Aspirant";
 
-  const themeOptions: Array<{ value: Theme; label: string; icon: typeof Sun }> = [
-    { value: "light", label: "Light", icon: Sun },
-    { value: "dark", label: "Dark", icon: Moon },
-    { value: "system", label: "System", icon: Monitor },
-  ];
-
-  const selectedThemeLabel = themeOptions.find((option) => option.value === theme)?.label || "System";
   const navSurfaceClassName = isLanding
     ? "border border-[var(--border)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)]"
     : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]";
@@ -180,43 +158,6 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
             </div>
           ) : (
             <div className="hidden items-center gap-4 md:flex">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className={`inline-flex h-12 items-center justify-center gap-2 rounded-[14px] px-3.5 text-sm font-medium transition hover:border-[var(--border-strong)] ${navSurfaceClassName}`}
-                    aria-label="Theme settings"
-                  >
-                    {resolvedTheme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
-                    <span className="hidden lg:inline">{selectedThemeLabel}</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-44 rounded-[16px] border-[var(--border)] bg-[var(--bg-card)] p-2 text-[var(--text-primary)] backdrop-blur-xl"
-                >
-                  <DropdownMenuLabel className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                    Theme
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-[var(--border)]" />
-                  <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(value as Theme)}>
-                    {themeOptions.map((option) => {
-                      const Icon = option.icon;
-                      return (
-                        <DropdownMenuRadioItem
-                          key={option.value}
-                          value={option.value}
-                          className="rounded-[12px] px-3 py-2 text-sm text-[var(--text-primary)]"
-                        >
-                          <Icon size={15} className="text-[var(--text-muted)]" />
-                          {option.label}
-                        </DropdownMenuRadioItem>
-                      );
-                    })}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
               {user ? (
                 <>
                   <Link href="/profile">
@@ -320,38 +261,6 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                       : "Sign in to save progress, bookmarks, and your daily momentum."}
                   </p>
                 </div>
-
-                {!isLanding ? (
-                  <div className="mb-3">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                      Theme
-                    </p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {themeOptions.map((option) => {
-                        const Icon = option.icon;
-                        const selected = theme === option.value;
-
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => setTheme(option.value)}
-                            className={cn(
-                              "inline-flex items-center justify-center gap-1.5 rounded-[12px] border px-3 py-2 text-xs font-medium transition",
-                              selected
-                                ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-light)]"
-                                : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)]",
-                            )}
-                          >
-                            <Icon size={13} />
-                            {option.label}
-                            {selected ? <Check size={12} /> : null}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
 
                 {user ? (
                   <div className="grid gap-2">

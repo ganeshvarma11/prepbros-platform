@@ -12,7 +12,6 @@ import {
 
 import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import { trackEvent } from "@/lib/analytics";
 import { getPolicyUrl } from "@/lib/siteConfig";
 import { cn } from "@/lib/utils";
@@ -41,7 +40,6 @@ export default function AuthModal({
   defaultTab = "login",
 }: AuthModalProps) {
   const { signIn, signUp } = useAuth();
-  const { resolvedTheme } = useTheme();
   const [tab, setTab] = useState<"login" | "signup">(defaultTab);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -114,8 +112,6 @@ export default function AuthModal({
   const fieldClasses =
     "w-full rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--brand)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)] md:px-4 md:py-3";
 
-  const lightMode = resolvedTheme === "light";
-
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 md:p-4">
       <button
@@ -136,20 +132,15 @@ export default function AuthModal({
 
         <div className="grid md:grid-cols-[1.05fr_0.95fr]">
           <div
-            className={cn(
-              "relative hidden overflow-hidden border-r border-[var(--border)] px-6 py-8 md:block md:px-8 md:py-10",
-              lightMode
-                ? "bg-[linear-gradient(180deg,#fff7ec_0%,#f6efe8_100%)] text-[var(--text-primary)]"
-                : "bg-[linear-gradient(180deg,#181818_0%,#111111_100%)] text-white",
-            )}
+            className="relative hidden overflow-hidden border-r border-[var(--border)] bg-[linear-gradient(180deg,#181818_0%,#111111_100%)] px-6 py-8 text-white md:block md:px-8 md:py-10"
           >
             <div className="absolute inset-0 hero-grid opacity-10" />
             <div className="absolute -right-16 top-16 h-40 w-40 rounded-full bg-[var(--brand-glow)] blur-3xl" />
             <div className="relative">
               <BrandLogo
-                textClassName={lightMode ? "text-[var(--text-primary)]" : "text-white"}
+                textClassName="text-white"
                 markClassName="border-[rgba(255,161,22,0.28)]"
-                className={lightMode ? "" : "[&_p:last-child]:text-white/70"}
+                className="[&_p:last-child]:text-white/70"
               />
 
               <div className="mt-10 space-y-4">
@@ -157,10 +148,10 @@ export default function AuthModal({
                   <Sparkles size={14} />
                   Built for serious aspirants
                 </p>
-                <h2 className={cn("max-w-md text-4xl font-semibold tracking-[-0.06em]", lightMode ? "text-[var(--text-primary)]" : "text-white")}>
+                <h2 className="max-w-md text-4xl font-semibold tracking-[-0.06em] text-white">
                   Practice with the kind of interface users actually trust.
                 </h2>
-                <p className={cn("max-w-md text-sm md:text-base", lightMode ? "text-[var(--text-secondary)]" : "text-white/78")}>
+                <p className="max-w-md text-sm text-white/78 md:text-base">
                   Your account keeps solved questions, streaks, bookmarks, and weak-topic review
                   in one place so progress feels tangible after every session.
                 </p>
@@ -177,7 +168,7 @@ export default function AuthModal({
                     className="flex items-start gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)] p-4"
                   >
                     <ShieldCheck size={18} className="mt-0.5 text-[var(--brand)]" />
-                    <p className={cn("text-sm", lightMode ? "text-[var(--text-secondary)]" : "text-white/82")}>{item}</p>
+                    <p className="text-sm text-white/82">{item}</p>
                   </div>
                 ))}
               </div>

@@ -3,17 +3,13 @@ import App from "./App";
 import "./index.css";
 
 const storedTheme = localStorage.getItem("theme");
-const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-const resolvedTheme =
-  storedTheme === "light" || storedTheme === "dark"
-    ? storedTheme
-    : systemPrefersDark
-      ? "dark"
-      : "light";
+if (storedTheme) {
+  localStorage.removeItem("theme");
+}
 
-document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
-document.documentElement.classList.toggle("light", resolvedTheme === "light");
-document.documentElement.style.colorScheme = resolvedTheme;
+document.documentElement.classList.add("dark");
+document.documentElement.classList.remove("light");
+document.documentElement.style.colorScheme = "dark";
 
 const analyticsEndpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
 const analyticsWebsiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;

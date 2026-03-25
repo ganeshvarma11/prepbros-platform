@@ -3,10 +3,9 @@ import { Link } from "wouter";
 import {
   ChevronLeft, ChevronRight, Shuffle, BookOpen,
   Brain, FileText, BarChart2, Globe, Zap,
-  CheckCircle2, X, Bookmark, BookmarkCheck, Flag, Clock, Sun, Moon, Loader2
+  CheckCircle2, X, Bookmark, BookmarkCheck, Flag, Clock, Loader2
 } from "lucide-react";
 import { useQuestionBank } from "../hooks/useQuestionBank";
-import { useTheme } from "../contexts/ThemeContext";
 import { type Question, type Difficulty } from "../data/questions";
 
 const APTITUDE_TOPICS = [
@@ -73,7 +72,6 @@ const EXAM_COLORS: Record<string, string> = {
 };
 
 export default function Aptitude() {
-  const { resolvedTheme, toggleTheme } = useTheme();
   const { questions, loading } = useQuestionBank();
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [activeQ, setActiveQ] = useState<Question | null>(null);
@@ -131,9 +129,6 @@ export default function Aptitude() {
           <div className="flex items-center gap-2">
             <button onClick={openRandom} className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white text-xs font-medium rounded-lg hover:bg-orange-600 transition-colors">
               <Shuffle size={12}/> Random
-            </button>
-            <button onClick={toggleTheme} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              {resolvedTheme === "dark" ? <Sun size={15}/> : <Moon size={15}/>}
             </button>
           </div>
         </div>
