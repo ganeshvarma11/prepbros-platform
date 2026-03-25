@@ -1,9 +1,11 @@
 const DEFAULT_SITE_NAME = "PrepBros";
 const DEFAULT_SUPPORT_EMAIL = "hello@prepbros.com";
 const DEFAULT_EFFECTIVE_DATE = "March 25, 2026";
+const DEFAULT_SITE_URL = "https://prepbros.in";
 
 export const siteConfig = {
   siteName: import.meta.env.VITE_SITE_NAME || DEFAULT_SITE_NAME,
+  siteUrl: (import.meta.env.VITE_SITE_URL || DEFAULT_SITE_URL).replace(/\/+$/, ""),
   legalEntity: import.meta.env.VITE_LEGAL_ENTITY || DEFAULT_SITE_NAME,
   supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || DEFAULT_SUPPORT_EMAIL,
   billingEmail:
@@ -23,12 +25,17 @@ export const siteConfig = {
 
 export function getSiteOrigin() {
   if (typeof window === "undefined") return "";
-  return window.location.origin;
+  return window.location.origin || siteConfig.siteUrl;
 }
 
 export function getPolicyUrl(path: string) {
   const origin = getSiteOrigin();
   return origin ? `${origin}${path}` : path;
+}
+
+export function getCanonicalUrl(path: string) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${siteConfig.siteUrl}${normalizedPath}`;
 }
 
 export function buildMailtoLink(

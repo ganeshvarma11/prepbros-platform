@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 
 import ErrorBoundary from "./components/ErrorBoundary";
 import PageLoader from "./components/PageLoader";
+import SeoManager from "./components/SeoManager";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -70,6 +71,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <RouteTracker />
+            <SeoManager />
             <Router />
           </TooltipProvider>
         </ThemeProvider>
