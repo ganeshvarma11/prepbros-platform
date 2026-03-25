@@ -113,6 +113,18 @@ function getStatusPill(status?: "correct" | "wrong") {
   };
 }
 
+function formatQuestionForDisplay(question: string) {
+  return question
+    .replace(/[ \t]+/g, " ")
+    .trim()
+    .replace(/:\s*(?=1\.\s)/g, ":\n")
+    .replace(/\s(?=\d+\.\s)/g, "\n")
+    .replace(
+      /([.?!])\s+(?=(Which|What|How|Select|Choose|In the context|With reference|Arrange|Match|Identify)\b)/g,
+      "$1\n"
+    );
+}
+
 export default function Practice() {
   const [, navigate] = useLocation();
   const { user, loading: authLoading } = useAuth();
@@ -348,6 +360,9 @@ export default function Practice() {
         question => toQuestionId(question.id) === toQuestionId(activeQ.id)
       )
     : -1;
+  const formattedActiveQuestion = activeQ
+    ? formatQuestionForDisplay(activeQ.question)
+    : "";
   const filterCount =
     selExams.length +
     (selDiff ? 1 : 0) +
@@ -1134,9 +1149,14 @@ export default function Practice() {
               ) : null}
             </div>
 
-            <h1 className="mt-5 text-[1.6rem] font-semibold tracking-[-0.05em] text-[var(--text-primary)] md:text-[1.9rem]">
-              {activeQ.question}
-            </h1>
+            <div className="mt-5 rounded-[24px] border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.025)] px-5 py-5 md:px-7 md:py-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                Question
+              </p>
+              <h1 className="mt-3 max-w-[44ch] whitespace-pre-line text-[1.16rem] font-medium leading-[1.72] tracking-[-0.025em] text-[var(--text-primary)] md:text-[1.34rem] md:leading-[1.76] lg:text-[1.5rem]">
+                {formattedActiveQuestion}
+              </h1>
+            </div>
 
             <div className="mt-6 grid gap-3">
               {activeQ.options.map((option, index) => {
@@ -1169,7 +1189,7 @@ export default function Practice() {
                       >
                         {["A", "B", "C", "D"][index]}
                       </span>
-                      <span className="text-sm leading-7 text-[var(--text-primary)]">
+                      <span className="text-[0.97rem] leading-7 text-[var(--text-primary)] md:text-[1rem]">
                         {option}
                       </span>
                     </span>
