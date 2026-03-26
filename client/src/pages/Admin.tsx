@@ -174,6 +174,18 @@ type SupportRequest = {
   subject?: string | null;
   message?: string | null;
   source?: string | null;
+  status?: "open" | "in_progress" | "resolved" | null;
+  created_at?: string | null;
+};
+
+type SupportReply = {
+  id: string | number;
+  support_request_id: string;
+  to_email: string;
+  subject: string;
+  message: string;
+  sent_by_email?: string | null;
+  sent_at?: string | null;
   created_at?: string | null;
 };
 
@@ -457,6 +469,17 @@ function buildSupportReplyMessage(request: SupportRequest) {
   ].join("\n");
 }
 
+function supportStatusTone(status?: string | null): Tone {
+  switch (status) {
+    case "resolved":
+      return "green";
+    case "in_progress":
+      return "blue";
+    default:
+      return "orange";
+  }
+}
+
 function matchesText(value: string, query: string) {
   return value.toLowerCase().includes(query.toLowerCase());
 }
@@ -659,6 +682,7 @@ function Admin() {
   const [showContestForm, setShowContestForm] = useState(false);
 
   const [supportRequests, setSupportRequests] = useState<SupportRequest[]>([]);
+  const [supportReplies, setSupportReplies] = useState<SupportReply[]>([]);
   const [supportSearch, setSupportSearch] = useState("");
   const [replyTarget, setReplyTarget] = useState<SupportRequest | null>(null);
   const [replySubject, setReplySubject] = useState("");
@@ -717,6 +741,16 @@ function Admin() {
     setSupportRequests((data || []) as SupportRequest[]);
   };
 
+  const loadSupportReplies = async () => {
+    const { data, error } = await supabase
+      .from("support_replies")
+      .select("*")
+      .order("sent_at", { ascending: false });
+
+    if (error) throw error;
+    setSupportReplies((data || []) as SupportReply[]);
+  };
+
   const loadAll = async (silent = false) => {
     if (!silent) setBusy("refresh");
 
@@ -726,6 +760,7 @@ function Admin() {
         loadResources(),
         loadContests(),
         loadSupportRequests(),
+        loadSupportReplies(),
       ]);
       if (!silent) showToast("Admin data refreshed.");
     } catch (error) {
@@ -760,6 +795,7 @@ function Admin() {
           loadResources(),
           loadContests(),
           loadSupportRequests(),
+          loadSupportReplies(),
         ]);
       } catch (error) {
         if (!cancelled) {
@@ -921,6 +957,15 @@ function Admin() {
         .includes(query)
     );
   }, [supportRequests, supportSearch]);
+
+  const supportRepliesByRequestId = useMemo(() => {
+    return supportReplies.reduce<Record<string, SupportReply[]>>((acc, reply) => {
+      const key = reply.support_request_id;
+      acc[key] = acc[key] || [];
+      acc[key].push(reply);
+      return acc;
+    }, {});
+  }, [supportReplies]);
 
   const questionStats = useMemo(() => {
     const active = dbQuestions.filter(question => question.is_active).length;
@@ -1587,12 +1632,38 @@ function Admin() {
       }
 
       showToast(payload.message || "Reply sent.");
+      await Promise.all([loadSupportRequests(), loadSupportReplies()]);
       closeReplyDialog();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not send reply.";
       showToast(message, false);
     } finally {
       setSendingReply(false);
+    }
+  };
+
+  const updateSupportStatus = async (
+    requestId: string,
+    status: "open" | "in_progress" | "resolved"
+  ) => {
+    try {
+      const { error } = await supabase
+        .from("support_requests")
+        .update({ status })
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      setSupportRequests((current) =>
+        current.map((request) =>
+          toId(request.id) === requestId ? { ...request, status } : request
+        )
+      );
+      showToast(`Support status updated to ${status.replace("_", " ")}.`);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not update support status.";
+      showToast(message, false);
     }
   };
 
@@ -3009,6 +3080,10 @@ function Admin() {
                             <Pill tone="orange">{request.category || "General support"}</Pill>
                             <Pill tone="slate">{request.email}</Pill>
                             <Pill tone="blue">{request.source || "support_page_direct"}</Pill>
+                            <Pill tone={supportStatusTone(request.status)}>{request.status || "open"}</Pill>
+                            <Pill tone="slate">
+                              {supportRepliesByRequestId[toId(request.id)]?.length || 0} replies
+                            </Pill>
                           </div>
                           <p className="mt-3 text-base font-medium text-slate-950 dark:text-white">
                             {request.subject || "No subject"}
@@ -3026,7 +3101,52 @@ function Admin() {
                             >
                               Open Email App
                             </a>
+                            <SmallButton
+                              onClick={() => void updateSupportStatus(toId(request.id), "open")}
+                              disabled={request.status === "open"}
+                            >
+                              Open
+                            </SmallButton>
+                            <SmallButton
+                              onClick={() => void updateSupportStatus(toId(request.id), "in_progress")}
+                              disabled={request.status === "in_progress"}
+                            >
+                              In Progress
+                            </SmallButton>
+                            <SmallButton
+                              onClick={() => void updateSupportStatus(toId(request.id), "resolved")}
+                              disabled={request.status === "resolved"}
+                            >
+                              Resolved
+                            </SmallButton>
                           </div>
+                          {supportRepliesByRequestId[toId(request.id)]?.length ? (
+                            <div className="mt-4 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                                Reply History
+                              </p>
+                              <div className="mt-3 space-y-3">
+                                {supportRepliesByRequestId[toId(request.id)].map((reply) => (
+                                  <div key={toId(reply.id)} className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <Pill tone="blue">Sent</Pill>
+                                      <Pill tone="slate">{reply.to_email}</Pill>
+                                      {reply.sent_by_email ? <Pill tone="slate">{reply.sent_by_email}</Pill> : null}
+                                    </div>
+                                    <p className="mt-3 text-sm font-medium text-slate-900 dark:text-white">
+                                      {reply.subject}
+                                    </p>
+                                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                      {reply.message}
+                                    </p>
+                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                      {formatDate(reply.sent_at || reply.created_at)}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
                         <div className="text-sm text-slate-500 dark:text-slate-400">{formatDate(request.created_at)}</div>
                       </div>

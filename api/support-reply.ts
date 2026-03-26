@@ -18,6 +18,7 @@ const SUPPORT_REPLY_TO = process.env.SUPPORT_TO_EMAIL || "support@prepbros.in";
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const SUPABASE_URL =
   process.env.SUPABASE_URL || "https://yhnbkwyakgebycfphzrk.supabase.co";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const SUPABASE_AUTH_KEY =
   process.env.SUPABASE_ANON_KEY ||
   process.env.SUPABASE_PUBLISHABLE_KEY ||
@@ -138,6 +139,58 @@ async function sendReplyEmail(payload: ValidReplyPayload) {
   return { ok: true, message: "Reply sent successfully." };
 }
 
+async function persistReplyHistory(payload: ValidReplyPayload) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !payload.requestId) {
+    return false;
+  }
+
+  const insertReply = await fetch(`${SUPABASE_URL}/rest/v1/support_replies`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    },
+    body: JSON.stringify([
+      {
+        support_request_id: payload.requestId,
+        to_email: payload.to,
+        subject: payload.subject,
+        message: payload.message,
+        sent_by_email: ADMIN_EMAIL,
+      },
+    ]),
+  });
+
+  if (!insertReply.ok) {
+    const details = await insertReply.text();
+    console.error("Failed to persist support reply", details);
+    return false;
+  }
+
+  const updateRequest = await fetch(
+    `${SUPABASE_URL}/rest/v1/support_requests?id=eq.${encodeURIComponent(payload.requestId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({
+        status: "in_progress",
+      }),
+    }
+  );
+
+  if (!updateRequest.ok) {
+    const details = await updateRequest.text();
+    console.error("Failed to update support request status after reply", details);
+  }
+
+  return true;
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     res.status(405).json({ ok: false, message: "Method not allowed." });
@@ -171,5 +224,18 @@ export default async function handler(req: any, res: any) {
 
   const result = await sendReplyEmail(validation.data);
 
-  res.status(result.ok ? 200 : 502).json(result);
+  if (!result.ok) {
+    res.status(502).json(result);
+    return;
+  }
+
+  const historySaved = await persistReplyHistory(validation.data);
+
+  res.status(200).json({
+    ok: true,
+    message: historySaved
+      ? "Reply sent successfully."
+      : "Reply sent successfully, but history could not be saved.",
+    historySaved,
+  });
 }
