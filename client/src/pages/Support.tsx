@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
+import { buildMailtoLink, siteConfig } from "@/lib/siteConfig";
 import { supabase } from "@/lib/supabase";
 
 const fieldClassName =
@@ -23,6 +24,7 @@ async function saveSupportRequestDirectly(form: { email: string; issue: string; 
 
 export default function Support() {
   const { user } = useAuth();
+  const supportEmail = siteConfig.supportEmail;
   const [form, setForm] = useState({
     email: "",
     issue: "",
@@ -93,8 +95,7 @@ export default function Support() {
       if (error) {
         setResult({
           ok: false,
-          message:
-            "We couldn't deliver your request right now. Please email hello@prepbros.com directly and we'll help from there.",
+          message: `We couldn't deliver your request right now. Please email ${supportEmail} directly and we'll help from there.`,
         });
         setSubmitting(false);
         return;
@@ -102,7 +103,7 @@ export default function Support() {
 
       console.warn("Support API unavailable, saved request directly instead.", apiError);
       successMessage =
-        "Request saved successfully. If you need an urgent reply, email hello@prepbros.com directly too.";
+        `Request saved successfully. If you need an urgent reply, email ${supportEmail} directly too.`;
     }
 
     trackEvent("support_request_submitted", { category: "General support" });
@@ -142,10 +143,10 @@ export default function Support() {
               Support email
             </p>
             <a
-              href="mailto:hello@prepbros.com"
+              href={buildMailtoLink(supportEmail)}
               className="mt-3 inline-block text-xl font-medium tracking-[-0.03em] text-white transition hover:text-white/80 sm:text-2xl"
             >
-              hello@prepbros.com
+              {supportEmail}
             </a>
             <p className="mt-2 text-sm leading-6 text-white/46">
               Prefer email? You can always reach us directly there.

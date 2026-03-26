@@ -1,5 +1,5 @@
 const DEFAULT_SITE_NAME = "PrepBros";
-const DEFAULT_SUPPORT_EMAIL = "hello@prepbros.com";
+const DEFAULT_SUPPORT_EMAIL = "support@prepbros.in";
 const DEFAULT_EFFECTIVE_DATE = "March 25, 2026";
 const DEFAULT_SITE_URL = "https://prepbros.in";
 
