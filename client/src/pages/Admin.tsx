@@ -16,6 +16,7 @@ import {
   Plus,
   RefreshCcw,
   Search,
+  Send,
   ShieldCheck,
   Trash2,
   Trophy,
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 
 import type { Difficulty, Exam, QuestionType } from "@/data/questions";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { chunkQuestions, parseBulkQuestionInput, type ImportedQuestionPayload } from "@/lib/questionImport";
 import { buildMailtoLink } from "@/lib/siteConfig";
@@ -437,6 +439,24 @@ function buildSupportReplyLink(request: SupportRequest) {
   });
 }
 
+function buildSupportReplySubject(request: SupportRequest) {
+  return `Re: ${request.subject || "Your PrepBros support request"}`;
+}
+
+function buildSupportReplyMessage(request: SupportRequest) {
+  return [
+    `Hi,`,
+    ``,
+    `Thanks for reaching out to PrepBros support.`,
+    ``,
+    `About your issue: ${request.subject || "your request"}`,
+    ``,
+    ``,
+    `Best,`,
+    `PrepBros Support`,
+  ].join("\n");
+}
+
 function matchesText(value: string, query: string) {
   return value.toLowerCase().includes(query.toLowerCase());
 }
@@ -597,7 +617,7 @@ function EmptyState({
 
 function Admin() {
   const [, navigate] = useLocation();
-  const { user, signOut, loading: authLoading } = useAuth();
+  const { user, session, signOut, loading: authLoading } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AdminTab>("questions");
   const [booting, setBooting] = useState(true);
@@ -640,6 +660,10 @@ function Admin() {
 
   const [supportRequests, setSupportRequests] = useState<SupportRequest[]>([]);
   const [supportSearch, setSupportSearch] = useState("");
+  const [replyTarget, setReplyTarget] = useState<SupportRequest | null>(null);
+  const [replySubject, setReplySubject] = useState("");
+  const [replyMessage, setReplyMessage] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   const questionFileInputRef = useRef<HTMLInputElement | null>(null);
   const resourceFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -1512,6 +1536,66 @@ function Admin() {
     }
   };
 
+  const openReplyDialog = (request: SupportRequest) => {
+    setReplyTarget(request);
+    setReplySubject(buildSupportReplySubject(request));
+    setReplyMessage(buildSupportReplyMessage(request));
+  };
+
+  const closeReplyDialog = () => {
+    if (sendingReply) return;
+    setReplyTarget(null);
+    setReplySubject("");
+    setReplyMessage("");
+  };
+
+  const sendSupportReply = async () => {
+    if (!replyTarget) return;
+    if (!session?.access_token) {
+      showToast("Please sign in again before sending a reply.", false);
+      return;
+    }
+
+    if (!replySubject.trim() || !replyMessage.trim()) {
+      showToast("Add a subject and reply message first.", false);
+      return;
+    }
+
+    setSendingReply(true);
+
+    try {
+      const response = await fetch("/api/support-reply", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          to: replyTarget.email,
+          subject: replySubject,
+          message: replyMessage,
+          requestId: toId(replyTarget.id),
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { ok?: boolean; message?: string }
+        | null;
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.message || "Could not send reply.");
+      }
+
+      showToast(payload.message || "Reply sent.");
+      closeReplyDialog();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not send reply.";
+      showToast(message, false);
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
   if (authLoading || booting) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#fff7ed_0%,#f8fafc_55%,#eef2ff_100%)] dark:bg-[linear-gradient(180deg,#020617_0%,#0f172a_55%,#111827_100%)]">
@@ -1538,6 +1622,56 @@ function Admin() {
           {toast.msg}
         </div>
       ) : null}
+
+      <Dialog open={Boolean(replyTarget)} onOpenChange={(open) => (open ? null : closeReplyDialog())}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Reply To Support Request</DialogTitle>
+            <DialogDescription>
+              Send a direct reply from the admin panel using your verified PrepBros support domain.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">To</label>
+              <input
+                value={replyTarget?.email || ""}
+                readOnly
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Subject</label>
+              <input
+                value={replySubject}
+                onChange={(event) => setReplySubject(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Reply</label>
+              <textarea
+                value={replyMessage}
+                onChange={(event) => setReplyMessage(event.target.value)}
+                rows={10}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <SmallButton onClick={closeReplyDialog} disabled={sendingReply}>
+              Cancel
+            </SmallButton>
+            <SmallButton icon={Send} tone="primary" onClick={() => void sendSupportReply()} disabled={sendingReply}>
+              {sendingReply ? "Sending..." : "Send Reply"}
+            </SmallButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <nav className="sticky top-0 z-40 border-b border-white/50 bg-white/70 backdrop-blur-xl dark:border-white/5 dark:bg-slate-950/75">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
@@ -2883,11 +3017,14 @@ function Admin() {
                             {request.message || "No message provided."}
                           </p>
                           <div className="mt-4 flex flex-wrap gap-2">
+                            <SmallButton icon={Send} tone="primary" onClick={() => openReplyDialog(request)}>
+                              Reply Here
+                            </SmallButton>
                             <a
                               href={buildSupportReplyLink(request)}
                               className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
                             >
-                              Reply
+                              Open Email App
                             </a>
                           </div>
                         </div>
