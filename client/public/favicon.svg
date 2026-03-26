@@ -1,0 +1,29 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="256"
+  height="256"
+  viewBox="0 0 256 256"
+  fill="none"
+>
+  <defs>
+    <linearGradient id="prepbros-bg" x1="128" y1="16" x2="128" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17141C" />
+      <stop offset="1" stop-color="#0A090D" />
+    </linearGradient>
+    <linearGradient id="prepbros-accent" x1="141" y1="93" x2="197" y2="141" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB24A" />
+      <stop offset="1" stop-color="#FF861C" />
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="224" height="224" rx="56" fill="url(#prepbros-bg)" />
+  <rect x="16" y="16" width="224" height="224" rx="56" stroke="#2B2631" stroke-width="6" />
+  <rect x="74" y="54" width="34" height="148" rx="17" fill="#F7F3F8" />
+  <path
+    d="M94 84C103 58 139 48 171 58C190 64 207 80 214 100"
+    stroke="#F7F3F8"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path d="M141 93L197 117L141 141V93Z" fill="url(#prepbros-accent)" />
+</svg>
