@@ -14,6 +14,7 @@ import {
 import { Link, useLocation } from "wouter";
 
 import BrandLogo from "@/components/BrandLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
@@ -150,6 +151,12 @@ function SidebarBody({
       </div>
 
       <div className="border-t border-[var(--border)] pt-4">
+        <div className="mb-4 flex items-center justify-between px-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            Appearance
+          </p>
+          <ThemeToggle />
+        </div>
         {user ? (
           <div className="space-y-3">
             <Link href="/profile">
@@ -233,12 +240,12 @@ export default function AppShell({ children, contentClassName }: AppShellProps) 
   return (
     <div className="min-h-screen bg-[var(--page-background)]">
       <div className="lg:grid lg:min-h-screen lg:grid-cols-[228px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[var(--border)] bg-[rgba(11,11,14,0.78)] px-3 py-4 backdrop-blur-xl lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
+        <aside className="hidden border-r border-[var(--border)] bg-[var(--bg-card)]/90 px-3 py-4 backdrop-blur-xl lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
           <SidebarBody location={location} />
         </aside>
 
         <div className="min-w-0">
-          <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[rgba(11,11,14,0.82)] backdrop-blur-xl lg:hidden">
+          <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-card)]/92 backdrop-blur-xl lg:hidden">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
                 <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -252,7 +259,7 @@ export default function AppShell({ children, contentClassName }: AppShellProps) 
                   </button>
                   <SheetContent
                     side="left"
-                    className="w-[84vw] max-w-[312px] border-r border-[var(--border)] bg-[rgba(11,11,14,0.96)] p-3 text-[var(--text-primary)]"
+                    className="w-[84vw] max-w-[312px] border-r border-[var(--border)] bg-[var(--bg-card-strong)] p-3 text-[var(--text-primary)]"
                   >
                     <SidebarBody location={location} onNavigate={() => setMobileOpen(false)} />
                   </SheetContent>
@@ -268,7 +275,9 @@ export default function AppShell({ children, contentClassName }: AppShellProps) 
                 </div>
               </div>
 
-              <Link href={user ? "/profile" : "/"}>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <Link href={user ? "/profile" : "/"}>
                 <span className="flex cursor-pointer items-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] p-1.5">
                   <Avatar className="h-8 w-8 rounded-[10px]">
                     <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
@@ -278,6 +287,7 @@ export default function AppShell({ children, contentClassName }: AppShellProps) 
                   </Avatar>
                 </span>
               </Link>
+              </div>
             </div>
           </header>
 

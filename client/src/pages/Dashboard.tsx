@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 
 import AppShell from "@/components/AppShell";
 import OnboardingModal from "@/components/OnboardingModal";
+import { PageEmpty, PageSkeleton } from "@/components/PageState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
 import {
@@ -36,9 +37,6 @@ type TopicPerformance = {
   incorrect: number;
   accuracy: number;
 };
-
-const signInPanelClassName =
-  "rounded-[24px] bg-[rgba(255,255,255,0.03)] p-8 text-center md:p-12";
 
 const toDateKey = (value: Date | string) =>
   new Date(value).toLocaleDateString("en-CA");
@@ -334,11 +332,8 @@ export default function Dashboard() {
   if (loading || pageLoading || questionsSyncing) {
     return (
       <AppShell>
-        <div className="container-shell flex min-h-[60vh] items-center justify-center">
-          <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-5 py-3 text-sm text-[var(--text-secondary)]">
-            <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
-            Loading your dashboard...
-          </div>
+        <div className="container-shell py-2">
+          <PageSkeleton rows={6} />
         </div>
       </AppShell>
     );
@@ -347,25 +342,14 @@ export default function Dashboard() {
   if (!user) {
     return (
       <AppShell>
-        <div className="container-shell py-14">
-          <div className={signInPanelClassName}>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
-              Dashboard
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
-              Sign in to unlock your prep workspace.
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-sm text-[var(--text-secondary)] md:text-base">
-              Your dashboard ties together practice history, streak, and focus
-              areas once your progress is attached to an account.
-            </p>
-            <Link href="/">
-              <span className="btn-primary mt-8 inline-flex cursor-pointer px-6 py-3">
-                Go back home
-                <ArrowRight size={16} />
-              </span>
-            </Link>
-          </div>
+        <div className="container-shell py-10">
+          <PageEmpty
+            title="Sign in to unlock your prep workspace"
+            description="Your dashboard ties together practice history, streak, and focus areas once your progress is attached to an account."
+            actionLabel="Go back home"
+            actionHref="/"
+            className="rounded-[24px] bg-[var(--bg-card)]/60 py-14"
+          />
         </div>
       </AppShell>
     );

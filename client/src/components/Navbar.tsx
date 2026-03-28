@@ -11,6 +11,7 @@ import {
 
 import AuthModal from "@/components/AuthModal";
 import BrandLogo from "@/components/BrandLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
@@ -89,7 +90,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
         >
           <BrandLogo compact className="shrink-0" textClassName="text-[1.5rem] md:text-[1.7rem]" />
 
-          <div className="hidden items-center gap-10 lg:flex">
+          <div className="hidden items-center gap-6 lg:flex">
             {navLinks.map((item) =>
               item.anchor ? (
                 <a
@@ -116,6 +117,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
 
           {isLanding ? (
             <div className="hidden items-center gap-3 md:flex">
+              <ThemeToggle />
               {user ? (
                 <>
                   <Link href="/profile">
@@ -158,6 +160,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
             </div>
           ) : (
             <div className="hidden items-center gap-4 md:flex">
+              <ThemeToggle />
               {user ? (
                 <>
                   <Link href="/profile">
@@ -201,6 +204,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
           )}
 
           <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
             <button
               type="button"
               onClick={() => setIsOpen((value) => !value)}

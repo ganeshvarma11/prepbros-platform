@@ -10,6 +10,7 @@ import {
 import { Link } from "wouter";
 
 import AppShell from "@/components/AppShell";
+import PageHeader from "@/components/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
 import { toQuestionId } from "@/lib/questionIdentity";
@@ -137,15 +138,16 @@ export default function Explore() {
 
   return (
     <AppShell contentClassName="max-w-[1040px]">
-      <div className="space-y-4 md:space-y-5">
-        <header className="space-y-2 px-1 py-1">
-          <h1 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.4rem]">
-            Explore
-          </h1>
-          <p className="max-w-2xl text-sm text-[var(--text-secondary)] md:text-[0.95rem]">
-            Pick a track, open a path, or jump straight into practice.
-          </p>
-        </header>
+      <div className="space-y-6 md:space-y-7">
+        <PageHeader
+          eyebrow="Workspace"
+          title="Explore"
+          description="Pick a track, open a path, or jump straight into practice."
+          crumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Explore" },
+          ]}
+        />
 
         <section className={sectionClassName}>
           <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">

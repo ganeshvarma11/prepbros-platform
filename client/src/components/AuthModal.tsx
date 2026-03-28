@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowRight,
   CheckCircle2,
@@ -9,6 +10,8 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +37,21 @@ const EXAM_OPTIONS = [
   "IBPS PO 2025",
 ];
 
+const loginSchema = z.object({
+  email: z.email({ message: "Enter a valid email address." }),
+  password: z.string().min(1, "Password is required."),
+});
+
+const signupSchema = z.object({
+  fullName: z.string().min(2, "Enter your full name (at least 2 characters)."),
+  email: z.email({ message: "Enter a valid email address." }),
+  password: z.string().min(6, "Use at least 6 characters for your password."),
+  targetExam: z.string().min(1, "Choose a target exam."),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
+type SignupValues = z.infer<typeof signupSchema>;
+
 export default function AuthModal({
   isOpen,
   onClose,
@@ -44,73 +62,94 @@ export default function AuthModal({
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [confirmedEmail, setConfirmedEmail] = useState("");
 
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [signupForm, setSignupForm] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    targetExam: "UPSC CSE 2026",
+  const loginForm = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const signupForm = useForm<SignupValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      targetExam: "UPSC CSE 2026",
+    },
   });
 
   useEffect(() => {
     if (!isOpen) return;
     setTab(defaultTab);
-    setError("");
+    setSubmitError("");
     setShowPassword(false);
     setLoading(false);
     setSuccess(false);
-  }, [defaultTab, isOpen]);
+    loginForm.reset({ email: "", password: "" });
+    signupForm.reset({
+      fullName: "",
+      email: "",
+      password: "",
+      targetExam: "UPSC CSE 2026",
+    });
+  }, [defaultTab, isOpen, loginForm.reset, signupForm.reset]);
 
   if (!isOpen) return null;
 
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const fieldClasses =
+    "w-full rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--brand)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)] md:px-4 md:py-3";
+
+  const fieldError = (message?: string) =>
+    message ? (
+      <p className="mt-1.5 text-xs font-medium text-[var(--red)]" role="alert">
+        {message}
+      </p>
+    ) : null;
+
+  const handleLogin = loginForm.handleSubmit(async (data) => {
     setLoading(true);
-    setError("");
-    const { error: authError } = await signIn(loginForm.email, loginForm.password);
+    setSubmitError("");
+    const { error: authError } = await signIn(data.email, data.password);
     setLoading(false);
 
     if (authError) {
-      setError(authError.message || "Invalid email or password");
+      setSubmitError(
+        authError.message ||
+          "We could not sign you in. Check your email and password, then try again.",
+      );
       return;
     }
 
     trackEvent("auth_login_success");
     onClose();
-  };
+  });
 
-  const handleSignup = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSignup = signupForm.handleSubmit(async (data) => {
     setLoading(true);
-    setError("");
-
-    if (signupForm.password.length < 6) {
-      setError("Use at least 6 characters for your password.");
-      setLoading(false);
-      return;
-    }
+    setSubmitError("");
 
     const { error: authError } = await signUp(
-      signupForm.email,
-      signupForm.password,
-      signupForm.fullName,
-      signupForm.targetExam,
+      data.email,
+      data.password,
+      data.fullName,
+      data.targetExam,
     );
     setLoading(false);
 
     if (authError) {
-      setError(authError.message || "Something went wrong while creating your account.");
+      setSubmitError(
+        authError.message ||
+          "We could not create your account. Try again in a moment or use a different email.",
+      );
       return;
     }
 
-    trackEvent("auth_signup_success", { target_exam: signupForm.targetExam });
+    setConfirmedEmail(data.email);
+    trackEvent("auth_signup_success", { target_exam: data.targetExam });
     setSuccess(true);
-  };
-
-  const fieldClasses =
-    "w-full rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--brand)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)] md:px-4 md:py-3";
+  });
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 md:p-4">
@@ -186,7 +225,7 @@ export default function AuthModal({
                 </h3>
                 <p className="mt-3 text-sm text-[var(--text-secondary)]">
                   We sent a confirmation link to{" "}
-                  <span className="font-semibold text-[var(--text-primary)]">{signupForm.email}</span>.
+                  <span className="font-semibold text-[var(--text-primary)]">{confirmedEmail}</span>.
                   Open it to activate your account and start syncing your progress.
                 </p>
                 <button
@@ -229,7 +268,7 @@ export default function AuthModal({
                       type="button"
                       onClick={() => {
                         setTab(item);
-                        setError("");
+                        setSubmitError("");
                         trackEvent(item === "login" ? "auth_tab_login_opened" : "auth_tab_signup_opened");
                       }}
                       className={cn(
@@ -245,36 +284,48 @@ export default function AuthModal({
                 </div>
 
                 {tab === "login" ? (
-                  <form onSubmit={handleLogin} className="space-y-3.5 md:space-y-4">
+                  <form onSubmit={handleLogin} className="space-y-3.5 md:space-y-4" noValidate>
                     <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                      <label
+                        htmlFor="auth-login-email"
+                        className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]"
+                      >
                         Email
                       </label>
                       <input
+                        id="auth-login-email"
                         type="email"
-                        required
-                        value={loginForm.email}
-                        onChange={(event) =>
-                          setLoginForm((current) => ({ ...current, email: event.target.value }))
-                        }
+                        autoComplete="email"
+                        {...loginForm.register("email")}
                         placeholder="you@example.com"
-                        className={fieldClasses}
+                        className={cn(
+                          fieldClasses,
+                          loginForm.formState.errors.email && "border-[var(--red)]/40",
+                        )}
+                        aria-invalid={Boolean(loginForm.formState.errors.email)}
                       />
+                      {fieldError(loginForm.formState.errors.email?.message)}
                     </div>
                     <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                      <label
+                        htmlFor="auth-login-password"
+                        className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]"
+                      >
                         Password
                       </label>
                       <div className="relative">
                         <input
+                          id="auth-login-password"
                           type={showPassword ? "text" : "password"}
-                          required
-                          value={loginForm.password}
-                          onChange={(event) =>
-                            setLoginForm((current) => ({ ...current, password: event.target.value }))
-                          }
+                          autoComplete="current-password"
+                          {...loginForm.register("password")}
                           placeholder="Enter your password"
-                          className={cn(fieldClasses, "pr-11")}
+                          className={cn(
+                            fieldClasses,
+                            "pr-11",
+                            loginForm.formState.errors.password && "border-[var(--red)]/40",
+                          )}
+                          aria-invalid={Boolean(loginForm.formState.errors.password)}
                         />
                         <button
                           type="button"
@@ -284,11 +335,12 @@ export default function AuthModal({
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
+                      {fieldError(loginForm.formState.errors.password?.message)}
                     </div>
 
-                    {error ? (
+                    {submitError ? (
                       <div className="rounded-[14px] border border-[var(--red)]/20 bg-[var(--red-bg)] px-4 py-3 text-sm text-[var(--red)]">
-                        {error}
+                        {submitError}
                       </div>
                     ) : null}
 
@@ -322,51 +374,69 @@ export default function AuthModal({
                     </p>
                   </form>
                 ) : (
-                  <form onSubmit={handleSignup} className="space-y-3.5 md:space-y-4">
+                  <form onSubmit={handleSignup} className="space-y-3.5 md:space-y-4" noValidate>
                     <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                      <label
+                        htmlFor="auth-signup-name"
+                        className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]"
+                      >
                         Full name
                       </label>
                       <input
+                        id="auth-signup-name"
                         type="text"
-                        required
-                        value={signupForm.fullName}
-                        onChange={(event) =>
-                          setSignupForm((current) => ({ ...current, fullName: event.target.value }))
-                        }
+                        autoComplete="name"
+                        {...signupForm.register("fullName")}
                         placeholder="Priya Sharma"
-                        className={fieldClasses}
+                        className={cn(
+                          fieldClasses,
+                          signupForm.formState.errors.fullName && "border-[var(--red)]/40",
+                        )}
+                        aria-invalid={Boolean(signupForm.formState.errors.fullName)}
                       />
+                      {fieldError(signupForm.formState.errors.fullName?.message)}
                     </div>
                     <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                      <label
+                        htmlFor="auth-signup-email"
+                        className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]"
+                      >
                         Email
                       </label>
                       <input
+                        id="auth-signup-email"
                         type="email"
-                        required
-                        value={signupForm.email}
-                        onChange={(event) =>
-                          setSignupForm((current) => ({ ...current, email: event.target.value }))
-                        }
+                        autoComplete="email"
+                        {...signupForm.register("email")}
                         placeholder="you@example.com"
-                        className={fieldClasses}
+                        className={cn(
+                          fieldClasses,
+                          signupForm.formState.errors.email && "border-[var(--red)]/40",
+                        )}
+                        aria-invalid={Boolean(signupForm.formState.errors.email)}
                       />
+                      {fieldError(signupForm.formState.errors.email?.message)}
                     </div>
                     <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                      <label
+                        htmlFor="auth-signup-password"
+                        className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]"
+                      >
                         Password
                       </label>
                       <div className="relative">
                         <input
+                          id="auth-signup-password"
                           type={showPassword ? "text" : "password"}
-                          required
-                          value={signupForm.password}
-                          onChange={(event) =>
-                            setSignupForm((current) => ({ ...current, password: event.target.value }))
-                          }
+                          autoComplete="new-password"
+                          {...signupForm.register("password")}
                           placeholder="At least 6 characters"
-                          className={cn(fieldClasses, "pr-11")}
+                          className={cn(
+                            fieldClasses,
+                            "pr-11",
+                            signupForm.formState.errors.password && "border-[var(--red)]/40",
+                          )}
+                          aria-invalid={Boolean(signupForm.formState.errors.password)}
                         />
                         <button
                           type="button"
@@ -376,30 +446,35 @@ export default function AuthModal({
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
+                      {fieldError(signupForm.formState.errors.password?.message)}
                     </div>
                     <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                      <label
+                        htmlFor="auth-signup-exam"
+                        className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]"
+                      >
                         Target exam
                       </label>
                       <select
-                        value={signupForm.targetExam}
-                        onChange={(event) =>
-                          setSignupForm((current) => ({
-                            ...current,
-                            targetExam: event.target.value,
-                          }))
-                        }
-                        className={cn(fieldClasses, "appearance-none")}
+                        id="auth-signup-exam"
+                        {...signupForm.register("targetExam")}
+                        className={cn(
+                          fieldClasses,
+                          "appearance-none",
+                          signupForm.formState.errors.targetExam && "border-[var(--red)]/40",
+                        )}
+                        aria-invalid={Boolean(signupForm.formState.errors.targetExam)}
                       >
                         {EXAM_OPTIONS.map((exam) => (
                           <option key={exam}>{exam}</option>
                         ))}
                       </select>
+                      {fieldError(signupForm.formState.errors.targetExam?.message)}
                     </div>
 
-                    {error ? (
+                    {submitError ? (
                       <div className="rounded-[14px] border border-[var(--red)]/20 bg-[var(--red-bg)] px-4 py-3 text-sm text-[var(--red)]">
-                        {error}
+                        {submitError}
                       </div>
                     ) : null}
 

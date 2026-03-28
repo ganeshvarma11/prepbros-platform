@@ -3,10 +3,32 @@
 
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var d = document.documentElement;
+          var key = "prepbros-ui-theme";
+          var t = localStorage.getItem(key);
+          if (t === "dark") {
+            d.classList.add("dark");
+          } else if (t === "light") {
+            d.classList.remove("dark");
+          } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+              d.classList.add("dark");
+            } else {
+              d.classList.remove("dark");
+            }
+          }
+          d.style.colorScheme = d.classList.contains("dark") ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <meta name="theme-color" content="#111111" />
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
     <meta name="application-name" content="PrepBros" />
     <meta name="apple-mobile-web-app-title" content="PrepBros" />
     <link rel="icon" href="/favicon.ico" sizes="any" />

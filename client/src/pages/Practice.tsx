@@ -15,6 +15,7 @@ import {
 import { useLocation } from "wouter";
 
 import AppShell from "@/components/AppShell";
+import { PageEmpty, PracticeTableSkeleton } from "@/components/PageState";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { type Question } from "@/data/questions";
@@ -884,15 +885,7 @@ export default function Practice() {
                 ) : null}
 
                 {questionsLoading ? (
-                  <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
-                    <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-5 py-3 text-sm text-[var(--text-secondary)]">
-                      <Loader2
-                        size={16}
-                        className="animate-spin text-[var(--text-muted)]"
-                      />
-                      Loading questions...
-                    </div>
-                  </div>
+                  <PracticeTableSkeleton rows={10} />
                 ) : reviewModeSyncing ? (
                   <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
                     <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-5 py-3 text-sm text-[var(--text-secondary)]">
@@ -904,21 +897,19 @@ export default function Practice() {
                     </div>
                   </div>
                 ) : paginated.length === 0 ? (
-                  <div className="flex min-h-[360px] flex-col items-center justify-center px-6 py-10 text-center">
-                    <p className="text-lg font-semibold text-[var(--text-primary)]">
-                      No questions match those filters.
-                    </p>
-                    <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">
-                      Clear a few filters to widen the list and get back into
-                      solving mode.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={clearAll}
-                      className="btn-primary mt-5 px-4 py-2.5 text-sm"
+                  <div className="min-h-[360px] px-4 py-8">
+                    <PageEmpty
+                      title="No questions match those filters"
+                      description="Clear a few filters to widen the list and get back into solving mode."
                     >
-                      Clear filters
-                    </button>
+                      <button
+                        type="button"
+                        onClick={clearAll}
+                        className="btn-primary mt-2 px-4 py-2.5 text-sm"
+                      >
+                        Clear filters
+                      </button>
+                    </PageEmpty>
                   </div>
                 ) : (
                   <>
