@@ -122,11 +122,19 @@ const TABLE_COLUMNS = [
 ];
 
 const panelClassName =
-  "overflow-hidden rounded-[30px] border border-[rgba(116,74,36,0.14)] bg-[rgba(255,250,244,0.84)] shadow-[0_32px_90px_-52px_rgba(81,46,18,0.28)] backdrop-blur-xl";
+  "overflow-hidden rounded-[30px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-lg)] backdrop-blur-xl";
 const softPanelClassName =
-  "rounded-[24px] border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.72)] shadow-[0_18px_60px_-44px_rgba(81,46,18,0.3)]";
+  "rounded-[24px] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]";
 const fieldClassName =
-  "w-full rounded-[18px] border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.84)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[rgba(198,107,44,0.35)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)]";
+  "w-full rounded-[18px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--border-focus)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)]";
+const accentChipClassName =
+  "rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-light)]";
+const ghostButtonClassName =
+  "inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]";
+const primaryButtonClassName =
+  "inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--brand)_0%,var(--brand-dark)_100%)] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:translate-y-[-1px]";
+const insetCardClassName =
+  "rounded-[20px] border border-[var(--border)] bg-[var(--bg-card-strong)]";
 
 function createEmptyFilters(): PracticeFilters {
   return {
@@ -213,7 +221,7 @@ function getStatusPill(status?: "correct" | "wrong") {
   return {
     label: "New",
     className:
-      "border-[rgba(198,107,44,0.14)] bg-[rgba(198,107,44,0.08)] text-[#8c5426]",
+      "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-light)]",
     icon: <Sparkles size={12} />,
   };
 }
@@ -455,7 +463,7 @@ function FilterDisclosure({
         </div>
         <span
           className={cn(
-            "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.84)] text-[var(--text-secondary)] transition",
+            "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-secondary)] transition",
             open && "rotate-180 text-[var(--text-primary)]"
           )}
         >
@@ -464,7 +472,7 @@ function FilterDisclosure({
       </button>
 
       {open ? (
-        <div className="border-t border-[rgba(116,74,36,0.1)] px-4 pb-4 pt-3">
+        <div className="border-t border-[var(--border)] px-4 pb-4 pt-3">
           {children}
         </div>
       ) : null}
@@ -1067,7 +1075,7 @@ export default function Practice() {
 
   const filterPanel = (
     <div className="flex h-full flex-col text-[var(--text-primary)]">
-      <div className="border-b border-[rgba(116,74,36,0.1)] pb-5">
+      <div className="border-b border-[var(--border)] pb-5">
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
           Progressive filters
         </p>
@@ -1079,7 +1087,9 @@ export default function Practice() {
           mix you want to see.
         </p>
         <div className="mt-4 flex items-center gap-3">
-          <span className="rounded-full border border-[rgba(198,107,44,0.14)] bg-[rgba(198,107,44,0.08)] px-3 py-1 text-[11px] font-medium text-[#8c5426]">
+          <span
+            className={`${accentChipClassName} px-3 py-1 text-[11px] font-medium`}
+          >
             {draftFilterCount} active
           </span>
           {draftFilterCount > 0 ? (
@@ -1120,8 +1130,8 @@ export default function Practice() {
                 className={cn(
                   "rounded-[16px] border px-3 py-3 text-left text-sm transition",
                   draftFilters.reviewMode === item.value
-                    ? "border-[rgba(198,107,44,0.22)] bg-[rgba(198,107,44,0.1)] text-[var(--text-primary)]"
-                    : "border-[rgba(116,74,36,0.1)] bg-[rgba(255,255,255,0.8)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--text-primary)]"
+                    : "border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 )}
               >
                 {item.label}
@@ -1145,7 +1155,7 @@ export default function Practice() {
             {EXAM_FILTERS.map(exam => (
               <label
                 key={exam}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[rgba(116,74,36,0.1)] bg-[rgba(255,255,255,0.78)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(198,107,44,0.18)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)]"
               >
                 <input
                   type="checkbox"
@@ -1156,7 +1166,7 @@ export default function Practice() {
                       exams: toggleItem(current.exams, exam),
                     }))
                   }
-                  className="h-4 w-4 rounded border-[rgba(116,74,36,0.18)] bg-transparent"
+                  className="h-4 w-4 rounded border-[var(--border-strong)] bg-transparent"
                 />
                 <span>{exam}</span>
                 <span className="ml-auto text-xs text-[var(--text-faint)]">
@@ -1194,8 +1204,8 @@ export default function Practice() {
                   className={cn(
                     "rounded-full border px-3 py-2 text-xs font-medium transition",
                     draftFilters.difficulty === value
-                      ? "border-[rgba(198,107,44,0.22)] bg-[rgba(198,107,44,0.1)] text-[var(--text-primary)]"
-                      : "border-[rgba(116,74,36,0.1)] bg-[rgba(255,255,255,0.82)] text-[var(--text-secondary)]"
+                      ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--text-primary)]"
+                      : "border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-secondary)]"
                   )}
                 >
                   {difficulty}
@@ -1220,7 +1230,7 @@ export default function Practice() {
             {TYPES.map(type => (
               <label
                 key={type}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[rgba(116,74,36,0.1)] bg-[rgba(255,255,255,0.78)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(198,107,44,0.18)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)]"
               >
                 <input
                   type="checkbox"
@@ -1231,7 +1241,7 @@ export default function Practice() {
                       types: toggleItem(current.types, type),
                     }))
                   }
-                  className="h-4 w-4 rounded border-[rgba(116,74,36,0.18)] bg-transparent"
+                  className="h-4 w-4 rounded border-[var(--border-strong)] bg-transparent"
                 />
                 <span>{TYPE_LABELS[type] || type}</span>
               </label>
@@ -1254,7 +1264,7 @@ export default function Practice() {
             {allTopics.map(topic => (
               <label
                 key={topic}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[rgba(116,74,36,0.1)] bg-[rgba(255,255,255,0.78)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(198,107,44,0.18)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)]"
               >
                 <input
                   type="checkbox"
@@ -1265,7 +1275,7 @@ export default function Practice() {
                       topics: toggleItem(current.topics, topic),
                     }))
                   }
-                  className="h-4 w-4 rounded border-[rgba(116,74,36,0.18)] bg-transparent"
+                  className="h-4 w-4 rounded border-[var(--border-strong)] bg-transparent"
                 />
                 <span className="line-clamp-1">{topic}</span>
                 <span className="ml-auto text-xs text-[var(--text-faint)]">
@@ -1291,7 +1301,7 @@ export default function Practice() {
             {allYears.map(year => (
               <label
                 key={year}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[rgba(116,74,36,0.1)] bg-[rgba(255,255,255,0.78)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[rgba(198,107,44,0.18)]"
+                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)]"
               >
                 <input
                   type="checkbox"
@@ -1302,7 +1312,7 @@ export default function Practice() {
                       years: toggleItem(current.years, year),
                     }))
                   }
-                  className="h-4 w-4 rounded border-[rgba(116,74,36,0.18)] bg-transparent"
+                  className="h-4 w-4 rounded border-[var(--border-strong)] bg-transparent"
                 />
                 <span>{year}</span>
               </label>
@@ -1333,20 +1343,20 @@ export default function Practice() {
         </section>
       </div>
 
-      <div className="border-t border-[rgba(116,74,36,0.1)] pt-4">
+      <div className="border-t border-[var(--border)] pt-4">
         <div className="flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
             onClick={applyFilters}
             disabled={!draftChanged}
-            className="inline-flex h-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#cb7a3b_0%,#af5a24_100%)] px-5 text-sm font-semibold text-[#fff6ef] shadow-[0_18px_40px_-20px_rgba(175,90,36,0.5)] transition disabled:cursor-not-allowed disabled:opacity-45"
+            className={`${primaryButtonClassName} h-12 px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45`}
           >
             Save filters
           </button>
           <button
             type="button"
             onClick={() => setShowFilters(false)}
-            className="inline-flex h-12 items-center justify-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.78)] px-5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(198,107,44,0.22)]"
+            className={`${ghostButtonClassName} h-12 px-5 text-sm font-medium`}
           >
             Cancel
           </button>
@@ -1368,7 +1378,9 @@ export default function Practice() {
               <div className="grid gap-5 px-5 py-5 md:px-6 md:py-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
                 <div className="min-w-0 space-y-5">
                   <div className="space-y-3">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(198,107,44,0.14)] bg-[rgba(198,107,44,0.08)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8c5426]">
+                    <span
+                      className={`${accentChipClassName} inline-flex items-center gap-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]`}
+                    >
                       Practice studio
                     </span>
                     <div className="space-y-2">
@@ -1378,10 +1390,10 @@ export default function Practice() {
                             Question Library
                           </h1>
                           <p className="mt-2 max-w-2xl text-[15px] leading-7 text-[var(--text-secondary)]">
-                            A brighter, calmer practice desk built to surface
-                            fresh questions first, keep filters tucked away
-                            until you need them, and make everyday solving feel
-                            less noisy.
+                            A focused practice desk built to surface fresh
+                            questions first, keep filters tucked away until you
+                            need them, and make everyday solving feel less
+                            noisy.
                           </p>
                         </div>
                         <p className="text-sm text-[var(--text-faint)]">
@@ -1450,12 +1462,14 @@ export default function Practice() {
                     <button
                       type="button"
                       onClick={openFilterPanel}
-                      className="inline-flex h-13 items-center justify-center gap-2 rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.84)] px-5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(198,107,44,0.2)]"
+                      className={`${ghostButtonClassName} h-13 gap-2 px-5 text-sm font-medium`}
                     >
                       <SlidersHorizontal size={16} />
                       Filters
                       {filterCount > 0 ? (
-                        <span className="rounded-full border border-[rgba(198,107,44,0.16)] bg-[rgba(198,107,44,0.08)] px-2 py-0.5 text-[11px] text-[#8c5426]">
+                        <span
+                          className={`${accentChipClassName} px-2 py-0.5 text-[11px]`}
+                        >
                           {filterCount}
                         </span>
                       ) : null}
@@ -1468,7 +1482,7 @@ export default function Practice() {
                     Library flow
                   </p>
                   <div className="mt-4 space-y-4">
-                    <div className="rounded-[20px] border border-[rgba(116,74,36,0.1)] bg-[rgba(255,255,255,0.82)] px-4 py-4">
+                    <div className={`${insetCardClassName} px-4 py-4`}>
                       <p className="text-sm font-medium text-[var(--text-primary)]">
                         New questions first
                       </p>
@@ -1478,7 +1492,7 @@ export default function Practice() {
                         not stuck revisiting the same set every time.
                       </p>
                     </div>
-                    <div className="rounded-[20px] border border-[rgba(116,74,36,0.1)] bg-[rgba(255,255,255,0.82)] px-4 py-4">
+                    <div className={`${insetCardClassName} px-4 py-4`}>
                       <p className="text-sm font-medium text-[var(--text-primary)]">
                         Saved filtering
                       </p>
@@ -1491,7 +1505,7 @@ export default function Practice() {
                     <button
                       type="button"
                       onClick={openRandom}
-                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#cb7a3b_0%,#af5a24_100%)] px-5 text-sm font-semibold text-[#fff6ef] shadow-[0_18px_40px_-20px_rgba(175,90,36,0.5)] transition hover:translate-y-[-1px]"
+                      className={`${primaryButtonClassName} h-12 w-full gap-2 px-5 text-sm font-semibold`}
                     >
                       <Shuffle size={15} />
                       Open a random question
@@ -1502,9 +1516,9 @@ export default function Practice() {
             </section>
 
             <section className={panelClassName}>
-              <div className="flex flex-col gap-4 border-b border-[rgba(116,74,36,0.1)] px-5 py-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-4 border-b border-[var(--border)] px-5 py-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#c87032]" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-[var(--brand)]" />
                   <p className="text-sm text-[var(--text-secondary)]">
                     {questionsLoading
                       ? "Preparing the question table."
@@ -1518,7 +1532,7 @@ export default function Practice() {
                     <button
                       type="button"
                       onClick={clearAll}
-                      className="inline-flex h-10 items-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.8)] px-4 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+                      className={`${ghostButtonClassName} h-10 px-4 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]`}
                     >
                       Clear filters
                     </button>
@@ -1526,7 +1540,7 @@ export default function Practice() {
                   <button
                     type="button"
                     onClick={openFilterPanel}
-                    className="inline-flex h-10 items-center gap-2 rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.8)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(198,107,44,0.2)]"
+                    className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-medium`}
                   >
                     <SlidersHorizontal size={14} />
                     Adjust
@@ -1535,11 +1549,11 @@ export default function Practice() {
               </div>
 
               {activeFilterPills.length > 0 ? (
-                <div className="flex flex-wrap gap-2 border-b border-[rgba(116,74,36,0.1)] px-5 py-3">
+                <div className="flex flex-wrap gap-2 border-b border-[var(--border)] px-5 py-3">
                   {activeFilterPills.map(item => (
                     <span
                       key={item.key}
-                      className="rounded-full border border-[rgba(198,107,44,0.14)] bg-[rgba(198,107,44,0.08)] px-3 py-1 text-[11px] font-medium text-[#8c5426]"
+                      className={`${accentChipClassName} px-3 py-1 text-[11px] font-medium`}
                     >
                       {item.label}
                     </span>
@@ -1551,7 +1565,7 @@ export default function Practice() {
                 <PracticeTableSkeleton rows={10} />
               ) : reviewModeSyncing ? (
                 <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
-                  <div className="inline-flex items-center gap-3 rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.8)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+                  <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-5 py-3 text-sm text-[var(--text-secondary)]">
                     <Loader2 size={16} className="animate-spin" />
                     Restoring saved progress...
                   </div>
@@ -1565,7 +1579,7 @@ export default function Practice() {
                     <button
                       type="button"
                       onClick={clearAll}
-                      className="mt-2 inline-flex items-center rounded-full bg-[linear-gradient(135deg,#cb7a3b_0%,#af5a24_100%)] px-4 py-2.5 text-sm font-semibold text-[#fff6ef]"
+                      className={`${primaryButtonClassName} mt-2 px-4 py-2.5 text-sm font-semibold`}
                     >
                       Clear filters
                     </button>
@@ -1576,7 +1590,7 @@ export default function Practice() {
                   <div className="overflow-x-auto">
                     <table className="min-w-[940px] w-full table-fixed border-collapse">
                       <thead>
-                        <tr className="border-b border-[rgba(116,74,36,0.1)]">
+                        <tr className="border-b border-[var(--border)]">
                           {TABLE_COLUMNS.map(column => (
                             <th
                               key={column.label}
@@ -1599,7 +1613,7 @@ export default function Practice() {
                             <tr
                               key={question.id}
                               onClick={() => openQuestion(question)}
-                              className="cursor-pointer border-b border-[rgba(116,74,36,0.08)] transition hover:bg-[rgba(198,107,44,0.05)]"
+                              className="cursor-pointer border-b border-[var(--border)] transition hover:bg-[var(--brand-subtle)]"
                             >
                               <td className="px-5 py-4 align-middle text-sm text-[var(--text-muted)]">
                                 {rowNumber}
@@ -1642,7 +1656,7 @@ export default function Practice() {
                               </td>
                               <td className="px-5 py-4 align-middle">
                                 {progressSyncing ? (
-                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.78)] text-[var(--text-muted)]">
+                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-muted)]">
                                     <Loader2
                                       size={12}
                                       className="animate-spin"
@@ -1678,7 +1692,7 @@ export default function Practice() {
                             setPage(current => Math.max(1, current - 1))
                           }
                           disabled={page === 1}
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.82)] text-[var(--text-primary)] transition disabled:opacity-40"
+                          className={`${ghostButtonClassName} h-10 w-10 disabled:opacity-40`}
                         >
                           <ChevronLeft size={14} />
                         </button>
@@ -1700,8 +1714,8 @@ export default function Practice() {
                                 onClick={() => setPage(currentPage)}
                                 className={
                                   isActive
-                                    ? "inline-flex h-10 min-w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#cb7a3b_0%,#af5a24_100%)] px-3 text-sm font-semibold text-[#fff6ef]"
-                                    : "inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.82)] px-3 text-sm font-medium text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+                                    ? `${primaryButtonClassName} h-10 min-w-10 px-3 text-sm font-semibold`
+                                    : `${ghostButtonClassName} h-10 min-w-10 px-3 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]`
                                 }
                               >
                                 {currentPage}
@@ -1717,7 +1731,7 @@ export default function Practice() {
                             )
                           }
                           disabled={page === totalPages}
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.82)] text-[var(--text-primary)] transition disabled:opacity-40"
+                          className={`${ghostButtonClassName} h-10 w-10 disabled:opacity-40`}
                         >
                           <ChevronRight size={14} />
                         </button>
@@ -1731,7 +1745,7 @@ export default function Practice() {
             <Sheet open={showFilters} onOpenChange={setShowFilters}>
               <SheetContent
                 side="right"
-                className="w-[96vw] max-w-[430px] border-l border-[rgba(116,74,36,0.12)] bg-[linear-gradient(180deg,#fdf8f2_0%,#f7f0e7_100%)] p-5 text-[var(--text-primary)]"
+                className="w-[96vw] max-w-[430px] border-l border-[var(--border)] bg-[var(--bg-base)] p-5 text-[var(--text-primary)]"
               >
                 {filterPanel}
               </SheetContent>
@@ -1739,18 +1753,20 @@ export default function Practice() {
           </>
         ) : (
           <section className={panelClassName}>
-            <div className="border-b border-[rgba(116,74,36,0.1)] px-5 py-4 md:px-6">
+            <div className="border-b border-[var(--border)] px-5 py-4 md:px-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={closeQuestion}
-                    className="inline-flex h-11 items-center gap-2 rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.84)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(198,107,44,0.22)]"
+                    className={`${ghostButtonClassName} h-11 gap-2 px-4 text-sm font-medium`}
                   >
                     <ChevronLeft size={14} />
                     Back to library
                   </button>
-                  <span className="rounded-full border border-[rgba(198,107,44,0.14)] bg-[rgba(198,107,44,0.08)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8c5426]">
+                  <span
+                    className={`${accentChipClassName} px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]`}
+                  >
                     {activeIdx + 1} of {filtered.length}
                   </span>
                 </div>
@@ -1760,12 +1776,15 @@ export default function Practice() {
                     type="button"
                     onClick={handleBookmark}
                     disabled={Boolean(user) && questionsSyncing}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.84)] text-[var(--text-primary)] transition"
+                    className={`${ghostButtonClassName} h-10 w-10`}
                   >
                     {Boolean(user) && questionsSyncing ? (
                       <Loader2 size={14} className="animate-spin" />
                     ) : bookmarkSet.has(toQuestionId(activeQ.id)) ? (
-                      <BookmarkCheck size={14} className="text-[#af5a24]" />
+                      <BookmarkCheck
+                        size={14}
+                        className="text-[var(--brand)]"
+                      />
                     ) : (
                       <Bookmark size={14} />
                     )}
@@ -1773,14 +1792,14 @@ export default function Practice() {
                   <button
                     type="button"
                     onClick={handleReportQuestion}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.84)] text-[var(--text-primary)] transition"
+                    className={`${ghostButtonClassName} h-10 w-10`}
                   >
                     <Flag size={14} />
                   </button>
                   <button
                     type="button"
                     onClick={closeQuestion}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.84)] text-[var(--text-primary)] transition"
+                    className={`${ghostButtonClassName} h-10 w-10`}
                   >
                     <X size={14} />
                   </button>
@@ -1802,14 +1821,14 @@ export default function Practice() {
                 >
                   {activeQ.difficulty}
                 </span>
-                <span className="inline-flex rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.78)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
                   {getTopicBucket(activeQ)}
                 </span>
-                <span className="inline-flex rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.78)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
                   {TYPE_LABELS[activeQ.type] || activeQ.type}
                 </span>
                 {activeQ.year ? (
-                  <span className="inline-flex rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.78)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                  <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
                     {activeQ.year}
                   </span>
                 ) : null}
@@ -1833,7 +1852,7 @@ export default function Practice() {
                     const isSubmitted = submittedOption !== null;
 
                     let optionClass =
-                      "option-btn border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.84)]";
+                      "option-btn border-[var(--border)] bg-[var(--bg-card-strong)]";
 
                     if (isSubmitted) {
                       if (index === activeQ.correct) {
@@ -1845,7 +1864,7 @@ export default function Practice() {
                       }
                     } else if (isSelected) {
                       optionClass =
-                        "option-btn border-[rgba(198,107,44,0.24)] bg-[rgba(198,107,44,0.09)]";
+                        "option-btn border-[var(--brand)] bg-[var(--brand-subtle)]";
                     }
 
                     return (
@@ -1870,8 +1889,8 @@ export default function Practice() {
                                     index === submittedOption
                                   ? "border-[var(--red)] bg-[var(--red)] text-white"
                                   : isSelected
-                                    ? "border-[#cb7a3b] bg-[rgba(203,122,59,0.12)] text-[#af5a24]"
-                                    : "border-[rgba(116,74,36,0.16)] text-[var(--text-muted)]"
+                                    ? "border-[var(--brand)] bg-[var(--brand-subtle)] text-[var(--brand-light)]"
+                                    : "border-[var(--border-strong)] text-[var(--text-muted)]"
                             )}
                           >
                             {["A", "B", "C", "D"][index]}
@@ -1899,14 +1918,14 @@ export default function Practice() {
                       submittedOption !== null ||
                       (Boolean(user) && questionsSyncing)
                     }
-                    className="inline-flex h-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#cb7a3b_0%,#af5a24_100%)] px-4 text-sm font-semibold text-[#fff6ef] shadow-[0_18px_40px_-20px_rgba(175,90,36,0.5)] transition disabled:cursor-not-allowed disabled:opacity-45"
+                    className={`${primaryButtonClassName} h-10 px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45`}
                   >
                     Submit
                   </button>
                 </div>
 
                 {user && questionsSyncing ? (
-                  <p className="text-xs text-[#8c5426]">
+                  <p className="text-xs text-[var(--brand-light)]">
                     Syncing the live question bank before answers and bookmarks
                     are written to your account.
                   </p>
@@ -1919,7 +1938,7 @@ export default function Practice() {
                     Response
                   </p>
                   <div className="mt-4 space-y-3">
-                    <div className="rounded-[18px] border border-[rgba(116,74,36,0.1)] bg-[rgba(255,255,255,0.82)] px-4 py-4">
+                    <div className={`${insetCardClassName} px-4 py-4`}>
                       <p className="text-sm font-medium text-[var(--text-primary)]">
                         {selectedOption === null
                           ? "No option selected yet"
@@ -1949,12 +1968,12 @@ export default function Practice() {
                           {activeQ.explanation}
                         </p>
                         {!user ? (
-                          <p className="mt-3 text-xs text-[#8c5426]">
+                          <p className="mt-3 text-xs text-[var(--brand-light)]">
                             Sign in to save progress, accuracy, and streaks
                             across sessions.
                           </p>
                         ) : questionsSyncing ? (
-                          <p className="mt-3 text-xs text-[#8c5426]">
+                          <p className="mt-3 text-xs text-[var(--brand-light)]">
                             Hold for a moment while PrepBros syncs the live
                             question bank before saving progress.
                           </p>
@@ -1973,19 +1992,19 @@ export default function Practice() {
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {activeQ.topic !== getTopicBucket(activeQ) ? (
-                        <span className="inline-flex rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.82)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                        <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
                           {activeQ.topic}
                         </span>
                       ) : null}
                       {activeQ.subtopic ? (
-                        <span className="inline-flex rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.82)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                        <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
                           {activeQ.subtopic}
                         </span>
                       ) : null}
                       {activeQ.tags.map(tag => (
                         <span
                           key={tag}
-                          className="inline-flex rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.82)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]"
+                          className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]"
                         >
                           #{tag}
                         </span>
@@ -1996,7 +2015,7 @@ export default function Practice() {
               </aside>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[rgba(116,74,36,0.1)] px-5 py-5 md:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] px-5 py-5 md:px-6">
               <button
                 type="button"
                 onClick={() => {
@@ -2006,7 +2025,7 @@ export default function Practice() {
                   }
                 }}
                 disabled={activeIdx === 0}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.82)] px-4 text-sm font-medium text-[var(--text-primary)] transition disabled:opacity-40"
+                className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-medium disabled:opacity-40`}
               >
                 <ChevronLeft size={14} />
                 Previous
@@ -2014,7 +2033,7 @@ export default function Practice() {
               <button
                 type="button"
                 onClick={openRandom}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-[rgba(116,74,36,0.12)] bg-[rgba(255,255,255,0.82)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[rgba(198,107,44,0.2)]"
+                className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-medium`}
               >
                 <Shuffle size={14} />
                 Random
@@ -2028,7 +2047,7 @@ export default function Practice() {
                   }
                 }}
                 disabled={activeIdx === filtered.length - 1}
-                className="inline-flex h-10 items-center gap-2 rounded-full bg-[linear-gradient(135deg,#cb7a3b_0%,#af5a24_100%)] px-4 text-sm font-semibold text-[#fff6ef] transition disabled:opacity-40"
+                className={`${primaryButtonClassName} h-10 gap-2 px-4 text-sm font-semibold disabled:opacity-40`}
               >
                 Next
                 <ChevronRight size={14} />

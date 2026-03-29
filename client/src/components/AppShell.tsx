@@ -325,7 +325,21 @@ export default function AppShell({
           <SidebarBody location={location} />
         </aside>
 
-        <div className="min-w-0">
+        <div className="relative min-w-0">
+          {allowDesktopSidebarToggle ? (
+            <button
+              type="button"
+              onClick={() => setDesktopSidebarOpen(current => !current)}
+              className={cn(
+                "absolute top-6 z-40 hidden h-11 w-11 items-center justify-center rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-primary)] shadow-lg transition hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] lg:inline-flex",
+                desktopSidebarOpen ? "-left-5" : "left-3"
+              )}
+              aria-label={desktopSidebarOpen ? "Hide sidebar" : "Show sidebar"}
+            >
+              <Menu size={18} />
+            </button>
+          ) : null}
+
           <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-card)]/92 backdrop-blur-xl lg:hidden">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
@@ -380,20 +394,6 @@ export default function AppShell({
           </header>
 
           <main className="px-4 py-4 md:px-6 md:py-5 lg:px-8 lg:py-7">
-            {allowDesktopSidebarToggle ? (
-              <div className="mb-4 hidden lg:flex">
-                <button
-                  type="button"
-                  onClick={() => setDesktopSidebarOpen(current => !current)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]"
-                  aria-label={
-                    desktopSidebarOpen ? "Hide sidebar" : "Show sidebar"
-                  }
-                >
-                  <Menu size={18} />
-                </button>
-              </div>
-            ) : null}
             <div
               className={cn("mx-auto w-full max-w-[1280px]", contentClassName)}
             >

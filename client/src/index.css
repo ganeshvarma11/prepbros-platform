@@ -642,6 +642,77 @@ pre {
 }
 
 .practice-shell {
+  --brand: #f68c21;
+  --brand-light: #ffb258;
+  --brand-dark: #dd7510;
+  --brand-subtle: rgba(246, 140, 33, 0.12);
+  --brand-muted: rgba(246, 140, 33, 0.28);
+  --brand-glow: rgba(246, 140, 33, 0.2);
+
+  --accent: #2db55d;
+  --accent-subtle: rgba(45, 181, 93, 0.12);
+  --accent-muted: rgba(45, 181, 93, 0.2);
+
+  --bg-base: #0b090b;
+  --bg-subtle: #131113;
+  --bg-muted: #1b181b;
+  --bg-elevated: rgba(20, 18, 20, 0.9);
+  --bg-card: rgba(28, 24, 27, 0.92);
+  --bg-card-strong: #242023;
+  --bg-inverse: #f8f4ef;
+
+  --text-primary: #f7f1ec;
+  --text-secondary: #d4cbc5;
+  --text-muted: #a39489;
+  --text-faint: #776c65;
+  --text-on-brand: #fff7ef;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --border-focus: #f68c21;
+
+  --green: #2fba69;
+  --green-bg: rgba(47, 186, 105, 0.14);
+  --yellow: #ffbf57;
+  --yellow-bg: rgba(255, 191, 87, 0.14);
+  --red: #ff7c71;
+  --red-bg: rgba(255, 124, 113, 0.14);
+  --blue: #7ba5ff;
+  --blue-bg: rgba(123, 165, 255, 0.14);
+
+  --page-background:
+    radial-gradient(
+      circle at 76% 14%,
+      rgba(246, 140, 33, 0.18),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 22% 46%,
+      rgba(255, 220, 185, 0.05),
+      transparent 24%
+    ),
+    linear-gradient(180deg, #0c0a0c 0%, #0a090a 100%);
+  --navbar-bg: linear-gradient(
+    180deg,
+    rgba(12, 10, 12, 0.94) 0%,
+    rgba(12, 10, 12, 0.82) 100%
+  );
+  --navbar-border: rgba(255, 255, 255, 0.06);
+  --logo-mark: #f5f1f7;
+  --logo-mark-glow: rgba(255, 255, 255, 0.12);
+  --logo-mark-border: #f5f1f7;
+
+  --shadow-sm: 0 8px 24px -18px rgba(0, 0, 0, 0.55);
+  --shadow-md: 0 18px 50px -26px rgba(0, 0, 0, 0.65);
+  --shadow-lg: 0 28px 70px -30px rgba(0, 0, 0, 0.75);
+  --shadow-xl: 0 40px 100px -34px rgba(0, 0, 0, 0.85);
+
+  font-family: "DM Sans", var(--font-sans);
+  background: var(--page-background);
+  overflow-x: clip;
+}
+
+html:not(.dark) .practice-shell {
   --brand: #cb7a3b;
   --brand-light: #df9251;
   --brand-dark: #af5a24;
@@ -665,7 +736,6 @@ pre {
   --text-secondary: #655246;
   --text-muted: #8f7868;
   --text-faint: #b09c8b;
-  --text-on-brand: #fff7ef;
 
   --border: rgba(116, 74, 36, 0.12);
   --border-strong: rgba(116, 74, 36, 0.2);
@@ -706,9 +776,6 @@ pre {
   --shadow-md: 0 18px 50px -26px rgba(89, 54, 23, 0.16);
   --shadow-lg: 0 28px 70px -30px rgba(89, 54, 23, 0.2);
   --shadow-xl: 0 40px 100px -34px rgba(89, 54, 23, 0.24);
-
-  font-family: "DM Sans", var(--font-sans);
-  background: var(--page-background);
 }
 
 html:not(.dark) .landing-minimal-page {
