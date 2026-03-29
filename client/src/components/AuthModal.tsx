@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Link } from "wouter";
 
 import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -307,12 +308,25 @@ export default function AuthModal({
                       {fieldError(loginForm.formState.errors.email?.message)}
                     </div>
                     <div>
-                      <label
-                        htmlFor="auth-login-password"
-                        className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]"
-                      >
-                        Password
-                      </label>
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <label
+                          htmlFor="auth-login-password"
+                          className="block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]"
+                        >
+                          Password
+                        </label>
+                        <Link
+                          href={
+                            loginForm.getValues("email")
+                              ? `/reset-password?email=${encodeURIComponent(loginForm.getValues("email"))}`
+                              : "/reset-password"
+                          }
+                        >
+                          <span className="cursor-pointer text-xs font-medium text-[var(--brand)]">
+                            Forgot password?
+                          </span>
+                        </Link>
+                      </div>
                       <div className="relative">
                         <input
                           id="auth-login-password"

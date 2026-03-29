@@ -26,6 +26,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Support = lazy(() => import("./pages/Support"));
 const Status = lazy(() => import("./pages/Status"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function RouteTracker() {
@@ -56,6 +57,7 @@ function Router() {
         <Route path="/terms" component={Terms} />
         <Route path="/support" component={Support} />
         <Route path="/status" component={Status} />
+        <Route path="/reset-password" component={ResetPassword} />
         <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
