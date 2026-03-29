@@ -1,7 +1,7 @@
 {
   "name": "PrepBros",
   "short_name": "PrepBros",
-  "description": "PrepBros exam preparation platform",
+  "description": "Daily practice for UPSC, SSC, and state exam aspirants.",
   "theme_color": "#111111",
   "background_color": "#111111",
   "display": "standalone",

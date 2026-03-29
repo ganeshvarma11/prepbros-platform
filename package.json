@@ -5,7 +5,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "seo:generate": "node --import tsx scripts/generate-seo-assets.ts",
+    "indexnow:submit": "node --import tsx scripts/submit-indexnow.ts",
+    "build": "pnpm seo:generate && vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
