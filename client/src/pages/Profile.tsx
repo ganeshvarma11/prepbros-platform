@@ -1,9 +1,17 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 import {
   ArrowRight,
   Copy,
   Crown,
   Flame,
+  ImagePlus,
   Loader2,
   LogOut,
   Mail,
@@ -43,6 +51,8 @@ const EXAM_OPTIONS = [
 ];
 
 const PREP_LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced"];
+const PROFILE_MEDIA_BUCKET = "profile-media";
+const MAX_MEDIA_SIZE_BYTES = 5 * 1024 * 1024;
 
 type ActiveTab = "profile" | "settings" | "account";
 
@@ -257,9 +267,26 @@ function AccountRow({
   );
 }
 
+const isValidImageFile = (file: File) => file.type.startsWith("image/");
+
+const buildMediaPath = ({
+  userId,
+  kind,
+  file,
+}: {
+  userId: string;
+  kind: "avatar" | "banner";
+  file: File;
+}) => {
+  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  return `${kind}s/${userId}/${kind}.${extension}`;
+};
+
 export default function Profile() {
   const { user, loading, signOut } = useAuth();
   const { questions, syncing: questionsSyncing } = useQuestionBank();
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const bannerInputRef = useRef<HTMLInputElement | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [answers, setAnswers] = useState<
@@ -268,6 +295,12 @@ export default function Profile() {
   const [settings, setSettings] = useState<EditableSettings>(defaultSettings);
   const [activeTab, setActiveTab] = useState<ActiveTab>("profile");
   const [saving, setSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [uploadingMedia, setUploadingMedia] = useState<{
+    avatar: boolean;
+    banner: boolean;
+  }>({ avatar: false, banner: false });
   const [saveNotice, setSaveNotice] = useState<SaveNotice | null>(null);
 
   useEffect(() => {
@@ -288,6 +321,15 @@ export default function Profile() {
       setProfile(nextProfile);
       setSettings(buildSettings(nextProfile, user));
       setAnswers(answerData || []);
+      setAvatarUrl(
+        String(
+          user.user_metadata?.avatar_url ||
+            user.user_metadata?.picture ||
+            user.user_metadata?.avatar ||
+            ""
+        )
+      );
+      setBannerUrl(String(user.user_metadata?.banner_url || ""));
       setPageLoading(false);
     };
 
@@ -379,6 +421,8 @@ export default function Profile() {
       email_reminders: nextSettings.emailReminders,
       weekly_digest: nextSettings.weeklyDigest,
       streak_alerts: nextSettings.streakAlerts,
+      avatar_url: avatarUrl || null,
+      banner_url: bannerUrl || null,
     };
 
     setSettings(nextSettings);
@@ -436,6 +480,148 @@ export default function Profile() {
     }
   };
 
+  const updateProfileMedia = async ({
+    avatar,
+    banner,
+  }: {
+    avatar?: string | null;
+    banner?: string | null;
+  }) => {
+    if (!user) return { error: new Error("No active user session.") };
+
+    const metadata = user.user_metadata || {};
+    const payload = {
+      ...metadata,
+      ...(avatar !== undefined ? { avatar_url: avatar } : {}),
+      ...(banner !== undefined ? { banner_url: banner } : {}),
+    };
+
+    const { error } = await supabase.auth.updateUser({
+      data: payload,
+    });
+
+    return { error };
+  };
+
+  const uploadMedia = async ({
+    file,
+    kind,
+  }: {
+    file: File;
+    kind: "avatar" | "banner";
+  }) => {
+    if (!user) return;
+
+    if (!isValidImageFile(file)) {
+      setSaveNotice({
+        tone: "error",
+        message: "Please choose an image file for your profile media.",
+      });
+      return;
+    }
+
+    if (file.size > MAX_MEDIA_SIZE_BYTES) {
+      setSaveNotice({
+        tone: "error",
+        message: "Please choose an image smaller than 5 MB.",
+      });
+      return;
+    }
+
+    setUploadingMedia(current => ({ ...current, [kind]: true }));
+    setSaveNotice(null);
+
+    const path = buildMediaPath({ userId: user.id, kind, file });
+    const { error: uploadError } = await supabase.storage
+      .from(PROFILE_MEDIA_BUCKET)
+      .upload(path, file, {
+        upsert: true,
+        cacheControl: "3600",
+        contentType: file.type,
+      });
+
+    if (uploadError) {
+      setSaveNotice({
+        tone: "error",
+        message:
+          uploadError.message.includes("Bucket not found") ||
+          uploadError.message.includes("not found")
+            ? "The profile-media storage bucket is not set up in Supabase yet."
+            : "We couldn't upload that image right now. Please try again.",
+      });
+      setUploadingMedia(current => ({ ...current, [kind]: false }));
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from(PROFILE_MEDIA_BUCKET)
+      .getPublicUrl(path);
+    const nextUrl = `${data.publicUrl}?t=${Date.now()}`;
+    const { error: metadataError } = await updateProfileMedia({
+      avatar: kind === "avatar" ? nextUrl : undefined,
+      banner: kind === "banner" ? nextUrl : undefined,
+    });
+
+    if (metadataError) {
+      setSaveNotice({
+        tone: "error",
+        message: "Image uploaded, but saving it to your profile failed.",
+      });
+      setUploadingMedia(current => ({ ...current, [kind]: false }));
+      return;
+    }
+
+    if (kind === "avatar") {
+      setAvatarUrl(nextUrl);
+    } else {
+      setBannerUrl(nextUrl);
+    }
+
+    setSaveNotice({
+      tone: "success",
+      message: `${kind === "avatar" ? "Profile photo" : "Banner image"} updated.`,
+    });
+    setUploadingMedia(current => ({ ...current, [kind]: false }));
+  };
+
+  const handleMediaSelection =
+    (kind: "avatar" | "banner") =>
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+      await uploadMedia({ file, kind });
+    };
+
+  const removeMedia = async (kind: "avatar" | "banner") => {
+    setUploadingMedia(current => ({ ...current, [kind]: true }));
+    const { error } = await updateProfileMedia({
+      avatar: kind === "avatar" ? null : undefined,
+      banner: kind === "banner" ? null : undefined,
+    });
+
+    if (error) {
+      setSaveNotice({
+        tone: "error",
+        message: `We couldn't remove the ${kind} image right now.`,
+      });
+      setUploadingMedia(current => ({ ...current, [kind]: false }));
+      return;
+    }
+
+    if (kind === "avatar") {
+      setAvatarUrl("");
+    } else {
+      setBannerUrl("");
+    }
+
+    setSaveNotice({
+      tone: "success",
+      message: `${kind === "avatar" ? "Profile photo" : "Banner image"} removed.`,
+    });
+    setUploadingMedia(current => ({ ...current, [kind]: false }));
+  };
+
   if (loading || pageLoading || questionsSyncing) {
     return (
       <AppShell shellClassName="bg-[#050505]">
@@ -472,6 +658,21 @@ export default function Profile() {
         <div className="pointer-events-none absolute inset-0 opacity-[0.09] [background-image:linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:150px_150px]" />
 
         <div className="relative z-10 mx-auto w-full max-w-[1120px] pb-10">
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleMediaSelection("avatar")}
+          />
+          <input
+            ref={bannerInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleMediaSelection("banner")}
+          />
+
           <div className="sticky top-0 z-20 -mx-4 border-b border-white/8 bg-[#141414]/92 px-4 backdrop-blur-xl md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
             <div className="mx-auto flex max-w-[1120px] items-center gap-1 overflow-x-auto">
               {[
@@ -498,47 +699,74 @@ export default function Profile() {
           {activeTab === "profile" ? (
             <section className="overflow-hidden">
               <div className="relative h-[190px] overflow-hidden border-b border-white/8 bg-[linear-gradient(135deg,#1a1200_0%,#2a1f00_38%,#1a1200_100%)]">
+                {bannerUrl ? (
+                  <img
+                    src={bannerUrl}
+                    alt={`${displayName} banner`}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : null}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(201,168,76,0.12),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(201,168,76,0.07),transparent_45%)]" />
                 <div className="absolute inset-0 opacity-[0.18] [background-image:linear-gradient(to_right,rgba(201,168,76,0.16)_1px,transparent_1px),linear-gradient(to_bottom,rgba(201,168,76,0.12)_1px,transparent_1px)] [background-size:180px_180px]" />
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("settings")}
-                  className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-[10px] border border-white/12 bg-black/35 px-3 py-2 text-xs text-[#f0ede6] backdrop-blur-sm transition hover:bg-black/55"
-                >
-                  <PencilLine size={13} />
-                  Edit profile
-                </button>
+                <div className="absolute right-4 top-4 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => bannerInputRef.current?.click()}
+                    disabled={uploadingMedia.banner}
+                    className="inline-flex items-center gap-2 rounded-[10px] border border-white/12 bg-black/35 px-3 py-2 text-xs text-[#f0ede6] backdrop-blur-sm transition hover:bg-black/55 disabled:opacity-70"
+                  >
+                    {uploadingMedia.banner ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <ImagePlus size={13} />
+                    )}
+                    {bannerUrl ? "Change banner" : "Upload banner"}
+                  </button>
+                  {bannerUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void removeMedia("banner");
+                      }}
+                      disabled={uploadingMedia.banner}
+                      className="inline-flex items-center gap-2 rounded-[10px] border border-white/12 bg-black/35 px-3 py-2 text-xs text-[#f0ede6] backdrop-blur-sm transition hover:bg-black/55 disabled:opacity-70"
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
               </div>
 
               <div className="border-b border-white/8 px-0 pb-8">
-                <div className="px-0 sm:px-0">
-                  <div className="mx-0 px-0">
-                    <div className="px-0">
-                      <div className="mx-0 px-0" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="px-0">
-                  <div className="mx-auto max-w-[1120px] px-0">
-                    <div className="relative px-0">
-                      <div className="mx-auto w-full px-0">
-                        <div className="px-0">
-                          <div className="mx-auto w-full px-0" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="px-0">
                   <div className="mx-auto max-w-[1120px]">
                     <div className="-mt-10 flex flex-col gap-6 px-0 sm:-mt-12 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
-                        <div className="relative flex h-[88px] w-[88px] items-center justify-center rounded-full border-[3px] border-[#050505] bg-[#222] text-[30px] text-[#c9a84c] shadow-[0_24px_60px_-28px_rgba(0,0,0,0.9)]">
-                          <span style={{ fontFamily: "var(--font-display)" }}>
-                            {getInitials(displayName)}
-                          </span>
+                        <div className="relative flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full border-[3px] border-[#050505] bg-[#222] text-[30px] text-[#c9a84c] shadow-[0_24px_60px_-28px_rgba(0,0,0,0.9)]">
+                          {avatarUrl ? (
+                            <img
+                              src={avatarUrl}
+                              alt={displayName}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span style={{ fontFamily: "var(--font-display)" }}>
+                              {getInitials(displayName)}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => avatarInputRef.current?.click()}
+                            disabled={uploadingMedia.avatar}
+                            className="absolute bottom-0 right-0 inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#050505] bg-[#c9a84c] text-[#0e0e0e] transition hover:bg-[#f0c040] disabled:opacity-70"
+                            aria-label="Upload profile photo"
+                          >
+                            {uploadingMedia.avatar ? (
+                              <Loader2 size={12} className="animate-spin" />
+                            ) : (
+                              <PencilLine size={12} />
+                            )}
+                          </button>
                         </div>
 
                         <div className="mt-4">
@@ -609,6 +837,18 @@ export default function Profile() {
                             <ArrowRight size={14} />
                           </span>
                         </Link>
+                        {avatarUrl ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void removeMedia("avatar");
+                            }}
+                            disabled={uploadingMedia.avatar}
+                            className="inline-flex items-center gap-2 rounded-[10px] border border-white/10 px-4 py-2.5 text-sm text-[#8a8880] transition hover:bg-white/[0.04] hover:text-[#f0ede6] disabled:opacity-70"
+                          >
+                            Remove photo
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   </div>
