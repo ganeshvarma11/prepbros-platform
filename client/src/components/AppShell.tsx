@@ -165,7 +165,7 @@ function SidebarBody({
   const initials = getInitials(displayName);
 
   return (
-    <div className="relative flex h-full flex-col border-r border-[var(--border-2)] bg-[linear-gradient(180deg,rgba(250,251,253,0.98)_0%,rgba(243,246,251,0.96)_100%)] px-3 py-4 shadow-[var(--shadow-md)] backdrop-blur-xl dark:border-[var(--border-1)] dark:bg-[linear-gradient(180deg,rgba(8,15,29,0.96)_0%,rgba(11,17,32,0.94)_100%)] dark:shadow-none">
+    <div className="relative flex h-full flex-col border-r border-[var(--border-2)] bg-[var(--bg-card)] px-3 py-4 shadow-[var(--shadow-md)] backdrop-blur-xl">
       <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
         {collapsed ? (
           <Link href="/">
