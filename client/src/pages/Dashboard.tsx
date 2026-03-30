@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Flame, Target } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowRight, Flame, Loader2, RotateCw, Target } from "lucide-react";
 import { Link } from "wouter";
 
 import AppShell from "@/components/AppShell";
 import OnboardingModal from "@/components/OnboardingModal";
 import PageHeader from "@/components/PageHeader";
 import { PageEmpty, PageSkeleton } from "@/components/PageState";
+import SwipeDismissNotice from "@/components/SwipeDismissNotice";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
 import {
   createQuestionIdentityIndex,
@@ -130,11 +132,57 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [answers, setAnswers] = useState<AnswerRow[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [dailyGoalOverride, setDailyGoalOverride] = useState<number | null>(
     null
   );
   const { questions, syncing: questionsSyncing } = useQuestionBank();
+  const loadDashboardData = useCallback(
+    async (mode: "initial" | "refresh" = "initial") => {
+      if (!user) {
+        setPageLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      if (mode === "initial") {
+        setPageLoading(true);
+      } else {
+        setRefreshing(true);
+      }
+
+      try {
+        const [{ data: profileData }, answersData] = await Promise.all([
+          supabase.from("profiles").select("*").eq("id", user.id).single(),
+          getAnswerAttempts(user.id),
+        ]);
+
+        setProfile(profileData || null);
+        setAnswers(
+          (answersData || []).map(item => ({
+            ...item,
+            answered_at: item.answered_at ?? new Date(0).toISOString(),
+          }))
+        );
+
+        const metadata = user.user_metadata || {};
+        if (
+          !metadata.onboarding_completed_at &&
+          (answersData?.length ?? 0) === 0
+        ) {
+          setShowOnboarding(true);
+        }
+      } finally {
+        if (mode === "initial") {
+          setPageLoading(false);
+        } else {
+          setRefreshing(false);
+        }
+      }
+    },
+    [user]
+  );
 
   useEffect(() => {
     if (loading) return;
@@ -143,34 +191,8 @@ export default function Dashboard() {
       return;
     }
 
-    const load = async () => {
-      setPageLoading(true);
-      const [{ data: profileData }, answersData] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
-        getAnswerAttempts(user.id),
-      ]);
-
-      setProfile(profileData || null);
-      setAnswers(
-        (answersData || []).map(item => ({
-          ...item,
-          answered_at: item.answered_at ?? new Date(0).toISOString(),
-        }))
-      );
-
-      const metadata = user.user_metadata || {};
-      if (
-        !metadata.onboarding_completed_at &&
-        (answersData?.length ?? 0) === 0
-      ) {
-        setShowOnboarding(true);
-      }
-
-      setPageLoading(false);
-    };
-
-    load();
-  }, [loading, user]);
+    void loadDashboardData("initial");
+  }, [loadDashboardData, loading, user]);
 
   const questionIdentity = useMemo(
     () => createQuestionIdentityIndex(questions),
@@ -235,6 +257,10 @@ export default function Dashboard() {
     profile?.full_name?.split(" ")[0] ||
     user?.email?.split("@")[0] ||
     "Aspirant";
+  const refreshDashboard = useCallback(async () => {
+    if (loading || !user) return;
+    await loadDashboardData("refresh");
+  }, [loadDashboardData, loading, user]);
 
   const dailyGoal =
     dailyGoalOverride ??
@@ -452,6 +478,10 @@ export default function Dashboard() {
         streak > 0 ? "Consistency is building" : "Start a new streak today",
     },
   ];
+  const dashboardRefresh = usePullToRefresh({
+    enabled: Boolean(user) && !loading && !pageLoading && !questionsSyncing,
+    onRefresh: refreshDashboard,
+  });
 
   if (loading || pageLoading || questionsSyncing) {
     return (
@@ -500,7 +530,37 @@ export default function Dashboard() {
 
       <div className="relative">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.78),transparent_32%),radial-gradient(circle_at_82%_12%,rgba(191,219,254,0.34),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.14),transparent_32%),radial-gradient(circle_at_82%_12%,rgba(59,130,246,0.14),transparent_24%)]" />
-        <div className="relative z-10 mx-auto w-full max-w-[1120px] space-y-6 pb-6">
+        <div
+          {...dashboardRefresh.bind}
+          className="relative z-10 mx-auto w-full max-w-[1120px] space-y-6 pb-6 transition-transform duration-200"
+          style={{
+            transform: `translateY(${dashboardRefresh.pullDistance}px)`,
+            transition: dashboardRefresh.pullDistance > 0 ? "none" : undefined,
+          }}
+        >
+          <div
+            className="pointer-events-none flex justify-center overflow-hidden transition-[max-height,opacity] duration-200"
+            style={{
+              maxHeight:
+                dashboardRefresh.pullDistance > 0 || refreshing ? "72px" : "0px",
+              opacity:
+                dashboardRefresh.pullDistance > 0 || refreshing ? 1 : 0,
+            }}
+          >
+            <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
+              {dashboardRefresh.isRefreshing || refreshing ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Refreshing
+                </>
+              ) : dashboardRefresh.readyToRefresh ? (
+                "Release to refresh"
+              ) : (
+                "Pull to refresh"
+              )}
+            </div>
+          </div>
+
           <section className="card overflow-hidden p-6 md:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <PageHeader
@@ -510,6 +570,20 @@ export default function Dashboard() {
                 className="mb-0 flex-1"
                 actions={
                   <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void refreshDashboard();
+                      }}
+                      className="badge cursor-pointer transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]"
+                    >
+                      {refreshing ? (
+                        <Loader2 size={13} className="animate-spin" />
+                      ) : (
+                        <RotateCw size={13} />
+                      )}
+                      Refresh
+                    </button>
                     <span className="badge">
                       <Target size={13} />
                       {todayAttempts} / {dailyGoal} today
@@ -529,6 +603,12 @@ export default function Dashboard() {
               />
             </div>
           </section>
+
+          <SwipeDismissNotice
+            title="Refresh with a pull"
+            description="On mobile, pull down from the top to reload your dashboard. On desktop, use the refresh chip."
+            className="bg-[var(--bg-card)]"
+          />
 
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {summaryStats.map(item => (

@@ -18,6 +18,13 @@ import { Link, useLocation } from "wouter";
 import AuthModal from "@/components/AuthModal";
 import BrandLogo from "@/components/BrandLogo";
 import Footer from "@/components/Footer";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
 import { getPolicyUrl, siteConfig } from "@/lib/siteConfig";
@@ -39,46 +46,104 @@ const PLATFORM_PILLARS = [
   {
     eyebrow: "Practice",
     title: "Quiet question desk",
-    description: "Fresh questions, clean filters, fewer distractions.",
+    description: "Fresh first. Noise down.",
     meta: "Daily flow",
   },
   {
     eyebrow: "Review",
     title: "Revision that returns",
-    description: "Wrong answers and weak topics stay easy to revisit.",
+    description: "Misses stay ready to revisit.",
     meta: "Retry ready",
   },
   {
     eyebrow: "Progress",
     title: "Signals, not noise",
-    description: "Accuracy, streak, pace, and coverage in one glance.",
+    description: "Accuracy, streak, and pace at a glance.",
     meta: "Clear progress",
   },
 ];
 
-const PLATFORM_FLOW = [
+const STUDY_TRACKS: Array<{
+  title: string;
+  subtitle: string;
+  metric: string;
+  chips: string[];
+  icon: LucideIcon;
+  href: string;
+}> = [
   {
-    step: "01",
-    title: "Solve",
-    description: "Start with fresh daily questions.",
+    title: "UPSC GS Sprint",
+    subtitle: "Polity, economy, history",
+    metric: "Daily rhythm",
+    chips: ["PYQs", "Mixed sets", "Review-ready"],
+    icon: BookOpen,
+    href: "/explore",
   },
   {
-    step: "02",
-    title: "Review",
-    description: "Return to misses before they pile up.",
+    title: "SSC Fast Lane",
+    subtitle: "Quant, reasoning, English",
+    metric: "Short loops",
+    chips: ["Speed practice", "Topic bursts", "Clear tracking"],
+    icon: Trophy,
+    href: "/explore",
   },
   {
-    step: "03",
-    title: "Track",
-    description: "Keep rhythm with a calm dashboard.",
+    title: "State PSC Focus",
+    subtitle: "Static GK and current affairs",
+    metric: "Steady coverage",
+    chips: ["State topics", "Retry flow", "Less clutter"],
+    icon: Sparkles,
+    href: "/explore",
   },
 ];
 
-const PLATFORM_HIGHLIGHTS = [
-  "Questions first",
-  "Weak-topic review",
-  "Progress snapshot",
-  "Resources and support",
+const PRACTICE_SET_CARDS = [
+  {
+    eyebrow: "Fresh now",
+    title: "Daily mixed set",
+    detail: "15 questions, quick momentum.",
+    chips: ["15 Q", "Swipe next", "New first"],
+    href: "/practice",
+  },
+  {
+    eyebrow: "Retry queue",
+    title: "Weak-topic return",
+    detail: "Come back to what slipped.",
+    chips: ["Review", "Incorrect only", "Low friction"],
+    href: "/practice?incorrect=1",
+  },
+  {
+    eyebrow: "Bookmarks",
+    title: "Saved for later",
+    detail: "Keep good questions close.",
+    chips: ["Saved", "Focused pass", "Quick reopen"],
+    href: "/practice?review=bookmarked",
+  },
+  {
+    eyebrow: "PYQ mode",
+    title: "Exam-style run",
+    detail: "Stay inside real-paper pressure.",
+    chips: ["Timed feel", "Topic mix", "Exam tags"],
+    href: "/practice?types=PYQ",
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    quote: "The swiping and quick sets make daily practice feel easy to return to.",
+    name: "Akhila S.",
+    role: "UPSC aspirant",
+  },
+  {
+    quote: "I can move from solve to review without losing focus or getting buried in menus.",
+    name: "Nitin R.",
+    role: "SSC learner",
+  },
+  {
+    quote: "The dashboard shows just enough. I know what to do next in seconds.",
+    name: "Harini P.",
+    role: "State PSC aspirant",
+  },
 ];
 
 const PRICING_PREVIEW = [
@@ -87,7 +152,7 @@ const PRICING_PREVIEW = [
     price: "₹0",
     cadence: "",
     badge: "Start here",
-    description: "Build consistency.",
+    description: "Build the habit.",
     features: ["Practice", "Basic dashboard", "Core resources"],
   },
   {
@@ -95,7 +160,7 @@ const PRICING_PREVIEW = [
     price: "₹199",
     cadence: "/ month",
     badge: "Most flexible",
-    description: "More room for active prep.",
+    description: "For active prep.",
     features: ["More access", "Better review signals", "Priority help"],
   },
   {
@@ -103,7 +168,7 @@ const PRICING_PREVIEW = [
     price: "₹999",
     cadence: "/ year",
     badge: "Best value",
-    description: "Best fit for long cycles.",
+    description: "For long prep cycles.",
     features: ["Everything in Pro", "Lower yearly cost", "Long-run prep"],
   },
 ];
@@ -632,53 +697,42 @@ export default function Home() {
       <div className="relative bg-[var(--page-background)] pb-4">
         <div className="mx-auto w-[min(1180px,calc(100vw-32px))] space-y-6 pb-8 pt-4 sm:space-y-7 sm:pb-10">
           <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(300px,0.95fr)] lg:items-start">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-start">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
-                  Platform overview
+                  Prep at a glance
                 </p>
                 <h2
-                  className="mt-4 max-w-[11ch] text-[clamp(2.6rem,6vw,4.2rem)] leading-[0.94] tracking-[-0.07em] text-[var(--text-primary)]"
+                  className="mt-4 max-w-[10ch] text-[clamp(2.6rem,6vw,4rem)] leading-[0.94] tracking-[-0.07em] text-[var(--text-primary)]"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
-                  PrepBros keeps the whole loop calm.
+                  One flow for solve, review, and progress.
                 </h2>
-                <p className="mt-5 max-w-[34rem] text-[16px] leading-8 text-[var(--text-secondary)]">
-                  Practice, review, track progress, and upgrade only when you
-                  need more room.
+                <p className="mt-5 max-w-[30rem] text-[15px] leading-7 text-[var(--text-secondary)]">
+                  Less reading. More signals. The sections below are built to be
+                  swiped, skimmed, and acted on.
                 </p>
-
-                <div className="mt-6 flex flex-wrap gap-3">
-                  {PLATFORM_HIGHLIGHTS.map(item => (
-                    <span
-                      key={item}
-                      className="rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[13px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { value: "Daily", label: "Practice flow" },
-                  { value: "Retry", label: "Weak-topic review" },
-                  { value: "Clear", label: "Dashboard signals" },
-                  { value: "Ready", label: "Support and plans" },
+                  { value: "Swipe", label: "Question flow" },
+                  { value: "Pull", label: "Dashboard refresh" },
+                  { value: "Track", label: "Course lanes" },
+                  { value: "Glow", label: "Cursor motion" },
                 ].map(item => (
                   <div
                     key={item.label}
                     className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
                   >
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
+                      {item.label}
+                    </p>
                     <p
-                      className="text-[2.4rem] leading-none tracking-[-0.06em] text-[var(--text-primary)]"
+                      className="mt-3 text-[2.2rem] leading-none tracking-[-0.06em] text-[var(--text-primary)]"
                       style={{ fontFamily: "var(--font-display)" }}
                     >
                       {item.value}
-                    </p>
-                    <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                      {item.label}
                     </p>
                   </div>
                 ))}
@@ -710,79 +764,167 @@ export default function Home() {
             </div>
           </InteractiveSurface>
 
-          <section className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
-                Flow
-              </p>
-              <div className="mt-6 space-y-4">
-                {PLATFORM_FLOW.map(item => (
-                  <div
-                    key={item.step}
-                    className="grid gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)] md:grid-cols-[auto_minmax(0,1fr)]"
-                  >
-                    <div
-                      className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-sm font-semibold text-[var(--text-primary)]"
-                      style={{ fontFamily: "var(--font-mono)" }}
-                    >
-                      {item.step}
-                    </div>
-                    <div>
-                      <h3 className="text-[1.3rem] tracking-[-0.04em] text-[var(--text-primary)]">
-                        {item.title}
-                      </h3>
-                      <p className="mt-1 text-sm leading-7 text-[var(--text-secondary)]">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                  Study lanes
+                </p>
+                <h2 className="mt-4 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+                  Swipe into the next track.
+                </h2>
               </div>
+              <p className="max-w-[28rem] text-sm leading-7 text-[var(--text-secondary)]">
+                Touch on mobile, drag on desktop, or tap the arrows.
+              </p>
+            </div>
+
+            <Carousel className="mt-7" opts={{ align: "start", dragFree: true }}>
+              <CarouselContent>
+                {STUDY_TRACKS.map(track => (
+                  <CarouselItem
+                    key={track.title}
+                    className="md:basis-1/2 xl:basis-1/3"
+                  >
+                    <InteractiveSurface className="h-full rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                      <div className="flex items-start justify-between gap-4">
+                        <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
+                          <track.icon size={18} />
+                        </span>
+                        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-secondary)]">
+                          {track.metric}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-5 text-[1.6rem] tracking-[-0.045em] text-[var(--text-primary)]">
+                        {track.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        {track.subtitle}
+                      </p>
+
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {track.chips.map(chip => (
+                          <span
+                            key={chip}
+                            className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)]"
+                          >
+                            {chip}
+                          </span>
+                        ))}
+                      </div>
+
+                      <Link href={track.href}>
+                        <span className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--text-primary)] transition hover:text-[var(--brand)]">
+                          Open track
+                          <ArrowRight size={15} />
+                        </span>
+                      </Link>
+                    </InteractiveSurface>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-auto right-12 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+              <CarouselNext className="right-0 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+            </Carousel>
+          </InteractiveSurface>
+
+          <section className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                    Practice sets
+                  </p>
+                  <h3 className="mt-4 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+                    Built for quick momentum.
+                  </h3>
+                </div>
+                <p className="max-w-[22rem] text-sm leading-7 text-[var(--text-secondary)]">
+                  Swipe across sets, then jump straight into solving.
+                </p>
+              </div>
+
+              <Carousel className="mt-7" opts={{ align: "start", dragFree: true }}>
+                <CarouselContent>
+                  {PRACTICE_SET_CARDS.map(setCard => (
+                    <CarouselItem key={setCard.title} className="md:basis-1/2">
+                      <InteractiveSurface className="h-full rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
+                          {setCard.eyebrow}
+                        </p>
+                        <h4 className="mt-4 text-[1.45rem] tracking-[-0.04em] text-[var(--text-primary)]">
+                          {setCard.title}
+                        </h4>
+                        <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                          {setCard.detail}
+                        </p>
+
+                        <div className="mt-5 flex flex-wrap gap-2">
+                          {setCard.chips.map(chip => (
+                            <span
+                              key={chip}
+                              className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)]"
+                            >
+                              {chip}
+                            </span>
+                          ))}
+                        </div>
+
+                        <Link href={setCard.href}>
+                          <span className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--text-primary)] transition hover:text-[var(--brand)]">
+                            Start set
+                            <ArrowRight size={15} />
+                          </span>
+                        </Link>
+                      </InteractiveSurface>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-auto right-12 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+                <CarouselNext className="right-0 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+              </Carousel>
             </InteractiveSurface>
 
             <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
-                Essentials
+                Testimonials
               </p>
               <h3 className="mt-4 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
-                Quick access, not clutter.
+                What students feel.
               </h3>
-              <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-                Product, support, pricing, and legal pages all stay one tap
-                away.
-              </p>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {ESSENTIAL_LINKS.map(item => (
-                  <Link key={item.href} href={item.href}>
-                    <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
-                      <span className="flex items-center gap-3">
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
-                          <item.icon size={16} />
-                        </span>
-                        <span>
-                          <span className="block text-sm font-medium text-[var(--text-primary)]">
-                            {item.label}
-                          </span>
-                          <span className="block text-xs text-[var(--text-faint)]">
-                            {item.note}
-                          </span>
-                        </span>
-                      </span>
-                      <ArrowRight size={15} className="text-[var(--text-faint)]" />
-                    </span>
-                  </Link>
-                ))}
-              </div>
+              <Carousel className="mt-7" opts={{ align: "start", loop: true }}>
+                <CarouselContent>
+                  {TESTIMONIALS.map(item => (
+                    <CarouselItem key={item.name}>
+                      <InteractiveSurface className="h-full rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                        <p className="text-[1.05rem] leading-8 tracking-[-0.02em] text-[var(--text-primary)]">
+                          “{item.quote}”
+                        </p>
+                        <div className="mt-6">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">
+                            {item.name}
+                          </p>
+                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                            {item.role}
+                          </p>
+                        </div>
+                      </InteractiveSurface>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-auto right-12 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+                <CarouselNext className="right-0 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+              </Carousel>
 
-              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-                  Contact
+              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                  Gestures
                 </p>
-                <div className="mt-3 space-y-1 text-sm leading-7 text-[var(--text-secondary)]">
-                  <p>{siteConfig.supportEmail}</p>
-                  <p>{siteConfig.billingEmail}</p>
-                  <p>{siteConfig.companyAddress}</p>
+                <div className="mt-3 grid gap-2 text-sm text-[var(--text-secondary)]">
+                  <p>Mobile: swipe questions, pull to refresh, slide menus away.</p>
+                  <p>Desktop: drag carousels, click arrows, use the same fallbacks.</p>
                 </div>
               </div>
             </InteractiveSurface>
@@ -800,8 +942,8 @@ export default function Home() {
                 >
                   Start free. Upgrade when it helps.
                 </h2>
-                <p className="mt-4 max-w-[34rem] text-[16px] leading-8 text-[var(--text-secondary)]">
-                  Simple plans for short bursts or long prep cycles.
+                <p className="mt-4 max-w-[30rem] text-[15px] leading-7 text-[var(--text-secondary)]">
+                  Clear plans for short bursts or long prep cycles.
                 </p>
               </div>
 
@@ -856,38 +998,78 @@ export default function Home() {
             </div>
           </InteractiveSurface>
 
-          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
-                  Trust and legal
+          <section className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                    Essentials
+                  </p>
+                  <h3 className="mt-3 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+                    Keep the important things close.
+                  </h3>
+                </div>
+                <p className="max-w-[25rem] text-sm leading-7 text-[var(--text-secondary)]">
+                  Product links, help, privacy, terms, and platform status stay easy to find.
                 </p>
-                <h3 className="mt-3 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
-                  Policies stay visible.
-                </h3>
               </div>
-              <p className="max-w-[28rem] text-sm leading-7 text-[var(--text-secondary)]">
-                Privacy, terms, support, and platform status stay easy to find
-                across the product.
-              </p>
-            </div>
 
-            <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              {[
-                { label: "Privacy Policy", href: "/privacy" },
-                { label: "Terms & Conditions", href: "/terms" },
-                { label: "Support and Billing", href: "/support" },
-                { label: "Platform Status", href: "/status" },
-              ].map(item => (
-                <Link key={item.href} href={item.href}>
-                  <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
-                    {item.label}
-                    <ArrowRight size={15} className="text-[var(--text-faint)]" />
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </InteractiveSurface>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {ESSENTIAL_LINKS.map(item => (
+                  <Link key={item.href} href={item.href}>
+                    <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
+                      <span className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
+                          <item.icon size={16} />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-medium text-[var(--text-primary)]">
+                            {item.label}
+                          </span>
+                          <span className="block text-xs text-[var(--text-faint)]">
+                            {item.note}
+                          </span>
+                        </span>
+                      </span>
+                      <ArrowRight size={15} className="text-[var(--text-faint)]" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </InteractiveSurface>
+
+            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                Trust and legal
+              </p>
+              <div className="mt-5 grid gap-3">
+                {[
+                  { label: "Privacy Policy", href: "/privacy" },
+                  { label: "Terms & Conditions", href: "/terms" },
+                  { label: "Support and Billing", href: "/support" },
+                  { label: "Platform Status", href: "/status" },
+                ].map(item => (
+                  <Link key={item.href} href={item.href}>
+                    <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
+                      {item.label}
+                      <ArrowRight size={15} className="text-[var(--text-faint)]" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                  Contact
+                </p>
+                <div className="mt-3 space-y-1 text-sm leading-7 text-[var(--text-secondary)]">
+                  <p>{siteConfig.supportEmail}</p>
+                  <p>{siteConfig.billingEmail}</p>
+                  <p>{siteConfig.companyAddress}</p>
+                </div>
+              </div>
+            </InteractiveSurface>
+          </section>
         </div>
 
         <Footer />

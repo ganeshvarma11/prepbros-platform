@@ -27,6 +27,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSwipeable } from "@/hooks/useSwipeable";
 import { cn } from "@/lib/utils";
 
 type AppShellProps = {
@@ -445,6 +446,14 @@ export default function AppShell({
     user?.user_metadata?.picture ||
     user?.user_metadata?.avatar ||
     "";
+  const mobileNavSwipe = useSwipeable({
+    axis: "x",
+    enabled: mobileOpen,
+    mouse: true,
+    minDistance: 58,
+    resistance: 0.65,
+    onSwipeLeft: () => setMobileOpen(false),
+  });
 
   return (
     <div className={cn("min-h-screen bg-[var(--bg)]", shellClassName)}>
@@ -484,11 +493,29 @@ export default function AppShell({
                     side="left"
                     className="w-[84vw] max-w-[312px] border-r border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[var(--text-1)]"
                   >
-                    <SidebarBody
-                      location={location}
-                      collapsed={false}
-                      onNavigate={() => setMobileOpen(false)}
-                    />
+                    <div
+                      {...mobileNavSwipe.bind}
+                      className="h-full transition-[transform,opacity] duration-200"
+                      style={{
+                        transform: `translateX(${Math.min(0, mobileNavSwipe.offsetX)}px)`,
+                        opacity: mobileNavSwipe.isDragging
+                          ? Math.max(
+                              0.74,
+                              1 - Math.abs(mobileNavSwipe.offsetX) / 220
+                            )
+                          : 1,
+                        touchAction: mobileNavSwipe.touchAction,
+                        transition: mobileNavSwipe.isDragging
+                          ? "none"
+                          : "transform 200ms cubic-bezier(0.4,0,0.2,1), opacity 200ms cubic-bezier(0.4,0,0.2,1)",
+                      }}
+                    >
+                      <SidebarBody
+                        location={location}
+                        collapsed={false}
+                        onNavigate={() => setMobileOpen(false)}
+                      />
+                    </div>
                   </SheetContent>
                 </Sheet>
 

@@ -17,10 +17,12 @@ import { useLocation } from "wouter";
 
 import AppShell from "@/components/AppShell";
 import { PageEmpty, PracticeTableSkeleton } from "@/components/PageState";
+import SwipeDismissNotice from "@/components/SwipeDismissNotice";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { type Question } from "@/data/questions";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
+import { useSwipeable } from "@/hooks/useSwipeable";
 import { trackEvent } from "@/lib/analytics";
 import {
   createQuestionIdentityIndex,
@@ -807,6 +809,9 @@ export default function Practice() {
   const activeIdx = activeQuestionId
     ? activeSequenceIds.indexOf(activeQuestionId)
     : -1;
+  const canNavigatePrev = activeIdx > 0;
+  const canNavigateNext =
+    activeIdx >= 0 && activeIdx < activeSequenceIds.length - 1;
   const formattedActiveQuestion = activeQ
     ? formatQuestionForDisplay(activeQ.question)
     : "";
@@ -825,6 +830,23 @@ export default function Practice() {
     const allIds = questions.map(question => toQuestionId(question.id));
     return allIds.includes(questionId) ? allIds : filteredIds;
   };
+  const activeQuestionSwipe = useSwipeable({
+    axis: "x",
+    enabled: Boolean(activeQ),
+    mouse: true,
+    minDistance: 84,
+    resistance: 0.58,
+    onSwipeLeft: () => {
+      if (canNavigateNext) {
+        navigateQuestion(1);
+      }
+    },
+    onSwipeRight: () => {
+      if (canNavigatePrev) {
+        navigateQuestion(-1);
+      }
+    },
+  });
 
   useEffect(() => {
     setPage(current => Math.min(current, totalPages));
@@ -1835,7 +1857,31 @@ export default function Practice() {
             </div>
 
             <div className="px-5 py-5 md:px-6 md:py-6">
-              <div className="mx-auto max-w-[1040px] space-y-5">
+              <div className="mx-auto mb-5 max-w-[1040px]">
+                <SwipeDismissNotice
+                  title="Swipe between questions"
+                  description="Swipe left for next, right for previous. Buttons still work for click-first users."
+                  className="bg-[var(--surface-1)]"
+                />
+              </div>
+
+              <div
+                {...activeQuestionSwipe.bind}
+                className="mx-auto max-w-[1040px] space-y-5 transition-[transform,opacity] duration-200"
+                style={{
+                  transform: `translateX(${activeQuestionSwipe.offsetX}px)`,
+                  opacity: activeQuestionSwipe.isDragging
+                    ? Math.max(
+                        0.78,
+                        1 - Math.abs(activeQuestionSwipe.offsetX) / 320
+                      )
+                    : 1,
+                  touchAction: activeQuestionSwipe.touchAction,
+                  transition: activeQuestionSwipe.isDragging
+                    ? "none"
+                    : "transform 200ms cubic-bezier(0.4,0,0.2,1), opacity 200ms cubic-bezier(0.4,0,0.2,1)",
+                }}
+              >
                 <div
                   className={cn(
                     softPanelClassName,
@@ -1996,7 +2042,7 @@ export default function Practice() {
                 <button
                   type="button"
                   onClick={() => navigateQuestion(-1)}
-                  disabled={activeIdx <= 0}
+                  disabled={!canNavigatePrev}
                   className={`${navigationButtonClassName} h-12 justify-start gap-2 px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                   <ChevronLeft size={15} />
@@ -2005,9 +2051,7 @@ export default function Practice() {
                 <button
                   type="button"
                   onClick={() => navigateQuestion(1)}
-                  disabled={
-                    activeIdx < 0 || activeIdx === activeSequenceIds.length - 1
-                  }
+                  disabled={!canNavigateNext}
                   className={`${primaryButtonClassName} h-12 justify-end gap-2 px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                   Next
