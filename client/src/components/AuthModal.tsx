@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,6 +59,7 @@ export default function AuthModal({
   defaultTab = "login",
 }: AuthModalProps) {
   const { signIn, signUp } = useAuth();
+  const [, setLocation] = useLocation();
   const [tab, setTab] = useState<"login" | "signup">(defaultTab);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -125,13 +126,14 @@ export default function AuthModal({
 
     trackEvent("auth_login_success");
     onClose();
+    setLocation("/practice");
   });
 
   const handleSignup = signupForm.handleSubmit(async data => {
     setLoading(true);
     setSubmitError("");
 
-    const { error: authError } = await signUp(
+    const { error: authError, session } = await signUp(
       data.email,
       data.password,
       data.fullName,
@@ -144,6 +146,13 @@ export default function AuthModal({
         authError.message ||
           "We could not create your account. Try again in a moment or use a different email."
       );
+      return;
+    }
+
+    if (session) {
+      trackEvent("auth_signup_success", { target_exam: data.targetExam });
+      onClose();
+      setLocation("/practice");
       return;
     }
 
@@ -232,8 +241,8 @@ export default function AuthModal({
                   <span className="font-semibold text-[var(--text-primary)]">
                     {confirmedEmail}
                   </span>
-                  . Open it to activate your account and start syncing your
-                  progress.
+                  . Open it to activate your account. The confirmation link
+                  will take you straight into practice.
                 </p>
                 <button
                   type="button"
@@ -263,7 +272,7 @@ export default function AuthModal({
                   </h3>
                   <p className="mt-2 text-sm text-[var(--text-secondary)] md:mt-3">
                     {tab === "login"
-                      ? "Your dashboard, progress history, and saved question flow are ready."
+                      ? "Your practice desk, progress history, and saved question flow are ready."
                       : "Start with a free account so your streaks, bookmarks, and progress stay with you."}
                   </p>
                 </div>
@@ -392,7 +401,7 @@ export default function AuthModal({
                         </>
                       ) : (
                         <>
-                          Continue to dashboard
+                          Continue to practice
                           <ArrowRight size={16} />
                         </>
                       )}

@@ -2,6 +2,7 @@ const DEFAULT_SITE_NAME = "PrepBros";
 const DEFAULT_SUPPORT_EMAIL = "support@prepbros.in";
 const DEFAULT_EFFECTIVE_DATE = "March 25, 2026";
 const DEFAULT_SITE_URL = "https://prepbros.in";
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "0.0.0.0"]);
 
 export const siteConfig = {
   siteName: import.meta.env.VITE_SITE_NAME || DEFAULT_SITE_NAME,
@@ -23,9 +24,46 @@ export const siteConfig = {
   annualCheckoutUrl: import.meta.env.VITE_PRO_ANNUAL_CHECKOUT_URL || "",
 };
 
+function getConfiguredSiteOrigin() {
+  try {
+    return new URL(siteConfig.siteUrl).origin;
+  } catch {
+    return "";
+  }
+}
+
+export function isLocalHostname(hostname: string) {
+  return LOCAL_HOSTNAMES.has(hostname) || hostname.endsWith(".local");
+}
+
 export function getSiteOrigin() {
   if (typeof window === "undefined") return "";
   return window.location.origin || siteConfig.siteUrl;
+}
+
+export function getPreferredSiteOrigin() {
+  if (typeof window !== "undefined" && isLocalHostname(window.location.hostname)) {
+    return window.location.origin;
+  }
+
+  return getConfiguredSiteOrigin() || siteConfig.siteUrl;
+}
+
+export function buildPreferredSiteUrl(path: string) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${getPreferredSiteOrigin()}${normalizedPath}`;
+}
+
+export function shouldRedirectToConfiguredHost() {
+  if (typeof window === "undefined") return false;
+  if (isLocalHostname(window.location.hostname)) return false;
+
+  const configuredOrigin = getConfiguredSiteOrigin();
+  if (!configuredOrigin || configuredOrigin === window.location.origin) {
+    return false;
+  }
+
+  return window.location.hostname.endsWith(".vercel.app");
 }
 
 export function getPolicyUrl(path: string) {

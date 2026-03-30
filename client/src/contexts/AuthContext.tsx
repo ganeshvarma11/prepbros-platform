@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
+import { buildPreferredSiteUrl } from "../lib/siteConfig";
 
 interface AuthContextType {
   user: User | null;
@@ -11,7 +12,7 @@ interface AuthContextType {
     password: string,
     fullName?: string,
     targetExam?: string,
-  ) => Promise<{ error: any }>;
+  ) => Promise<{ error: any; session: Session | null }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   sendPhoneOtp: (phone: string) => Promise<{ error: any }>;
@@ -22,6 +23,10 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function getAuthRedirectUrl(path: string) {
+  return buildPreferredSiteUrl(path);
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -52,17 +57,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     const normalizedName = fullName?.trim() || email.split("@")[0] || "Aspirant";
 
-    const { error } = await supabase.auth.signUp({
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: getAuthRedirectUrl("/practice"),
         data: {
           full_name: normalizedName,
           target_exam: targetExam,
         },
       },
     });
-    return { error };
+    return { error, session };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -71,8 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const redirectTo =
-      typeof window !== "undefined" ? `${window.location.origin}/dashboard` : undefined;
+    const redirectTo = getAuthRedirectUrl("/practice");
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -105,8 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    const redirectTo =
-      typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined;
+    const redirectTo = getAuthRedirectUrl("/reset-password");
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo,

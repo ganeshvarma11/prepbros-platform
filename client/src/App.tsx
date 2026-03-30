@@ -7,6 +7,10 @@ import PageLoader from "./components/PageLoader";
 import SeoManager from "./components/SeoManager";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  buildPreferredSiteUrl,
+  shouldRedirectToConfiguredHost,
+} from "@/lib/siteConfig";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { trackPage } from "./lib/analytics";
@@ -35,6 +39,23 @@ function RouteTracker() {
   useEffect(() => {
     trackPage(location);
   }, [location]);
+
+  return null;
+}
+
+function CanonicalDomainRedirect() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!shouldRedirectToConfiguredHost()) return;
+
+    const nextUrl = buildPreferredSiteUrl(
+      `${window.location.pathname}${window.location.search}${window.location.hash}`
+    );
+
+    if (nextUrl !== window.location.href) {
+      window.location.replace(nextUrl);
+    }
+  }, []);
 
   return null;
 }
@@ -72,6 +93,7 @@ function App() {
         <ThemeProvider>
           <TooltipProvider>
             <Toaster />
+            <CanonicalDomainRedirect />
             <RouteTracker />
             <SeoManager />
             <Router />

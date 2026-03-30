@@ -72,7 +72,7 @@ export default function OnboardingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 md:p-4">
       <button
         type="button"
         aria-label="Close onboarding"
@@ -80,7 +80,7 @@ export default function OnboardingModal({
         onClick={handleSkip}
       />
 
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-[32px] border border-white/10 bg-[var(--bg-card-strong)] shadow-[0_40px_120px_-32px_rgba(15,23,42,0.55)]">
+      <div className="relative max-h-[92svh] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-white/10 bg-[var(--bg-card-strong)] shadow-[0_40px_120px_-32px_rgba(15,23,42,0.55)] md:max-h-[90vh] md:rounded-[32px]">
         <button
           type="button"
           onClick={handleSkip}
@@ -168,7 +168,7 @@ export default function OnboardingModal({
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3 pt-2">
+              <div className="sticky bottom-0 flex flex-wrap gap-3 border-t border-[var(--border)] bg-[var(--bg-card-strong)] pb-1 pt-4">
                 <button
                   type="button"
                   onClick={handleComplete}
@@ -178,7 +178,11 @@ export default function OnboardingModal({
                   {saving ? "Saving..." : "Start with my plan"}
                   {!saving ? <ArrowRight size={16} /> : null}
                 </button>
-                <button type="button" onClick={handleSkip} className="btn-secondary rounded-full px-6 py-3">
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  className="btn-secondary rounded-full px-6 py-3"
+                >
                   Skip for now
                 </button>
               </div>

@@ -327,14 +327,13 @@ function LandingAuthPanel({
           Welcome back.
         </h2>
         <p className="mt-3 max-w-sm text-[15px] leading-7 text-[var(--text-secondary)]">
-          {displayName}, your dashboard and daily practice flow are ready when
-          you are.
+          {displayName}, your daily practice flow is ready when you are.
         </p>
 
         <div className="mt-8 space-y-3">
-          <Link href="/dashboard">
+          <Link href="/practice">
             <span className="inline-flex h-14 w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-[var(--brand)] bg-[var(--brand)] px-5 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition duration-200 hover:brightness-110">
-              Go to dashboard
+              Go to practice
               <ArrowRight size={17} />
             </span>
           </Link>
@@ -512,7 +511,7 @@ export default function Home() {
 
   const handleHeroStart = () => {
     if (user) {
-      setLocation("/dashboard");
+      setLocation("/practice");
       return;
     }
 
@@ -587,9 +586,9 @@ export default function Home() {
             <div className="flex items-center gap-2.5 sm:gap-3">
               {user ? (
                 <>
-                  <Link href="/dashboard">
+                  <Link href="/practice">
                     <span className="inline-flex cursor-pointer items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] sm:px-5">
-                      Dashboard
+                      Practice
                     </span>
                   </Link>
                   <button
