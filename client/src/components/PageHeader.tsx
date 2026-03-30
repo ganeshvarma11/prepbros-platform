@@ -31,18 +31,23 @@ export default function PageHeader({
   className,
   align = "left",
 }: PageHeaderProps) {
+  const hasActions = Boolean(actions);
+
   return (
     <header
       className={cn(
         "page-header",
         align === "center"
           ? "items-center text-center"
-          : "md:flex-row md:items-end md:justify-between",
+          : "items-start text-left",
+        align !== "center" && hasActions
+          ? "md:flex-row md:items-end md:justify-between"
+          : null,
         className
       )}
       data-align={align}
     >
-      <div className="page-header-content">
+      <div className="page-header-content w-full">
         {crumbs && crumbs.length > 0 ? (
           <Breadcrumb>
             <BreadcrumbList className="page-crumbs">

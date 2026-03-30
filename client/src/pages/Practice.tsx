@@ -504,6 +504,7 @@ export default function Practice() {
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [activeQ, setActiveQ] = useState<Question | null>(null);
+  const [activeSequenceIds, setActiveSequenceIds] = useState<QuestionId[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [submittedOption, setSubmittedOption] = useState<number | null>(null);
   const [rawBookmarks, setRawBookmarks] = useState<QuestionId[]>([]);
@@ -567,6 +568,11 @@ export default function Practice() {
 
   const questionIdentity = useMemo(
     () => createQuestionIdentityIndex(questions),
+    [questions]
+  );
+  const questionLookup = useMemo(
+    () =>
+      new Map(questions.map(question => [toQuestionId(question.id), question])),
     [questions]
   );
   const resolveStoredQuestionId = (rawId: QuestionId) =>
@@ -797,10 +803,9 @@ export default function Practice() {
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const reviewModeSyncing =
     progressSyncing && appliedFilters.reviewMode !== "all";
-  const activeIdx = activeQ
-    ? filtered.findIndex(
-        question => toQuestionId(question.id) === toQuestionId(activeQ.id)
-      )
+  const activeQuestionId = activeQ ? toQuestionId(activeQ.id) : null;
+  const activeIdx = activeQuestionId
+    ? activeSequenceIds.indexOf(activeQuestionId)
     : -1;
   const formattedActiveQuestion = activeQ
     ? formatQuestionForDisplay(activeQ.question)
@@ -811,6 +816,15 @@ export default function Practice() {
   const questionParamId = activeQ
     ? toQuestionId(activeQ.id)
     : requestedQuestionId || null;
+  const buildQuestionSequence = (questionId: QuestionId) => {
+    const filteredIds = filtered.map(question => toQuestionId(question.id));
+    if (filteredIds.includes(questionId)) {
+      return filteredIds;
+    }
+
+    const allIds = questions.map(question => toQuestionId(question.id));
+    return allIds.includes(questionId) ? allIds : filteredIds;
+  };
 
   useEffect(() => {
     setPage(current => Math.min(current, totalPages));
@@ -868,12 +882,13 @@ export default function Practice() {
     );
     if (!match) return;
 
+    setActiveSequenceIds(buildQuestionSequence(requestedQuestionId));
     setActiveQ(match);
     setSelectedOption(null);
     setSubmittedOption(null);
     setAnswerStart(Date.now());
     setRequestedQuestionId(null);
-  }, [questions, questionsSyncing, requestedQuestionId]);
+  }, [questions, questionsSyncing, requestedQuestionId, buildQuestionSequence]);
 
   const openFilterPanel = () => {
     setDraftFilters(appliedFilters);
@@ -905,11 +920,26 @@ export default function Practice() {
 
   const closeQuestion = () => {
     setActiveQ(null);
+    setActiveSequenceIds([]);
     resetQuestionState();
   };
 
   const openQuestion = (question: Question) => {
+    setActiveSequenceIds(buildQuestionSequence(toQuestionId(question.id)));
     setActiveQ(question);
+    resetQuestionState();
+  };
+
+  const navigateQuestion = (direction: -1 | 1) => {
+    if (activeIdx < 0) return;
+
+    const nextQuestionId = activeSequenceIds[activeIdx + direction];
+    if (!nextQuestionId) return;
+
+    const nextQuestion = questionLookup.get(nextQuestionId);
+    if (!nextQuestion) return;
+
+    setActiveQ(nextQuestion);
     resetQuestionState();
   };
 
@@ -1965,13 +1995,8 @@ export default function Practice() {
               <div className="mx-auto grid max-w-[1040px] gap-3 md:grid-cols-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (activeIdx > 0) {
-                      setActiveQ(filtered[activeIdx - 1]);
-                      resetQuestionState();
-                    }
-                  }}
-                  disabled={activeIdx === 0}
+                  onClick={() => navigateQuestion(-1)}
+                  disabled={activeIdx <= 0}
                   className={`${navigationButtonClassName} h-12 justify-start gap-2 px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                   <ChevronLeft size={15} />
@@ -1979,13 +2004,10 @@ export default function Practice() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (activeIdx < filtered.length - 1) {
-                      setActiveQ(filtered[activeIdx + 1]);
-                      resetQuestionState();
-                    }
-                  }}
-                  disabled={activeIdx === filtered.length - 1}
+                  onClick={() => navigateQuestion(1)}
+                  disabled={
+                    activeIdx < 0 || activeIdx === activeSequenceIds.length - 1
+                  }
                   className={`${primaryButtonClassName} h-12 justify-end gap-2 px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                   Next

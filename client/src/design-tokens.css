@@ -257,7 +257,7 @@ select {
 .main {
   flex: 1;
   min-width: 0;
-  padding: 28px 28px 64px 22px;
+  padding: 24px 28px 64px 12px;
   overflow-x: hidden;
 }
 

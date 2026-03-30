@@ -166,7 +166,7 @@ export default function Contests() {
 
   return (
     <AppShell>
-      <div className="container-shell space-y-6">
+      <div className="space-y-6">
         <PageHeader
           eyebrow="Workspace"
           title="Contests"
