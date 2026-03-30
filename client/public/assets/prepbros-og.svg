@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0B1628"/>
+      <stop offset="100%" stop-color="#0D1F3C"/>
+    </linearGradient>
+    <!-- Subtle radial glow in center-left -->
+    <radialGradient id="glow" cx="38%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#1E4D8C" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#0B1628" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Subtle grid lines (very faint) -->
+  <g stroke="#FFFFFF" stroke-opacity="0.03" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+
+  <!-- LEFT decorative icon mark (large, watermark-like) -->
+  <g transform="translate(700, 80)" opacity="0.07">
+    <rect x="0" y="0" width="14" height="370" rx="7" fill="#FFFFFF"/>
+    <rect x="30" y="0" width="230" height="40" rx="7" fill="#FFFFFF"/>
+    <rect x="30" y="110" width="175" height="40" rx="7" fill="#FFFFFF"/>
+    <rect x="30" y="220" width="120" height="40" rx="7" fill="#FFFFFF"/>
+    <rect x="30" y="330" width="65" height="40" rx="7" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Main logo mark (left area) -->
+  <g transform="translate(80, 228)">
+    <rect x="0" y="0" width="9" height="80" rx="4.5" fill="#FFFFFF"/>
+    <rect x="18" y="0" width="46" height="9" rx="4.5" fill="#FFFFFF"/>
+    <rect x="18" y="35.5" width="36" height="9" rx="4.5" fill="#FFFFFF" opacity="0.65"/>
+    <rect x="18" y="71" width="24" height="9" rx="4.5" fill="#FFFFFF" opacity="0.35"/>
+  </g>
+
+  <!-- Brand name -->
+  <text
+    x="156" y="296"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="64"
+    font-weight="700"
+    letter-spacing="-2"
+    fill="#FFFFFF"
+  >PrepBros</text>
+
+  <!-- Tagline label pill -->
+  <rect x="80" y="328" width="210" height="32" rx="16" fill="#FFFFFF" fill-opacity="0.08" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="1"/>
+  <text
+    x="185" y="349"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-size="13"
+    font-weight="500"
+    letter-spacing="2"
+    fill="#FFFFFF"
+    fill-opacity="0.55"
+    text-anchor="middle"
+  >CALM PREP WORKSPACE</text>
+
+  <!-- Divider -->
+  <line x1="80" y1="390" x2="540" y2="390" stroke="#FFFFFF" stroke-opacity="0.1" stroke-width="1"/>
+
+  <!-- Main headline -->
+  <text
+    x="80" y="455"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="52"
+    font-weight="700"
+    fill="#FFFFFF"
+    letter-spacing="-1"
+  >Daily practice that</text>
+  <text
+    x="80" y="519"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="52"
+    font-weight="700"
+    fill="#FFFFFF"
+    fill-opacity="0.45"
+    letter-spacing="-1"
+  >keeps prep steady.</text>
+
+  <!-- Right side: 3 feature pills stacked -->
+  <g transform="translate(820, 200)">
+    <!-- Feature card 1 -->
+    <rect x="0" y="0" width="300" height="68" rx="14" fill="#FFFFFF" fill-opacity="0.05" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1"/>
+    <rect x="20" y="24" width="6" height="20" rx="3" fill="#4A9EE8"/>
+    <text x="42" y="37" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">Daily MCQs</text>
+    <text x="42" y="54" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#FFFFFF" fill-opacity="0.45">Topic-focused questions daily</text>
+
+    <!-- Feature card 2 -->
+    <rect x="0" y="90" width="300" height="68" rx="14" fill="#FFFFFF" fill-opacity="0.05" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1"/>
+    <rect x="20" y="114" width="6" height="20" rx="3" fill="#6E63D6"/>
+    <text x="42" y="127" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">Weak topic review</text>
+    <text x="42" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#FFFFFF" fill-opacity="0.45">Auto-identify and reinforce gaps</text>
+
+    <!-- Feature card 3 -->
+    <rect x="0" y="180" width="300" height="68" rx="14" fill="#FFFFFF" fill-opacity="0.05" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1"/>
+    <rect x="20" y="204" width="6" height="20" rx="3" fill="#36C38E"/>
+    <text x="42" y="217" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">Phone OTP login</text>
+    <text x="42" y="234" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#FFFFFF" fill-opacity="0.45">Simple, frictionless access</text>
+
+    <!-- URL -->
+    <text x="0" y="310" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#FFFFFF" fill-opacity="0.3" letter-spacing="0.5">prepbros.com</text>
+  </g>
+</svg>

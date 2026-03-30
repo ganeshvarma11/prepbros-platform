@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 
 import {
+  DEFAULT_OG_IMAGE_HEIGHT,
+  DEFAULT_OG_IMAGE_WIDTH,
   resolveSeoMetadata,
 } from "@shared/seo";
 import { siteConfig } from "@/lib/siteConfig";
@@ -132,8 +134,14 @@ export default function SeoManager() {
       ensureMetaByProperty("og:image:secure_url"),
       metadata.imageUrl
     );
-    setMetaContent(ensureMetaByProperty("og:image:width"), "512");
-    setMetaContent(ensureMetaByProperty("og:image:height"), "512");
+    setMetaContent(
+      ensureMetaByProperty("og:image:width"),
+      DEFAULT_OG_IMAGE_WIDTH
+    );
+    setMetaContent(
+      ensureMetaByProperty("og:image:height"),
+      DEFAULT_OG_IMAGE_HEIGHT
+    );
     setMetaContent(
       ensureMetaByProperty("og:image:alt"),
       metadata.siteName

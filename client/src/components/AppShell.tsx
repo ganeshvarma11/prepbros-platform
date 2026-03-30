@@ -80,6 +80,7 @@ const SUPPORT_ITEM: NavItem = {
   label: "Support",
   icon: CircleHelp,
 };
+const BRAND_ICON_SRC = "/assets/prepbros-favicon.svg";
 
 const isActiveRoute = (location: string, href: string) =>
   location === href || (href !== "/" && location.startsWith(`${href}/`));
@@ -166,11 +167,23 @@ function SidebarBody({
   return (
     <div className="relative flex h-full flex-col border-r border-[var(--border-1)] bg-[color:rgba(255,255,255,0.38)] px-3 py-4 backdrop-blur-xl dark:bg-[color:rgba(2,6,23,0.42)]">
       <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
-        <BrandLogo
-          compact
-          className={cn("items-center gap-2", collapsed && "justify-center")}
-          textClassName={cn("text-[1.4rem]", collapsed && "hidden")}
-        />
+        {collapsed ? (
+          <Link href="/">
+            <span className="flex cursor-pointer justify-center">
+              <img
+                src={BRAND_ICON_SRC}
+                alt="PrepBros"
+                className="h-9 w-9 rounded-[12px]"
+              />
+            </span>
+          </Link>
+        ) : (
+          <BrandLogo
+            compact
+            className="items-center"
+            textClassName="text-[1.4rem]"
+          />
+        )}
         <button
           type="button"
           onClick={onToggle}

@@ -2,7 +2,10 @@ export const DEFAULT_SEO_SITE_NAME = "PrepBros";
 export const DEFAULT_SEO_SITE_URL = "https://prepbros.in";
 export const DEFAULT_SEO_DESCRIPTION =
   "PrepBros helps UPSC, SSC, and state exam aspirants practice daily MCQs, revisit PYQs, track progress, and improve weak topics with a focused prep system.";
-export const DEFAULT_OG_IMAGE_PATH = "/android-chrome-512x512.png";
+export const DEFAULT_OG_IMAGE_PATH = "/assets/prepbros-og.svg";
+export const DEFAULT_LOGO_IMAGE_PATH = "/assets/prepbros-logo-final.svg";
+export const DEFAULT_OG_IMAGE_WIDTH = "1200";
+export const DEFAULT_OG_IMAGE_HEIGHT = "630";
 export const SEO_HEAD_START_MARKER = "<!-- SEO_HEAD_START -->";
 export const SEO_HEAD_END_MARKER = "<!-- SEO_HEAD_END -->";
 
@@ -353,7 +356,7 @@ function buildStructuredData(
     "@type": "Organization",
     name: siteName,
     url: siteUrl,
-    logo: metadata.imageUrl,
+    logo: buildAbsoluteUrl(siteUrl, DEFAULT_LOGO_IMAGE_PATH),
     contactPoint: [
       {
         "@type": "ContactPoint",
@@ -486,8 +489,8 @@ export function renderSeoHead(
     `<meta property="og:url" content="${escapeHtml(metadata.canonicalUrl)}" />`,
     `<meta property="og:image" content="${escapeHtml(metadata.imageUrl)}" />`,
     `<meta property="og:image:secure_url" content="${escapeHtml(metadata.imageUrl)}" />`,
-    `<meta property="og:image:width" content="512" />`,
-    `<meta property="og:image:height" content="512" />`,
+    `<meta property="og:image:width" content="${DEFAULT_OG_IMAGE_WIDTH}" />`,
+    `<meta property="og:image:height" content="${DEFAULT_OG_IMAGE_HEIGHT}" />`,
     `<meta property="og:image:alt" content="${escapeHtml(metadata.siteName)}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${escapeHtml(metadata.title)}" />`,
