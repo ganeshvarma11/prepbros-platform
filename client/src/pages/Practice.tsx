@@ -80,6 +80,7 @@ const TYPE_LABELS: Record<string, string> = {
   CurrentAffairs: "Current Affairs",
   Mock: "Mock Test",
 };
+const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 const TOPIC_ORDER = [
   "Polity & Governance",
   "History & Culture",
@@ -135,6 +136,12 @@ const primaryButtonClassName =
   "inline-flex items-center justify-center rounded-full bg-[linear-gradient(180deg,var(--brand-light)_0%,var(--brand)_100%)] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:translate-y-[-1px] hover:brightness-105";
 const insetCardClassName =
   "rounded-[20px] border border-[var(--border)] bg-[var(--surface-2)]";
+const sectionLabelClassName =
+  "text-[0.78rem] font-semibold uppercase tracking-[0.24em] text-[var(--text-secondary)]";
+const neutralMetaPillClassName =
+  "inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-3 py-1.5 text-[0.72rem] font-semibold tracking-[0.03em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]";
+const navigationButtonClassName =
+  "inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]";
 
 function createEmptyFilters(): PracticeFilters {
   return {
@@ -1760,94 +1767,100 @@ export default function Practice() {
         ) : (
           <section className={panelClassName}>
             <div className="border-b border-[var(--border)] px-5 py-4 md:px-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={closeQuestion}
-                    className={`${ghostButtonClassName} h-11 gap-2 px-4 text-sm font-semibold`}
-                  >
-                    <ChevronLeft size={14} />
-                    Back to library
-                  </button>
+              <div className="mx-auto max-w-[1040px]">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={closeQuestion}
+                      className={`${ghostButtonClassName} h-11 gap-2 px-4 text-sm font-semibold`}
+                    >
+                      <ChevronLeft size={14} />
+                      Back to library
+                    </button>
+                    <span
+                      className={`${accentChipClassName} px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]`}
+                    >
+                      {activeIdx + 1} of {filtered.length}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleBookmark}
+                      disabled={Boolean(user) && questionsSyncing}
+                      className={`${ghostButtonClassName} h-10 w-10`}
+                    >
+                      {Boolean(user) && questionsSyncing ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : bookmarkSet.has(toQuestionId(activeQ.id)) ? (
+                        <BookmarkCheck
+                          size={14}
+                          className="text-[var(--brand)]"
+                        />
+                      ) : (
+                        <Bookmark size={14} />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleReportQuestion}
+                      className={`${ghostButtonClassName} h-10 w-10`}
+                    >
+                      <Flag size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={closeQuestion}
+                      className={`${ghostButtonClassName} h-10 w-10`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-2.5">
                   <span
-                    className={`${accentChipClassName} px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]`}
+                    className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[0.72rem] font-semibold tracking-[0.03em] shadow-[var(--shadow-sm)] ${getExamPillClass(
+                      activeQ.exam
+                    )}`}
                   >
-                    {activeIdx + 1} of {filtered.length}
+                    {activeQ.exam}
                   </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleBookmark}
-                    disabled={Boolean(user) && questionsSyncing}
-                    className={`${ghostButtonClassName} h-10 w-10`}
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[0.72rem] font-semibold tracking-[0.03em] shadow-[var(--shadow-sm)] ${getDifficultyPillClass(
+                      activeQ.difficulty
+                    )}`}
                   >
-                    {Boolean(user) && questionsSyncing ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : bookmarkSet.has(toQuestionId(activeQ.id)) ? (
-                      <BookmarkCheck
-                        size={14}
-                        className="text-[var(--brand)]"
-                      />
-                    ) : (
-                      <Bookmark size={14} />
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleReportQuestion}
-                    className={`${ghostButtonClassName} h-10 w-10`}
-                  >
-                    <Flag size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={closeQuestion}
-                    className={`${ghostButtonClassName} h-10 w-10`}
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span
-                  className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getExamPillClass(
-                    activeQ.exam
-                  )}`}
-                >
-                  {activeQ.exam}
-                </span>
-                <span
-                  className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getDifficultyPillClass(
-                    activeQ.difficulty
-                  )}`}
-                >
-                  {activeQ.difficulty}
-                </span>
-                <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                  {getTopicBucket(activeQ)}
-                </span>
-                <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                  {TYPE_LABELS[activeQ.type] || activeQ.type}
-                </span>
-                {activeQ.year ? (
-                  <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                    {activeQ.year}
+                    {activeQ.difficulty}
                   </span>
-                ) : null}
+                  <span className={neutralMetaPillClassName}>
+                    {getTopicBucket(activeQ)}
+                  </span>
+                  <span className={neutralMetaPillClassName}>
+                    {TYPE_LABELS[activeQ.type] || activeQ.type}
+                  </span>
+                  {activeQ.year ? (
+                    <span className={neutralMetaPillClassName}>
+                      {activeQ.year}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </div>
 
-            <div className="grid gap-6 px-5 py-5 md:px-6 md:py-6 xl:grid-cols-[minmax(0,1.15fr)_360px]">
-              <div className="space-y-5">
-                <div className={softPanelClassName + " px-5 py-5 md:px-6"}>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                    Question
-                  </p>
-                  <div className="mt-4 max-w-[60ch] whitespace-pre-line text-[1rem] font-medium leading-[1.72] tracking-[-0.015em] text-[var(--text-primary)] md:text-[1.14rem]">
+            <div className="px-5 py-5 md:px-6 md:py-6">
+              <div className="mx-auto max-w-[1040px] space-y-5">
+                <div
+                  className={cn(
+                    softPanelClassName,
+                    "relative overflow-hidden bg-[var(--bg-card-strong)] px-5 py-5 md:px-6 md:py-6"
+                  )}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--brand)_60%,transparent_100%)]" />
+                  <p className={sectionLabelClassName}>Question</p>
+                  <div className="mt-5 max-w-[46rem] whitespace-pre-line text-[1.22rem] font-semibold leading-[1.6] tracking-[-0.03em] text-[var(--text-primary)] md:text-[1.6rem]">
                     {formattedActiveQuestion}
                   </div>
                 </div>
@@ -1858,19 +1871,19 @@ export default function Practice() {
                     const isSubmitted = submittedOption !== null;
 
                     let optionClass =
-                      "option-btn border-[var(--border)] bg-[var(--bg-card-strong)]";
+                      "option-btn group border-[var(--border)] bg-[var(--bg-card-strong)]";
 
                     if (isSubmitted) {
                       if (index === activeQ.correct) {
-                        optionClass = "option-btn correct";
+                        optionClass = "option-btn group correct";
                       } else if (index === submittedOption) {
-                        optionClass = "option-btn wrong";
+                        optionClass = "option-btn group wrong";
                       } else {
-                        optionClass = "option-btn dimmed";
+                        optionClass = "option-btn group dimmed";
                       }
                     } else if (isSelected) {
                       optionClass =
-                        "option-btn border-[var(--brand)] bg-[var(--brand-subtle)]";
+                        "option-btn group border-[var(--brand)] bg-[var(--brand-subtle)] -translate-y-0.5";
                     }
 
                     return (
@@ -1884,24 +1897,31 @@ export default function Practice() {
                         disabled={Boolean(user) && questionsSyncing}
                         className={optionClass}
                       >
-                        <span className="flex items-start gap-3">
+                        <span className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
                           <span
                             className={cn(
-                              "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
+                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-semibold transition-all",
                               submittedOption !== null &&
                                 index === activeQ.correct
                                 ? "border-[var(--green)] bg-[var(--green)] text-white"
-                                : submittedOption !== null &&
+                              : submittedOption !== null &&
                                     index === submittedOption
                                   ? "border-[var(--red)] bg-[var(--red)] text-white"
                                   : isSelected
-                                    ? "border-[var(--brand)] bg-[var(--brand-subtle)] text-[var(--brand-light)]"
-                                    : "border-[var(--border-strong)] text-[var(--text-muted)]"
+                                    ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)] shadow-[var(--shadow-sm)]"
+                                    : "border-[var(--border-strong)] bg-[var(--surface-1)] text-[var(--text-muted)] group-hover:border-[var(--brand-muted)] group-hover:bg-[var(--brand-subtle)] group-hover:text-[var(--brand)]"
                             )}
                           >
-                            {["A", "B", "C", "D"][index]}
+                            {OPTION_LABELS[index]}
                           </span>
-                          <span className="text-[0.98rem] leading-7 text-[var(--text-primary)]">
+                          <span
+                            className={cn(
+                              "pt-0.5 text-[1rem] leading-7 text-[var(--text-primary)] md:text-[1.04rem]",
+                              isSelected && submittedOption === null
+                                ? "font-semibold"
+                                : "font-medium"
+                            )}
+                          >
                             {option}
                           </span>
                         </span>
@@ -1910,11 +1930,13 @@ export default function Practice() {
                   })}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-[var(--text-secondary)]">
+                <div className="flex flex-col gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] px-5 py-4 shadow-[var(--shadow-sm)] md:flex-row md:items-center md:justify-between">
+                  <p className="text-sm leading-6 text-[var(--text-secondary)] md:max-w-[38rem]">
                     {submittedOption === null
-                      ? "Pick an option, then submit to reveal the answer."
-                      : "Answer submitted. Explanation unlocked below."}
+                      ? selectedOption === null
+                        ? "Choose one option to lock your attention on an answer, then submit to reveal the explanation."
+                        : `Option ${OPTION_LABELS[selectedOption]} is selected. Submit when you're ready to check it.`
+                      : "Answer submitted. The explanation is unlocked below."}
                   </p>
                   <button
                     type="button"
@@ -1924,7 +1946,7 @@ export default function Practice() {
                       submittedOption !== null ||
                       (Boolean(user) && questionsSyncing)
                     }
-                    className={`${primaryButtonClassName} h-10 px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45`}
+                    className={`${primaryButtonClassName} h-11 min-w-[9rem] px-6 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45`}
                   >
                     Submit
                   </button>
@@ -1936,128 +1958,94 @@ export default function Practice() {
                     are written to your account.
                   </p>
                 ) : null}
-              </div>
 
-              <aside className="space-y-4">
-                <div className={softPanelClassName + " px-5 py-5"}>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                    Response
-                  </p>
-                  <div className="mt-4 space-y-3">
-                    <div className={`${insetCardClassName} px-4 py-4`}>
-                      <p className="text-sm font-medium text-[var(--text-primary)]">
-                        {selectedOption === null
-                          ? "No option selected yet"
-                          : `Selected option ${["A", "B", "C", "D"][selectedOption]}`}
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                        Use the small submit control once you are confident. The
-                        correct answer and explanation stay hidden until then.
+                {submittedOption !== null ? (
+                  <div
+                    className={cn(
+                      softPanelClassName,
+                      "overflow-hidden bg-[var(--bg-card-strong)]"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "border-b px-5 py-4 md:px-6",
+                        submittedOption === activeQ.correct
+                          ? "border-[rgba(21,128,61,0.14)] bg-[rgba(21,128,61,0.08)]"
+                          : "border-[rgba(220,38,38,0.14)] bg-[rgba(220,38,38,0.08)]"
+                      )}
+                    >
+                      <p className={sectionLabelClassName}>Answer</p>
+                      <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+                        {submittedOption === activeQ.correct
+                          ? "Correct. Keep the flow going."
+                          : `Not quite. The correct answer is ${OPTION_LABELS[activeQ.correct]}.`}
                       </p>
                     </div>
 
-                    {submittedOption !== null ? (
-                      <div
-                        className={cn(
-                          "rounded-[20px] border px-4 py-4",
-                          submittedOption === activeQ.correct
-                            ? "border-[rgba(21,128,61,0.16)] bg-[rgba(21,128,61,0.08)]"
-                            : "border-[rgba(220,38,38,0.16)] bg-[rgba(220,38,38,0.08)]"
-                        )}
-                      >
-                        <p className="text-sm font-semibold text-[var(--text-primary)]">
-                          {submittedOption === activeQ.correct
-                            ? "Correct. Keep the flow going."
-                            : `Not quite. The correct answer is ${activeQ.options[activeQ.correct]}.`}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                    <div className="space-y-4 px-5 py-5 md:px-6">
+                      <div className={`${insetCardClassName} px-4 py-4`}>
+                        <p className={sectionLabelClassName}>Explanation</p>
+                        <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)] md:text-[0.98rem]">
                           {activeQ.explanation}
                         </p>
-                        {!user ? (
-                          <p className="mt-3 text-xs text-[var(--brand-light)]">
-                            Sign in to save progress, accuracy, and streaks
-                            across sessions.
-                          </p>
-                        ) : questionsSyncing ? (
-                          <p className="mt-3 text-xs text-[var(--brand-light)]">
-                            Hold for a moment while PrepBros syncs the live
-                            question bank before saving progress.
-                          </p>
-                        ) : null}
                       </div>
-                    ) : null}
-                  </div>
-                </div>
 
-                {(activeQ.tags.length > 0 ||
-                  activeQ.topic !== getTopicBucket(activeQ) ||
-                  activeQ.subtopic) && (
-                  <div className={softPanelClassName + " px-5 py-5"}>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                      Context
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {activeQ.topic !== getTopicBucket(activeQ) ? (
-                        <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                          {activeQ.topic}
-                        </span>
+                      {!user ? (
+                        <p className="text-xs text-[var(--brand-light)]">
+                          Sign in to save progress, accuracy, and streaks across
+                          sessions.
+                        </p>
+                      ) : questionsSyncing ? (
+                        <p className="text-xs text-[var(--brand-light)]">
+                          Hold for a moment while PrepBros syncs the live
+                          question bank before saving progress.
+                        </p>
                       ) : null}
-                      {activeQ.subtopic ? (
-                        <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                          {activeQ.subtopic}
-                        </span>
-                      ) : null}
-                      {activeQ.tags.map(tag => (
-                        <span
-                          key={tag}
-                          className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
                     </div>
                   </div>
-                )}
-              </aside>
+                ) : null}
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] px-5 py-5 md:px-6">
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeIdx > 0) {
-                    setActiveQ(filtered[activeIdx - 1]);
-                    resetQuestionState();
-                  }
-                }}
-                disabled={activeIdx === 0}
-                className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-semibold disabled:opacity-40`}
-              >
-                <ChevronLeft size={14} />
-                Previous
-              </button>
-              <button
-                type="button"
-                onClick={openRandom}
-                className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-semibold`}
-              >
-                <Shuffle size={14} />
-                Random
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeIdx < filtered.length - 1) {
-                    setActiveQ(filtered[activeIdx + 1]);
-                    resetQuestionState();
-                  }
-                }}
-                disabled={activeIdx === filtered.length - 1}
-                className={`${primaryButtonClassName} h-10 gap-2 px-4 text-sm font-semibold disabled:opacity-40`}
-              >
-                Next
-                <ChevronRight size={14} />
-              </button>
+            <div className="border-t border-[var(--border)] px-5 py-5 md:px-6">
+              <div className="mx-auto grid max-w-[1040px] gap-3 md:grid-cols-[1fr_auto_1fr]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (activeIdx > 0) {
+                      setActiveQ(filtered[activeIdx - 1]);
+                      resetQuestionState();
+                    }
+                  }}
+                  disabled={activeIdx === 0}
+                  className={`${navigationButtonClassName} h-12 justify-start gap-2 px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40`}
+                >
+                  <ChevronLeft size={15} />
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={openRandom}
+                  className={`${navigationButtonClassName} h-12 gap-2 px-5 text-sm font-semibold`}
+                >
+                  <Shuffle size={15} />
+                  Random
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (activeIdx < filtered.length - 1) {
+                      setActiveQ(filtered[activeIdx + 1]);
+                      resetQuestionState();
+                    }
+                  }}
+                  disabled={activeIdx === filtered.length - 1}
+                  className={`${primaryButtonClassName} h-12 justify-end gap-2 px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40`}
+                >
+                  Next
+                  <ChevronRight size={15} />
+                </button>
+              </div>
             </div>
           </section>
         )}

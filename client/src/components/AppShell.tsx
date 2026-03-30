@@ -175,7 +175,7 @@ function SidebarBody({
           type="button"
           onClick={onToggle}
           className={cn(
-            "mt-4 inline-flex h-10 w-full items-center justify-center rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--text-2)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]",
+            "mt-4 inline-flex h-10 w-full items-center justify-center rounded-full border border-transparent bg-[var(--surface-1)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]",
             collapsed ? "px-0" : "gap-2 px-3"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}

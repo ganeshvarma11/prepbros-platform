@@ -1206,35 +1206,40 @@ html:not(.dark) .landing-minimal-page::before {
 .option-btn {
   width: 100%;
   text-align: left;
-  padding: 14px 18px;
-  background: var(--bg-subtle);
-  border: 1.5px solid var(--border);
-  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  background: var(--bg-card-strong);
+  border: 1px solid var(--border);
+  border-radius: 24px;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
   transition:
     border-color var(--t-fast),
     background var(--t-fast),
+    box-shadow var(--t-fast),
     transform var(--t-fast);
 }
 
 .option-btn:hover:not(:disabled) {
   border-color: var(--brand-muted);
-  background: var(--brand-subtle);
-  transform: translateX(2px);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .option-btn.correct {
   border-color: var(--green);
   background: var(--green-bg);
+  box-shadow: var(--shadow-md);
 }
 
 .option-btn.wrong {
   border-color: var(--red);
   background: var(--red-bg);
+  box-shadow: var(--shadow-md);
 }
 
 .option-btn.dimmed {
-  opacity: 0.45;
+  opacity: 0.58;
   cursor: default;
 }
 
