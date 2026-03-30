@@ -1,7 +1,16 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
   CircleHelp,
   Compass,
   Crown,
@@ -38,6 +47,11 @@ type NavGroup = {
   items: NavItem[];
 };
 
+const SIDEBAR_STORAGE_KEY = "sb-width";
+const SIDEBAR_DEFAULT_WIDTH = 240;
+const SIDEBAR_MIN_WIDTH = 60;
+const SIDEBAR_MAX_WIDTH = 320;
+
 const NAV_GROUPS: NavGroup[] = [
   {
     label: "Workspace",
@@ -53,7 +67,6 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
       { href: "/resources", label: "Resources", icon: BookOpen },
       { href: "/premium", label: "Premium", icon: Crown },
-      { href: "/support", label: "Support", icon: CircleHelp },
     ],
   },
   {
@@ -62,51 +75,60 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+const SUPPORT_ITEM: NavItem = {
+  href: "/support",
+  label: "Support",
+  icon: CircleHelp,
+};
+
 const isActiveRoute = (location: string, href: string) =>
   location === href || (href !== "/" && location.startsWith(`${href}/`));
+
+const clampSidebarWidth = (value: number) =>
+  Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, Math.round(value)));
+
+const getInitials = (value: string) =>
+  value
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() || "")
+    .join("") || "PB";
 
 function NavLink({
   item,
   location,
+  collapsed,
   onNavigate,
 }: {
   item: NavItem;
   location: string;
+  collapsed: boolean;
   onNavigate?: () => void;
 }) {
   const Icon = item.icon;
   const active = isActiveRoute(location, item.href);
-
   return (
     <Link href={item.href}>
       <span
         onClick={onNavigate}
         className={cn(
-          "group flex cursor-pointer items-center gap-3 rounded-[12px] px-3 py-2 text-[13px] font-medium transition",
+          "group relative flex cursor-pointer items-center rounded-[var(--radius-md)] border border-transparent text-[13px] transition-colors",
+          collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3",
           active
-            ? "bg-[var(--bg-elevated)] text-[var(--text-primary)]"
-            : "text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
+            ? "bg-[var(--surface-3)] font-medium text-[var(--text-1)]"
+            : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]",
         )}
+        title={collapsed ? item.label : undefined}
       >
         <span
           className={cn(
-            "h-1.5 w-1.5 rounded-full transition",
-            active
-              ? "bg-[var(--brand)]"
-              : "bg-transparent group-hover:bg-[var(--border-strong)]"
+            "absolute left-[10px] top-1/2 h-1 w-1 -translate-y-1/2 rounded-full transition",
+            active ? "bg-[var(--amber)]" : "bg-transparent",
           )}
         />
-        <span
-          className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-[9px] transition",
-            active
-              ? "bg-[var(--brand-subtle)] text-[var(--brand-light)]"
-              : "text-[var(--text-muted)] group-hover:text-[var(--text-primary)]"
-          )}
-        >
-          <Icon size={15} />
-        </span>
-        <span className="truncate">{item.label}</span>
+        <Icon size={16} className="shrink-0 text-current" />
+        {!collapsed ? <span className="truncate">{item.label}</span> : null}
       </span>
     </Link>
   );
@@ -114,9 +136,17 @@ function NavLink({
 
 function SidebarBody({
   location,
+  collapsed,
+  onToggle,
+  onResizeStart,
+  isResizing = false,
   onNavigate,
 }: {
   location: string;
+  collapsed: boolean;
+  onToggle?: () => void;
+  onResizeStart?: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+  isResizing?: boolean;
   onNavigate?: () => void;
 }) {
   const { user, signOut } = useAuth();
@@ -131,32 +161,42 @@ function SidebarBody({
     user?.user_metadata?.picture ||
     user?.user_metadata?.avatar ||
     "";
+  const initials = getInitials(displayName);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-[var(--border)] px-1 pb-4">
+    <div className="relative flex h-full flex-col border-r border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-4">
+      <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
         <BrandLogo
           compact
-          className="items-center gap-2"
-          textClassName="text-[1.4rem]"
+          className={cn("items-center gap-2", collapsed && "justify-center")}
+          textClassName={cn("text-[1.4rem]", collapsed && "hidden")}
         />
-        <p className="mt-3 px-2 text-xs leading-5 text-[var(--text-muted)]">
-          Daily practice, revision, and progress in one calm workspace.
-        </p>
+        <button
+          type="button"
+          onClick={onToggle}
+          className={cn(
+            "mt-4 inline-flex h-9 w-full items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-2)] text-[var(--text-2)] transition hover:border-[var(--border-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text-1)]",
+            collapsed ? "px-0" : "gap-2 px-3",
+          )}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {!collapsed ? <span className="text-[13px] font-medium">Collapse</span> : null}
+        </button>
       </div>
 
       <div className="flex-1 space-y-6 overflow-y-auto py-5 pr-1">
         {NAV_GROUPS.map(group => (
           <div key={group.label}>
-            <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-              {group.label}
-            </p>
+            {!collapsed ? <p className="section-label px-3">{group.label}</p> : null}
             <div className="mt-2 space-y-1">
               {group.items.map(item => (
                 <NavLink
                   key={item.href}
                   item={item}
                   location={location}
+                  collapsed={collapsed}
                   onNavigate={onNavigate}
                 />
               ))}
@@ -165,74 +205,118 @@ function SidebarBody({
         ))}
       </div>
 
-      <div className="border-t border-[var(--border)] pt-4">
-        <div className="mb-4 flex items-center justify-between px-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-            Appearance
-          </p>
+      <div className="space-y-3 border-t border-[var(--border-1)] pt-4">
+        <NavLink
+          item={SUPPORT_ITEM}
+          location={location}
+          collapsed={collapsed}
+          onNavigate={onNavigate}
+        />
+
+        <div
+          className={cn(
+            "flex items-center rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-2)]",
+            collapsed ? "justify-center px-0 py-2.5" : "justify-between px-3 py-2.5",
+          )}
+        >
+          {!collapsed ? <p className="section-label">Appearance</p> : null}
           <ThemeToggle />
         </div>
+
         {user ? (
-          <div className="space-y-3">
+          <div
+            className={cn(
+              "flex items-center rounded-[var(--radius-md)] transition hover:bg-[var(--surface-2)]",
+              collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
+            )}
+          >
             <Link href="/profile">
               <span
                 onClick={onNavigate}
-                className="flex cursor-pointer items-center gap-3 rounded-[14px] px-3 py-2.5 transition hover:bg-[var(--bg-elevated)]"
+                className={cn(
+                  "flex cursor-pointer items-center",
+                  collapsed ? "justify-center" : "min-w-0 flex-1 gap-3",
+                )}
               >
-                <Avatar className="h-9 w-9 rounded-[11px] border border-[var(--border)]">
+                <Avatar className="h-8 w-8 rounded-full">
                   <AvatarImage
                     src={avatarUrl}
                     alt={displayName}
                     className="object-cover"
                   />
-                  <AvatarFallback className="rounded-[11px] bg-[var(--brand-subtle)] text-[var(--brand)]">
-                    {displayName.charAt(0).toUpperCase()}
+                  <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--amber)]">
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[var(--text-primary)]">
-                    {displayName}
-                  </p>
-                  <p className="truncate text-xs text-[var(--text-muted)]">
-                    {targetExam}
-                  </p>
-                </div>
+                {!collapsed ? (
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-medium text-[var(--text-1)]">
+                      {displayName}
+                    </p>
+                    <p className="truncate text-[11px] text-[var(--text-3)]">
+                      {targetExam}
+                    </p>
+                  </div>
+                ) : null}
               </span>
             </Link>
-
-            <div className="flex items-center justify-between gap-3 px-3">
-              <p className="truncate text-xs text-[var(--text-muted)]">
-                {user.email}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  onNavigate?.();
-                  signOut();
-                }}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] text-[var(--text-muted)] transition hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
-                aria-label="Sign out"
-              >
-                <LogOut size={14} />
-              </button>
-            </div>
+            {!collapsed ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onNavigate?.();
+                    signOut();
+                  }}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-3)] transition hover:bg-[var(--surface-3)] hover:text-[var(--text-1)]"
+                  aria-label="Sign out"
+                  title="Sign out"
+                >
+                  <LogOut size={14} />
+                </button>
+              </>
+            ) : null}
           </div>
         ) : (
-          <div className="space-y-3 px-3">
-            <p className="text-sm leading-6 text-[var(--text-secondary)]">
-              Sign in to keep your progress, bookmarks, and daily streak synced.
-            </p>
+          <div className={cn("space-y-3", collapsed ? "px-0" : "px-3")}>
+            {!collapsed ? (
+              <p className="text-sm leading-6 text-[var(--text-2)]">
+                Sign in to keep your progress, bookmarks, and daily streak synced.
+              </p>
+            ) : null}
             <Link href="/">
               <span
                 onClick={onNavigate}
-                className="btn-secondary inline-flex cursor-pointer px-4 py-2 text-sm"
+                className={cn(
+                  "btn-ghost inline-flex cursor-pointer",
+                  collapsed ? "h-9 w-9 p-0" : "px-4 py-2 text-sm",
+                )}
+                title="Go to home"
               >
-                Go to home
+                {collapsed ? <ChevronRight size={14} /> : "Go to home"}
               </span>
             </Link>
           </div>
         )}
       </div>
+
+      {onResizeStart ? (
+        <button
+          type="button"
+          onPointerDown={onResizeStart}
+          className="absolute inset-y-0 right-[-7px] hidden w-4 cursor-col-resize lg:block"
+          aria-label="Resize sidebar"
+          tabIndex={-1}
+        >
+          <span
+            className={cn(
+              "absolute inset-y-0 left-1/2 w-[2px] -translate-x-1/2 rounded-full bg-transparent transition",
+              isResizing && "bg-[var(--border-2)]",
+              "group-hover:bg-[var(--border-2)]",
+            )}
+          />
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -241,11 +325,14 @@ export default function AppShell({
   children,
   contentClassName,
   shellClassName,
-  allowDesktopSidebarToggle = false,
+  allowDesktopSidebarToggle,
 }: AppShellProps) {
+  void allowDesktopSidebarToggle;
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH);
+  const [isResizing, setIsResizing] = useState(false);
+  const lastExpandedWidthRef = useRef(SIDEBAR_DEFAULT_WIDTH);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -253,25 +340,65 @@ export default function AppShell({
   }, [location]);
 
   useEffect(() => {
-    if (!allowDesktopSidebarToggle) return;
+    if (typeof window === "undefined") return;
 
-    const storedValue =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem("prepbros-desktop-sidebar-open")
-        : null;
+    const storedValue = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    if (!storedValue) return;
 
-    if (storedValue === "0") {
-      setDesktopSidebarOpen(false);
+    const parsed = Number.parseInt(storedValue, 10);
+    if (!Number.isFinite(parsed)) return;
+
+    const nextWidth = clampSidebarWidth(parsed);
+    setSidebarWidth(nextWidth);
+    if (nextWidth > SIDEBAR_MIN_WIDTH) {
+      lastExpandedWidthRef.current = nextWidth;
     }
-  }, [allowDesktopSidebarToggle]);
+  }, []);
 
   useEffect(() => {
-    if (!allowDesktopSidebarToggle || typeof window === "undefined") return;
-    window.localStorage.setItem(
-      "prepbros-desktop-sidebar-open",
-      desktopSidebarOpen ? "1" : "0"
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarWidth));
+    if (sidebarWidth > SIDEBAR_MIN_WIDTH) {
+      lastExpandedWidthRef.current = sidebarWidth;
+    }
+  }, [sidebarWidth]);
+
+  const collapsed = sidebarWidth <= SIDEBAR_MIN_WIDTH;
+
+  const toggleSidebar = () => {
+    setSidebarWidth(current =>
+      current <= SIDEBAR_MIN_WIDTH
+        ? clampSidebarWidth(lastExpandedWidthRef.current || SIDEBAR_DEFAULT_WIDTH)
+        : SIDEBAR_MIN_WIDTH,
     );
-  }, [allowDesktopSidebarToggle, desktopSidebarOpen]);
+  };
+
+  const startResize = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (typeof window === "undefined") return;
+
+    event.preventDefault();
+    const startX = event.clientX;
+    const initialWidth = sidebarWidth;
+    setIsResizing(true);
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const delta = moveEvent.clientX - startX;
+      setSidebarWidth(clampSidebarWidth(initialWidth + delta));
+    };
+
+    const handlePointerUp = () => {
+      setIsResizing(false);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+  };
 
   const currentLabel = useMemo(() => {
     for (const group of NAV_GROUPS) {
@@ -294,80 +421,56 @@ export default function AppShell({
     "";
 
   return (
-    <div
-      className={cn("min-h-screen bg-[var(--page-background)]", shellClassName)}
-    >
-      <div
-        className={cn(
-          "lg:grid lg:min-h-screen",
-          !allowDesktopSidebarToggle && "lg:grid-cols-[228px_minmax(0,1fr)]"
-        )}
-        style={
-          allowDesktopSidebarToggle
-            ? {
-                gridTemplateColumns: desktopSidebarOpen
-                  ? "228px minmax(0,1fr)"
-                  : "0px minmax(0,1fr)",
-              }
-            : undefined
-        }
-      >
+    <div className={cn("min-h-screen bg-[var(--bg)]", shellClassName)}>
+      <div className="layout">
         <aside
-          className={cn(
-            "hidden bg-[var(--bg-card)]/90 backdrop-blur-xl lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-hidden lg:transition-all lg:duration-300",
-            allowDesktopSidebarToggle
-              ? desktopSidebarOpen
-                ? "border-r border-[var(--border)] px-3 py-4 opacity-100"
-                : "pointer-events-none border-r-0 px-0 py-4 opacity-0"
-              : "border-r border-[var(--border)] px-3 py-4"
-          )}
+          className="group relative hidden shrink-0 lg:flex"
+          style={{
+            width: `${sidebarWidth}px`,
+            transition: isResizing
+              ? "none"
+              : "width 0.22s cubic-bezier(0.4,0,0.2,1)",
+          }}
         >
-          <SidebarBody location={location} />
+          <SidebarBody
+            location={location}
+            collapsed={collapsed}
+            onToggle={toggleSidebar}
+            onResizeStart={startResize}
+            isResizing={isResizing}
+          />
         </aside>
 
-        <div className="relative min-w-0">
-          {allowDesktopSidebarToggle ? (
-            <button
-              type="button"
-              onClick={() => setDesktopSidebarOpen(current => !current)}
-              className={cn(
-                "absolute top-6 z-40 hidden h-11 w-11 items-center justify-center rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-primary)] shadow-lg transition hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)] lg:inline-flex",
-                desktopSidebarOpen ? "-left-5" : "left-3"
-              )}
-              aria-label={desktopSidebarOpen ? "Hide sidebar" : "Show sidebar"}
-            >
-              <Menu size={18} />
-            </button>
-          ) : null}
-
-          <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-card)]/92 backdrop-blur-xl lg:hidden">
+        <div className="relative min-w-0 flex-1">
+          <header className="sticky top-0 z-30 border-b border-[var(--border-1)] bg-[var(--surface-1)] backdrop-blur-xl lg:hidden">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
                 <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                   <button
                     type="button"
                     onClick={() => setMobileOpen(true)}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--text-1)]"
                     aria-label="Open navigation"
                   >
                     <Menu size={18} />
                   </button>
                   <SheetContent
                     side="left"
-                    className="w-[84vw] max-w-[312px] border-r border-[var(--border)] bg-[var(--bg-card-strong)] p-3 text-[var(--text-primary)]"
+                    className="w-[84vw] max-w-[312px] border-r border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[var(--text-1)]"
                   >
                     <SidebarBody
                       location={location}
+                      collapsed={false}
                       onNavigate={() => setMobileOpen(false)}
                     />
                   </SheetContent>
                 </Sheet>
 
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
+                  <p className="page-label">
                     Workspace
                   </p>
-                  <p className="truncate text-sm font-medium text-[var(--text-primary)]">
+                  <p className="truncate text-sm font-medium text-[var(--text-1)]">
                     {currentLabel}
                   </p>
                 </div>
@@ -376,15 +479,15 @@ export default function AppShell({
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <Link href={user ? "/profile" : "/"}>
-                  <span className="flex cursor-pointer items-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] p-1.5">
-                    <Avatar className="h-8 w-8 rounded-[10px]">
+                  <span className="flex cursor-pointer items-center rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-1)] p-1.5">
+                    <Avatar className="h-8 w-8 rounded-full">
                       <AvatarImage
                         src={avatarUrl}
                         alt={displayName}
                         className="object-cover"
                       />
-                      <AvatarFallback className="rounded-[10px] bg-[var(--brand-subtle)] text-[var(--brand)]">
-                        {displayName.charAt(0).toUpperCase()}
+                      <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--amber)]">
+                        {getInitials(displayName)}
                       </AvatarFallback>
                     </Avatar>
                   </span>
@@ -393,10 +496,8 @@ export default function AppShell({
             </div>
           </header>
 
-          <main className="px-4 py-4 md:px-6 md:py-5 lg:px-8 lg:py-7">
-            <div
-              className={cn("mx-auto w-full max-w-[1280px]", contentClassName)}
-            >
+          <main className="main">
+            <div className={cn("page-shell", contentClassName)}>
               {children}
             </div>
           </main>

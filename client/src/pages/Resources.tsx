@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Loader2, Search } from "lucide-react";
 
 import AppShell from "@/components/AppShell";
+import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
@@ -177,146 +178,135 @@ export default function Resources() {
 
   return (
     <AppShell contentClassName="max-w-[1040px]">
-      <div className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top,rgba(255,161,22,0.1),transparent_60%)]" />
+      <div className="space-y-8">
+        <PageHeader
+          eyebrow="Progress"
+          title="Resources"
+          description="Useful study materials, books, PDFs, and channels in one focused place."
+          crumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Resources" },
+          ]}
+        />
 
-        <div className="relative mx-auto space-y-8 px-1 pb-8 pt-4 md:space-y-10 md:pt-8">
-          <header className="space-y-3">
-            <h1 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-5xl">
-              Resources
-            </h1>
-            <p className="max-w-2xl text-sm text-[var(--text-secondary)] md:text-base">
-              Useful study materials, books, PDFs, and channels in one focused
-              place.
-            </p>
-          </header>
-
-          <section className="space-y-5">
-            <label className="relative block">
+        <section className="card space-y-5">
+          <label className="relative block">
               <Search
                 size={18}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)]"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-3)]"
               />
               <input
                 type="search"
                 value={query}
                 onChange={event => setQuery(event.target.value)}
                 placeholder="Search resources"
-                className="w-full rounded-[20px] border border-transparent bg-white/[0.035] px-12 py-3.5 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[rgba(255,161,22,0.24)] focus:bg-white/[0.045]"
+                className="w-full pl-12"
               />
-            </label>
+          </label>
 
-            <div className="border-b border-[var(--border)]">
-              <div className="flex flex-wrap gap-6">
-                {FILTER_TABS.map(tab => {
-                  const active = tab === activeTab;
+          <div className="border-b border-[var(--border-1)] pb-4">
+            <div className="flex flex-wrap gap-2">
+              {FILTER_TABS.map(tab => {
+                const active = tab === activeTab;
+
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      active ? "btn-primary" : "btn-ghost",
+                      "min-w-[72px]",
+                    )}
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section>
+          {loading ? (
+            <div className="card flex min-h-[180px] items-center gap-3 text-sm text-[var(--text-2)]">
+              <Loader2
+                size={16}
+                className="animate-spin text-[var(--amber)]"
+              />
+              Loading resources...
+            </div>
+          ) : filteredResources.length > 0 ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <p className="section-label">
+                  {filteredResources.length} resource
+                  {filteredResources.length === 1 ? "" : "s"}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {filteredResources.map(resource => {
+                  const type = normalizeType(resource.type);
+                  const subject = getSubject(resource);
+                  const meta = [
+                    resource.exam && resource.exam !== "All"
+                      ? resource.exam
+                      : null,
+                    getSourceLabel(resource.url),
+                  ]
+                    .filter(Boolean)
+                    .join(" • ");
 
                   return (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setActiveTab(tab)}
-                      className={cn(
-                        "relative pb-3 text-sm font-medium transition",
-                        active
-                          ? "text-[var(--text-primary)]"
-                          : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                      )}
+                    <article
+                      key={resource.id || `${resource.title}-${resource.url}`}
+                      className="card grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-8"
                     >
-                      {tab}
-                      <span
-                        className={cn(
-                          "absolute inset-x-0 bottom-0 h-0.5 rounded-full transition",
-                          active ? "bg-[var(--brand)]" : "bg-transparent"
-                        )}
-                      />
-                    </button>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="badge">{type}</span>
+                          {resource.exam && resource.exam !== "All" ? (
+                            <span className="badge-amber">{resource.exam}</span>
+                          ) : null}
+                        </div>
+
+                        <h2 className="mt-4 text-xl font-medium tracking-[-0.03em] text-[var(--text-1)]">
+                          {resource.title}
+                        </h2>
+                        <p className="mt-2 text-sm text-[var(--text-2)]">
+                          {subject}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--text-3)]">
+                          {meta}
+                        </p>
+                      </div>
+
+                      <a
+                        href={resource.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary"
+                      >
+                        Open resource
+                        <ArrowUpRight size={15} />
+                      </a>
+                    </article>
                   );
                 })}
               </div>
             </div>
-          </section>
-
-          <section>
-            {loading ? (
-              <div className="flex min-h-[180px] items-center gap-3 text-sm text-[var(--text-muted)]">
-                <Loader2
-                  size={16}
-                  className="animate-spin text-[var(--brand)]"
-                />
-                Loading resources...
-              </div>
-            ) : filteredResources.length > 0 ? (
-              <div>
-                <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-3">
-                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                    {filteredResources.length} resource
-                    {filteredResources.length === 1 ? "" : "s"}
-                  </p>
-                </div>
-
-                <div>
-                  {filteredResources.map(resource => {
-                    const type = normalizeType(resource.type);
-                    const subject = getSubject(resource);
-                    const meta = [
-                      resource.exam && resource.exam !== "All"
-                        ? resource.exam
-                        : null,
-                      getSourceLabel(resource.url),
-                    ]
-                      .filter(Boolean)
-                      .join(" • ");
-
-                    return (
-                      <article
-                        key={resource.id || `${resource.title}-${resource.url}`}
-                        className="grid gap-3 border-b border-[var(--border)] py-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-8"
-                      >
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <h2 className="text-lg font-medium tracking-[-0.03em] text-[var(--text-primary)]">
-                              {resource.title}
-                            </h2>
-                            <span className="text-[11px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                              {type}
-                            </span>
-                          </div>
-
-                          <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                            {subject}
-                          </p>
-                          <p className="mt-1 text-xs text-[var(--text-muted)]">
-                            {meta}
-                          </p>
-                        </div>
-
-                        <a
-                          href={resource.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-sm font-medium text-[var(--brand)] transition hover:text-[var(--brand-light)]"
-                        >
-                          Open resource
-                          <ArrowUpRight size={15} />
-                        </a>
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="py-12">
-                <p className="text-lg font-medium text-[var(--text-primary)]">
-                  No resources found.
-                </p>
-                <p className="mt-2 text-sm text-[var(--text-muted)]">
-                  Try a different search or switch to another tab.
-                </p>
-              </div>
-            )}
-          </section>
-        </div>
+          ) : (
+            <div className="card py-12">
+              <p className="text-lg font-medium text-[var(--text-1)]">
+                No resources found.
+              </p>
+              <p className="mt-2 text-sm text-[var(--text-2)]">
+                Try a different search or switch to another tab.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
     </AppShell>
   );

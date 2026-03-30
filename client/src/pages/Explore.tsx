@@ -66,10 +66,10 @@ const starterPaths = [
 ];
 
 const sectionClassName =
-  "rounded-[22px] border border-white/[0.05] bg-white/[0.02] p-4 md:p-5";
+  "card p-4 md:p-5";
 
 const listRowClassName =
-  "group flex items-center justify-between gap-4 rounded-[16px] bg-white/[0.03] px-4 py-3 transition hover:bg-white/[0.05]";
+  "card group flex items-center justify-between gap-4 rounded-[var(--radius-md)] px-4 py-3";
 
 const examLabels: Record<string, string> = {
   RRB: "Railway",
@@ -159,8 +159,8 @@ export default function Explore() {
                   <span
                     className={
                       action.primary
-                        ? "flex cursor-pointer items-center justify-between gap-3 rounded-[16px] bg-[var(--brand)] px-4 py-3 text-sm font-medium text-[#1d1408] transition hover:bg-[var(--brand-light)]"
-                        : "flex cursor-pointer items-center justify-between gap-3 rounded-[16px] bg-white/[0.03] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:bg-white/[0.05]"
+                        ? "btn-primary flex cursor-pointer items-center justify-between gap-3"
+                        : "btn-ghost flex cursor-pointer items-center justify-between gap-3"
                     }
                   >
                     <span className="flex items-center gap-3">
@@ -169,7 +169,7 @@ export default function Explore() {
                         className={
                           action.primary
                             ? "text-[#1d1408]"
-                            : "text-[var(--text-muted)]"
+                            : "text-[var(--text-2)]"
                         }
                       />
                       <span>{action.label}</span>
@@ -179,7 +179,7 @@ export default function Explore() {
                       className={
                         action.primary
                           ? "text-[#1d1408]"
-                          : "text-[var(--text-faint)]"
+                          : "text-[var(--text-3)]"
                       }
                     />
                   </span>
@@ -244,7 +244,7 @@ export default function Explore() {
                         <span className="truncate text-sm font-medium text-[var(--text-primary)]">
                           {path.title}
                         </span>
-                        <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                        <span className="badge">
                           {path.duration}
                         </span>
                       </span>
@@ -277,7 +277,7 @@ export default function Explore() {
             </div>
 
             <Link href={`/practice?question=${toQuestionId(recommendedQuestion.id)}`}>
-              <span className="mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-[16px] bg-white/[0.03] px-4 py-3 transition hover:bg-white/[0.05]">
+              <span className="card mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-[var(--radius-md)] px-4 py-3">
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium text-[var(--text-primary)]">
                     {recommendedQuestion.topic} warm-up

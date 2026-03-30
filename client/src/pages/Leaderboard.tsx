@@ -32,17 +32,20 @@ export default function Leaderboard() {
         />
 
         <div className="flex flex-1 flex-col items-center justify-center px-4 py-6 text-center sm:px-6">
-          <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-muted)] text-[var(--text-primary)]">
+          <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--amber)]">
             <Trophy size={18} />
           </div>
 
-          <div className="mt-10 w-full max-w-[640px] border-y border-[var(--border)] py-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+          <div className="mt-10 w-full max-w-[640px]">
+            <p className="section-label mb-4">
               Coming soon
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {upcomingFeatures.map((feature) => (
-                <div key={feature} className="text-sm text-[var(--text-secondary)] sm:text-base">
+                <div
+                  key={feature}
+                  className="card py-4 text-sm text-[var(--text-3)] sm:text-base"
+                >
                   {feature}
                 </div>
               ))}
@@ -51,7 +54,7 @@ export default function Leaderboard() {
 
           <div className="mt-6">
             <Link href="/practice">
-              <span className="btn-primary inline-flex cursor-pointer items-center gap-2 rounded-full px-6 py-3 text-sm font-medium sm:text-base">
+              <span className="btn-primary inline-flex cursor-pointer items-center gap-2">
                 Go to Practice
                 <ArrowRight size={16} />
               </span>
@@ -59,17 +62,17 @@ export default function Leaderboard() {
           </div>
 
           <div className="mx-auto mt-12 w-full max-w-[320px]">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+            <p className="section-label">
               Preview
             </p>
             <div className="mt-4 space-y-3">
               {previewRanks.map((item) => (
                 <div
                   key={item.rank}
-                  className="flex items-center justify-between border-b border-[var(--border)] py-3 text-left"
+                  className="card flex items-center justify-between py-4 text-left"
                 >
-                  <span className="text-sm font-medium text-[var(--text-primary)]">{item.rank}</span>
-                  <span className="text-sm text-[var(--text-muted)]">{item.label}</span>
+                  <span className="text-sm font-medium text-[var(--text-1)]">{item.rank}</span>
+                  <span className="text-sm text-[var(--text-3)]">{item.label}</span>
                 </div>
               ))}
             </div>

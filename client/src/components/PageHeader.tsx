@@ -19,6 +19,7 @@ type PageHeaderProps = {
   crumbs?: Crumb[];
   actions?: ReactNode;
   className?: string;
+  align?: "left" | "center";
 };
 
 export default function PageHeader({
@@ -28,35 +29,34 @@ export default function PageHeader({
   crumbs,
   actions,
   className,
+  align = "left",
 }: PageHeaderProps) {
   return (
     <header
-      className={cn(
-        "flex flex-col gap-4 border-b border-[var(--border)] pb-5 md:flex-row md:items-end md:justify-between",
-        className,
-      )}
+      className={cn("page-header md:flex-row md:items-end md:justify-between", className)}
+      data-align={align}
     >
-      <div className="min-w-0 space-y-2">
+      <div className="page-header-content">
         {crumbs && crumbs.length > 0 ? (
           <Breadcrumb>
-            <BreadcrumbList className="text-[var(--text-muted)]">
+            <BreadcrumbList className="page-crumbs">
               {crumbs.map((crumb, index) => {
                 const isLast = index === crumbs.length - 1;
                 return (
                   <Fragment key={`${crumb.label}-${index}`}>
                     {index > 0 ? (
-                      <BreadcrumbSeparator className="text-[var(--text-faint)]" />
+                      <BreadcrumbSeparator className="page-crumb-separator" />
                     ) : null}
                     <BreadcrumbItem>
                       {!isLast && crumb.href ? (
                         <BreadcrumbLink
                           href={crumb.href}
-                          className="hover:text-[var(--text-primary)]"
+                          className="page-crumb is-link"
                         >
                           {crumb.label}
                         </BreadcrumbLink>
                       ) : (
-                        <BreadcrumbPage className="font-medium text-[var(--text-secondary)]">
+                        <BreadcrumbPage className="page-crumb">
                           {crumb.label}
                         </BreadcrumbPage>
                       )}
@@ -68,18 +68,18 @@ export default function PageHeader({
           </Breadcrumb>
         ) : null}
         {eyebrow ? (
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
+          <p className="page-label">
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.35rem]">
+        <h1 className="page-title">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-2xl text-sm text-[var(--text-secondary)] md:text-[0.95rem]">{description}</p>
+          <p className="page-description">{description}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
+      {actions ? <div className="page-actions shrink-0">{actions}</div> : null}
     </header>
   );
 }

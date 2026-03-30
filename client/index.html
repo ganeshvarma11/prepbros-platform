@@ -9,16 +9,11 @@
           var d = document.documentElement;
           var key = "prepbros-ui-theme";
           var t = localStorage.getItem(key);
-          if (t === "dark") {
-            d.classList.add("dark");
-          } else if (t === "light") {
-            d.classList.remove("dark");
+          d.classList.remove("light", "dark");
+          if (t === "light") {
+            d.classList.add("light");
           } else {
-            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-              d.classList.add("dark");
-            } else {
-              d.classList.remove("dark");
-            }
+            d.classList.add("dark");
           }
           d.style.colorScheme = d.classList.contains("dark") ? "dark" : "light";
         } catch (e) {}
@@ -27,8 +22,8 @@
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e0e0e" media="(prefers-color-scheme: dark)" />
     <meta name="application-name" content="PrepBros" />
     <meta name="apple-mobile-web-app-title" content="PrepBros" />
     <!-- SEO_HEAD_START -->

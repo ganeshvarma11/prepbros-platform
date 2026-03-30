@@ -1,6 +1,7 @@
 import { ArrowRight, Check } from "lucide-react";
 
 import AppShell from "@/components/AppShell";
+import PageHeader from "@/components/PageHeader";
 import { trackEvent } from "@/lib/analytics";
 import {
   getPremiumCheckoutUrl,
@@ -104,18 +105,19 @@ export default function Premium() {
 
   return (
     <AppShell>
-      <div className="container-shell py-4 md:py-8">
-        <div className="mx-auto max-w-6xl rounded-[28px] border border-white/6 bg-[radial-gradient(circle_at_top,rgba(246,140,33,0.08),transparent_22%),linear-gradient(180deg,#121014_0%,#0d0b11_100%)] px-5 py-10 md:px-10 md:py-16">
-          <header className="mx-auto max-w-2xl text-center">
-            <h1 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-6xl">
-              Premium
-            </h1>
-            <p className="mt-4 text-base leading-7 text-[var(--text-secondary)] md:text-xl">
-              Choose a plan that fits your preparation cycle.
-            </p>
-          </header>
+      <div className="container-shell space-y-8 py-4 md:py-8">
+        <PageHeader
+          eyebrow="Progress"
+          title="Premium"
+          description="Choose a plan that fits your preparation cycle."
+          align="center"
+          crumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Premium" },
+          ]}
+        />
 
-          <section className="mx-auto mt-12 grid max-w-6xl gap-5 lg:grid-cols-3">
+        <section className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
             {plans.map(plan => {
               const paidPlanKey =
                 plan.planKey === "monthly" || plan.planKey === "annual"
@@ -125,48 +127,46 @@ export default function Premium() {
               return (
                 <article
                   key={plan.name}
-                  className={`relative rounded-[24px] border px-7 py-7 ${
-                    plan.highlighted
-                      ? "border-[rgba(246,140,33,0.28)] bg-[linear-gradient(180deg,rgba(29,23,24,0.98)_0%,rgba(18,15,19,0.98)_100%)] shadow-[0_18px_40px_-30px_rgba(246,140,33,0.35)]"
-                      : "border-white/8 bg-[linear-gradient(180deg,rgba(25,21,28,0.94)_0%,rgba(18,15,21,0.94)_100%)]"
+                  className={`card relative px-7 py-7 ${
+                    plan.planKey === "free"
+                      ? "border-2 border-[var(--amber)]"
+                      : plan.highlighted
+                        ? "border-[var(--amber)]"
+                        : ""
                   }`}
                 >
                   {plan.highlighted ? (
-                    <div className="absolute inset-x-0 top-0 rounded-t-[24px] border-b border-[rgba(246,140,33,0.16)] bg-[linear-gradient(90deg,rgba(246,140,33,0.18),rgba(246,140,33,0.04))] px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--brand-light)]">
-                      Most Popular
+                    <div className="absolute right-6 top-6">
+                      <span className="badge-amber">Most Popular</span>
                     </div>
                   ) : null}
 
-                  <div className={plan.highlighted ? "pt-10" : ""}>
-                    <h2 className="text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
+                  <div>
+                    <h2 className="text-3xl font-medium tracking-[-0.05em] text-[var(--text-1)]">
                       {plan.name}
                     </h2>
 
                     <div className="mt-5 flex items-end gap-2">
-                      <span className="text-6xl font-semibold tracking-[-0.07em] text-[var(--text-primary)]">
+                      <span className="font-serif text-6xl font-normal tracking-[-0.04em] text-[var(--text-1)]">
                         {plan.price}
                       </span>
                       {plan.period ? (
-                        <span className="pb-2 text-base text-[var(--text-muted)]">
+                        <span className="pb-2 text-base text-[var(--text-2)]">
                           {plan.period}
                         </span>
                       ) : null}
                     </div>
 
-                    <div className="mt-5 h-px bg-white/8" />
+                    <div className="mt-5 h-px bg-[var(--border-1)]" />
 
                     <div className="mt-6 space-y-4">
                       {plan.features.map(feature => (
                         <div key={feature} className="flex items-start gap-3">
                           <Check
                             size={18}
-                            className={
-                              plan.highlighted
-                                ? "mt-0.5 text-[var(--brand)]"
-                                : "mt-0.5 text-[#7fd36e]"
-                            }
+                            className="mt-0.5 text-[var(--amber)]"
                           />
-                          <span className="text-sm leading-7 text-[var(--text-secondary)] md:text-[1.02rem]">
+                          <span className="text-sm leading-7 text-[var(--text-2)] md:text-[1.02rem]">
                             {feature}
                           </span>
                         </div>
@@ -180,9 +180,9 @@ export default function Premium() {
                         if (paidPlanKey) handlePlanClick(paidPlanKey);
                       }}
                       className={
-                        plan.highlighted
-                          ? "btn-primary mt-10 w-full py-3.5 text-base"
-                          : "btn-secondary mt-10 w-full border-white/8 bg-transparent py-3.5 text-base text-[var(--text-primary)] hover:bg-white/4"
+                        plan.planKey === "free"
+                          ? "btn-ghost mt-10 w-full cursor-not-allowed"
+                          : "btn-primary mt-10 w-full"
                       }
                     >
                       {plan.cta}
@@ -191,49 +191,46 @@ export default function Premium() {
                 </article>
               );
             })}
-          </section>
+        </section>
 
-          <section className="mx-auto mt-8 max-w-4xl">
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center text-sm leading-6 text-[var(--text-muted)] md:text-base">
+        <section className="mx-auto max-w-4xl">
+          <div className="card flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center text-sm leading-6 text-[var(--text-2)] md:text-base">
               {trustPoints.map((item, index) => (
                 <div key={item} className="inline-flex items-center gap-4">
                   {index > 0 ? (
-                    <span className="hidden text-white/20 md:inline">•</span>
+                    <span className="hidden text-[var(--text-3)] md:inline">•</span>
                   ) : null}
                   <span>{item}</span>
                 </div>
               ))}
-            </div>
-          </section>
+          </div>
+        </section>
 
-          <section className="mx-auto mt-10 max-w-5xl border-y border-white/6 px-1 py-7">
+        <section className="mx-auto max-w-5xl">
             <div className="grid gap-1 md:grid-cols-2 md:gap-x-10">
               {faqs.map((item, index) => (
                 <div
                   key={item.question}
-                  className={`py-4 ${
-                    index < faqs.length - 2
-                      ? "border-b border-white/6 md:border-b-0"
-                      : ""
-                  } ${index % 2 === 0 ? "md:border-r md:border-white/6 md:pr-10" : "md:pl-10"}`}
+                  className={`card py-5 ${
+                    index % 2 === 0 ? "md:mr-3" : "md:ml-3"
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-4">
-                    <p className="text-lg font-medium tracking-[-0.03em] text-[var(--text-primary)]">
+                    <p className="text-lg font-medium tracking-[-0.03em] text-[var(--text-1)]">
                       {item.question}
                     </p>
                     <ArrowRight
                       size={16}
-                      className="shrink-0 text-[var(--text-muted)]"
+                      className="shrink-0 text-[var(--text-3)]"
                     />
                   </div>
-                  <p className="mt-3 max-w-[34ch] text-sm leading-7 text-[var(--text-secondary)]">
+                  <p className="mt-3 max-w-[34ch] text-sm leading-7 text-[var(--text-2)]">
                     {item.answer}
                   </p>
                 </div>
               ))}
             </div>
-          </section>
-        </div>
+        </section>
       </div>
     </AppShell>
   );
