@@ -117,8 +117,8 @@ function NavLink({
           "group relative flex cursor-pointer items-center rounded-[18px] border text-[13px] transition-all",
           collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3",
           active
-            ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] font-semibold text-[var(--text-1)] shadow-[var(--shadow-sm)]"
-            : "border-transparent text-[var(--text-2)] hover:border-[var(--border-1)] hover:bg-[var(--surface-1)] hover:text-[var(--text-1)]"
+            ? "border-[var(--border-2)] bg-[var(--surface-2)] font-semibold text-[var(--text-1)] shadow-[var(--shadow-sm)]"
+            : "border-transparent text-[var(--text-2)] hover:border-[var(--border-1)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
         )}
         title={collapsed ? item.label : undefined}
       >
@@ -165,7 +165,7 @@ function SidebarBody({
   const initials = getInitials(displayName);
 
   return (
-    <div className="relative flex h-full flex-col border-r border-[var(--border-1)] bg-[color:rgba(255,255,255,0.38)] px-3 py-4 backdrop-blur-xl dark:bg-[color:rgba(2,6,23,0.42)]">
+    <div className="relative flex h-full flex-col border-r border-[var(--border-1)] bg-[color:rgba(248,250,252,0.92)] px-3 py-4 shadow-[var(--shadow-sm)] backdrop-blur-xl dark:bg-[color:rgba(2,6,23,0.42)] dark:shadow-none">
       <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
         {collapsed ? (
           <Link href="/">
@@ -188,7 +188,7 @@ function SidebarBody({
           type="button"
           onClick={onToggle}
           className={cn(
-            "mt-4 inline-flex h-10 w-full items-center justify-center rounded-full border border-transparent bg-[var(--surface-1)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]",
+            "mt-4 inline-flex h-10 w-full items-center justify-center rounded-full border border-transparent bg-[var(--surface-2)] text-[var(--text-2)] shadow-[var(--shadow-sm)] transition hover:bg-[var(--surface-1)] hover:text-[var(--text-1)]",
             collapsed ? "px-0" : "gap-2 px-3"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}

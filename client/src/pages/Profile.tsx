@@ -860,7 +860,7 @@ export default function Profile() {
 
   return (
     <AppShell contentClassName="max-w-none">
-      <div className="relative">
+      <div className="relative overflow-x-clip">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.76),transparent_34%),radial-gradient(circle_at_80%_18%,rgba(191,219,254,0.24),transparent_25%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.1),transparent_34%),radial-gradient(circle_at_80%_18%,rgba(59,130,246,0.12),transparent_25%)]" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:linear-gradient(to_right,rgba(148,163,184,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:150px_150px] dark:opacity-[0.08]" />
 
@@ -1049,8 +1049,8 @@ export default function Profile() {
             </DialogContent>
           </Dialog>
 
-          <div className="sticky top-0 z-20 -mx-4 border-b border-[var(--border)] bg-[color:rgba(247,250,252,0.76)] px-4 backdrop-blur-xl dark:bg-[color:rgba(8,15,29,0.76)] md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
-            <div className="mx-auto flex max-w-[1120px] items-center gap-1 overflow-x-auto">
+          <div className="sticky top-0 z-20 mb-6 rounded-[22px] border border-[var(--border)] bg-[color:rgba(255,255,255,0.92)] px-4 shadow-[var(--shadow-sm)] backdrop-blur-xl dark:bg-[color:rgba(8,15,29,0.82)] md:px-6">
+            <div className="flex items-center gap-1 overflow-x-auto">
               {[
                 { key: "profile", label: "Profile" },
                 { key: "settings", label: "Settings" },
@@ -1060,9 +1060,9 @@ export default function Profile() {
                   key={item.key}
                   type="button"
                   onClick={() => setActiveTab(item.key as ActiveTab)}
-                  className={`border-b-2 px-4 py-4 text-sm transition ${
+                  className={`border-b-2 px-4 py-4 text-sm font-medium transition ${
                     activeTab === item.key
-                      ? "border-[var(--brand)] text-[var(--brand)]"
+                      ? "border-[var(--brand)] text-[var(--text-primary)]"
                       : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
