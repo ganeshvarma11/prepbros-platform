@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
 import { buildPreferredSiteUrl } from "../lib/siteConfig";
 
+export const POST_AUTH_REDIRECT_STORAGE_KEY = "prepbros:post-auth-redirect";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -82,12 +84,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     const redirectTo = getAuthRedirectUrl("/practice");
 
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(POST_AUTH_REDIRECT_STORAGE_KEY, "/practice");
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo,
       },
     });
+
+    if (error && typeof window !== "undefined") {
+      window.sessionStorage.removeItem(POST_AUTH_REDIRECT_STORAGE_KEY);
+    }
 
     return { error };
   };

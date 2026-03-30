@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import {
   ArrowRight,
   BookOpen,
@@ -25,7 +25,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useAuth } from "@/contexts/AuthContext";
+import {
+  POST_AUTH_REDIRECT_STORAGE_KEY,
+  useAuth,
+} from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
 import { getPolicyUrl, siteConfig } from "@/lib/siteConfig";
 
@@ -483,8 +486,8 @@ function InteractiveSurface({
 }
 
 export default function Home() {
-  const { user, signInWithGoogle, signOut } = useAuth();
-  const [, setLocation] = useLocation();
+  const { user, loading, signInWithGoogle, signOut } = useAuth();
+  const [location, setLocation] = useLocation();
   const [showAuth, setShowAuth] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "signup">("signup");
   const [oauthLoading, setOauthLoading] = useState(false);
@@ -494,6 +497,31 @@ export default function Home() {
     user?.user_metadata?.full_name?.split(" ")[0] ||
     user?.email?.split("@")[0] ||
     "Aspirant";
+
+  useEffect(() => {
+    if (loading || !user || location !== "/" || typeof window === "undefined") {
+      return;
+    }
+
+    const storedRedirect = window.sessionStorage.getItem(
+      POST_AUTH_REDIRECT_STORAGE_KEY
+    );
+    const hash = window.location.hash;
+    const search = window.location.search;
+    const returnedFromAuth =
+      hash === "#" ||
+      hash.includes("access_token") ||
+      hash.includes("refresh_token") ||
+      hash.includes("type=") ||
+      search.includes("code=");
+
+    if (!storedRedirect && !returnedFromAuth) {
+      return;
+    }
+
+    window.sessionStorage.removeItem(POST_AUTH_REDIRECT_STORAGE_KEY);
+    setLocation(storedRedirect || "/practice");
+  }, [loading, location, setLocation, user]);
 
   const openSignup = () => {
     setPanelError("");
