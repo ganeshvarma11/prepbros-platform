@@ -257,14 +257,14 @@ select {
 .main {
   flex: 1;
   min-width: 0;
-  padding: 28px 28px 64px;
+  padding: 28px 28px 64px 22px;
   overflow-x: hidden;
 }
 
 .page-shell {
   width: 100%;
   max-width: 1280px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .page-header {

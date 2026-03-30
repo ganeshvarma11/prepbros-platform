@@ -150,31 +150,6 @@ export default function Explore() {
           ]}
         />
 
-        <section className="card grid gap-5 overflow-hidden p-5 md:grid-cols-[minmax(0,1fr)_280px] md:p-6">
-          <div>
-            <p className="section-label">Discovery</p>
-            <h2 className="mt-3 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
-              Find the next right thing to study.
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-              Explore is your low-friction starting point for exam tracks, short
-              paths, and focused entry into practice.
-            </p>
-          </div>
-          <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
-            <p className="section-label">Quick start</p>
-            <p
-              className="mt-3 text-[2.6rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              {questions.length}
-            </p>
-            <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
-              Questions currently available to explore and practice from.
-            </p>
-          </div>
-        </section>
-
         <section className={sectionClassName}>
           <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
             {quickActions.map(action => {

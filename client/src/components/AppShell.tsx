@@ -128,7 +128,9 @@ function NavLink({
             active ? "bg-[var(--brand)]" : "bg-transparent"
           )}
         />
-        <Icon size={16} className="shrink-0 text-current" />
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+          <Icon size={16} className="text-current" />
+        </span>
         {!collapsed ? <span className="truncate">{item.label}</span> : null}
       </span>
     </Link>

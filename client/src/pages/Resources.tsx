@@ -189,31 +189,6 @@ export default function Resources() {
           ]}
         />
 
-        <section className="card grid gap-5 overflow-hidden p-5 lg:grid-cols-[minmax(0,1fr)_240px] md:p-6">
-          <div>
-            <p className="section-label">Library</p>
-            <h2 className="mt-3 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
-              Study material without the clutter.
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-              Search by exam, keep only the formats you want, and jump straight
-              to the material that fits the current study block.
-            </p>
-          </div>
-          <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
-            <p className="section-label">Available now</p>
-            <p
-              className="mt-3 text-[2.6rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              {filteredResources.length}
-            </p>
-            <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
-              Curated items visible with your current filters.
-            </p>
-          </div>
-        </section>
-
         <section className="card space-y-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-1">
