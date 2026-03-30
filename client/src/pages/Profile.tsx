@@ -26,7 +26,17 @@ import { Link } from "wouter";
 import AppShell from "@/components/AppShell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PageEmpty } from "@/components/PageState";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
@@ -82,6 +92,18 @@ type EditableSettings = {
 type SaveNotice = {
   tone: "success" | "error";
   message: string;
+};
+
+type CropState = {
+  open: boolean;
+  kind: "avatar" | "banner";
+  fileName: string;
+  objectUrl: string;
+  naturalWidth: number;
+  naturalHeight: number;
+  zoom: number;
+  offsetX: number;
+  offsetY: number;
 };
 
 const defaultSettings: EditableSettings = {
@@ -203,6 +225,21 @@ const getInitials = (value: string) =>
     .map(part => part[0]?.toUpperCase() || "")
     .join("") || "PB";
 
+const getCropConfig = (kind: "avatar" | "banner") =>
+  kind === "avatar"
+    ? {
+        previewWidth: 280,
+        previewHeight: 280,
+        outputWidth: 720,
+        outputHeight: 720,
+      }
+    : {
+        previewWidth: 420,
+        previewHeight: 180,
+        outputWidth: 1500,
+        outputHeight: 640,
+      };
+
 function SettingField({
   label,
   hint,
@@ -269,17 +306,86 @@ function AccountRow({
 
 const isValidImageFile = (file: File) => file.type.startsWith("image/");
 
+const loadImageDimensions = (src: string) =>
+  new Promise<{ width: number; height: number }>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () =>
+      resolve({ width: image.naturalWidth, height: image.naturalHeight });
+    image.onerror = () => reject(new Error("Failed to load image."));
+    image.src = src;
+  });
+
 const buildMediaPath = ({
   userId,
   kind,
-  file,
 }: {
   userId: string;
   kind: "avatar" | "banner";
-  file: File;
-}) => {
-  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  return `${kind}s/${userId}/${kind}.${extension}`;
+}) => `${kind}s/${userId}/${kind}.jpg`;
+
+const getStoragePathFromUrl = (url: string) => {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    const marker = `/storage/v1/object/public/${PROFILE_MEDIA_BUCKET}/`;
+    const pathname = parsed.pathname;
+    const index = pathname.indexOf(marker);
+    if (index === -1) return null;
+    return decodeURIComponent(pathname.slice(index + marker.length));
+  } catch {
+    return null;
+  }
+};
+
+const exportCroppedImage = async ({ crop }: { crop: CropState }) => {
+  const config = getCropConfig(crop.kind);
+  const image = new Image();
+  image.src = crop.objectUrl;
+
+  await new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = reject;
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = config.outputWidth;
+  canvas.height = config.outputHeight;
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Canvas is not supported in this browser.");
+  }
+
+  const baseScale = Math.max(
+    config.outputWidth / crop.naturalWidth,
+    config.outputHeight / crop.naturalHeight
+  );
+  const scale = baseScale * crop.zoom;
+  const scaledWidth = crop.naturalWidth * scale;
+  const scaledHeight = crop.naturalHeight * scale;
+  const maxOffsetX = Math.max(0, (scaledWidth - config.outputWidth) / 2);
+  const maxOffsetY = Math.max(0, (scaledHeight - config.outputHeight) / 2);
+  const translateX = (crop.offsetX / 100) * maxOffsetX;
+  const translateY = (crop.offsetY / 100) * maxOffsetY;
+  const drawX = (config.outputWidth - scaledWidth) / 2 + translateX;
+  const drawY = (config.outputHeight - scaledHeight) / 2 + translateY;
+
+  context.fillStyle = "#111111";
+  context.fillRect(0, 0, config.outputWidth, config.outputHeight);
+  context.drawImage(image, drawX, drawY, scaledWidth, scaledHeight);
+
+  const blob = await new Promise<Blob | null>(resolve =>
+    canvas.toBlob(resolve, "image/jpeg", 0.86)
+  );
+
+  if (!blob) {
+    throw new Error("Failed to prepare the cropped image.");
+  }
+
+  return new File([blob], `${crop.kind}.jpg`, {
+    type: "image/jpeg",
+  });
 };
 
 export default function Profile() {
@@ -301,6 +407,7 @@ export default function Profile() {
     avatar: boolean;
     banner: boolean;
   }>({ avatar: false, banner: false });
+  const [cropState, setCropState] = useState<CropState | null>(null);
   const [saveNotice, setSaveNotice] = useState<SaveNotice | null>(null);
 
   useEffect(() => {
@@ -506,18 +613,20 @@ export default function Profile() {
   const uploadMedia = async ({
     file,
     kind,
+    previousUrl,
   }: {
     file: File;
     kind: "avatar" | "banner";
+    previousUrl?: string;
   }) => {
-    if (!user) return;
+    if (!user) return false;
 
     if (!isValidImageFile(file)) {
       setSaveNotice({
         tone: "error",
         message: "Please choose an image file for your profile media.",
       });
-      return;
+      return false;
     }
 
     if (file.size > MAX_MEDIA_SIZE_BYTES) {
@@ -525,19 +634,19 @@ export default function Profile() {
         tone: "error",
         message: "Please choose an image smaller than 5 MB.",
       });
-      return;
+      return false;
     }
 
     setUploadingMedia(current => ({ ...current, [kind]: true }));
     setSaveNotice(null);
 
-    const path = buildMediaPath({ userId: user.id, kind, file });
+    const path = buildMediaPath({ userId: user.id, kind });
     const { error: uploadError } = await supabase.storage
       .from(PROFILE_MEDIA_BUCKET)
       .upload(path, file, {
         upsert: true,
         cacheControl: "3600",
-        contentType: file.type,
+        contentType: "image/jpeg",
       });
 
     if (uploadError) {
@@ -550,7 +659,7 @@ export default function Profile() {
             : "We couldn't upload that image right now. Please try again.",
       });
       setUploadingMedia(current => ({ ...current, [kind]: false }));
-      return;
+      return false;
     }
 
     const { data } = supabase.storage
@@ -568,7 +677,7 @@ export default function Profile() {
         message: "Image uploaded, but saving it to your profile failed.",
       });
       setUploadingMedia(current => ({ ...current, [kind]: false }));
-      return;
+      return false;
     }
 
     if (kind === "avatar") {
@@ -577,11 +686,24 @@ export default function Profile() {
       setBannerUrl(nextUrl);
     }
 
+    const previousPath = previousUrl
+      ? getStoragePathFromUrl(previousUrl)
+      : null;
+    if (previousPath && previousPath !== path) {
+      const { error: removeOldError } = await supabase.storage
+        .from(PROFILE_MEDIA_BUCKET)
+        .remove([previousPath]);
+      if (removeOldError) {
+        console.error("Old media cleanup failed:", removeOldError);
+      }
+    }
+
     setSaveNotice({
       tone: "success",
       message: `${kind === "avatar" ? "Profile photo" : "Banner image"} updated.`,
     });
     setUploadingMedia(current => ({ ...current, [kind]: false }));
+    return true;
   };
 
   const handleMediaSelection =
@@ -590,11 +712,50 @@ export default function Profile() {
       const file = event.target.files?.[0];
       event.target.value = "";
       if (!file) return;
-      await uploadMedia({ file, kind });
+
+      if (!isValidImageFile(file)) {
+        setSaveNotice({
+          tone: "error",
+          message: "Please choose an image file for your profile media.",
+        });
+        return;
+      }
+
+      if (file.size > MAX_MEDIA_SIZE_BYTES) {
+        setSaveNotice({
+          tone: "error",
+          message: "Please choose an image smaller than 5 MB.",
+        });
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+
+      try {
+        const dimensions = await loadImageDimensions(objectUrl);
+        setCropState({
+          open: true,
+          kind,
+          fileName: file.name,
+          objectUrl,
+          naturalWidth: dimensions.width,
+          naturalHeight: dimensions.height,
+          zoom: 1,
+          offsetX: 0,
+          offsetY: 0,
+        });
+      } catch {
+        URL.revokeObjectURL(objectUrl);
+        setSaveNotice({
+          tone: "error",
+          message: "We couldn't prepare that image. Please try another file.",
+        });
+      }
     };
 
   const removeMedia = async (kind: "avatar" | "banner") => {
     setUploadingMedia(current => ({ ...current, [kind]: true }));
+    const currentUrl = kind === "avatar" ? avatarUrl : bannerUrl;
     const { error } = await updateProfileMedia({
       avatar: kind === "avatar" ? null : undefined,
       banner: kind === "banner" ? null : undefined,
@@ -615,11 +776,49 @@ export default function Profile() {
       setBannerUrl("");
     }
 
+    const storagePath = getStoragePathFromUrl(currentUrl);
+    if (storagePath) {
+      const { error: removeError } = await supabase.storage
+        .from(PROFILE_MEDIA_BUCKET)
+        .remove([storagePath]);
+      if (removeError) {
+        console.error("Storage cleanup failed:", removeError);
+      }
+    }
+
     setSaveNotice({
       tone: "success",
       message: `${kind === "avatar" ? "Profile photo" : "Banner image"} removed.`,
     });
     setUploadingMedia(current => ({ ...current, [kind]: false }));
+  };
+
+  const closeCropDialog = () => {
+    if (cropState?.objectUrl) {
+      URL.revokeObjectURL(cropState.objectUrl);
+    }
+    setCropState(null);
+  };
+
+  const confirmCrop = async () => {
+    if (!cropState) return;
+
+    try {
+      const processedFile = await exportCroppedImage({ crop: cropState });
+      const uploaded = await uploadMedia({
+        file: processedFile,
+        kind: cropState.kind,
+        previousUrl: cropState.kind === "avatar" ? avatarUrl : bannerUrl,
+      });
+      if (uploaded) {
+        closeCropDialog();
+      }
+    } catch {
+      setSaveNotice({
+        tone: "error",
+        message: "We couldn't crop that image. Please try again.",
+      });
+    }
   };
 
   if (loading || pageLoading || questionsSyncing) {
@@ -672,6 +871,171 @@ export default function Profile() {
             className="hidden"
             onChange={handleMediaSelection("banner")}
           />
+          <Dialog
+            open={Boolean(cropState?.open)}
+            onOpenChange={open => {
+              if (!open) closeCropDialog();
+            }}
+          >
+            <DialogContent className="max-w-[min(92vw,720px)] border-white/10 bg-[#111111] p-0 text-[#f0ede6]">
+              {cropState ? (
+                <>
+                  <DialogHeader className="border-b border-white/8 px-6 py-5">
+                    <DialogTitle className="text-xl tracking-[-0.03em] text-[#f0ede6]">
+                      Crop{" "}
+                      {cropState.kind === "avatar" ? "profile photo" : "banner"}
+                    </DialogTitle>
+                    <DialogDescription className="text-sm text-[#8a8880]">
+                      Adjust the framing before upload. The image will be
+                      compressed automatically for faster loading.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="px-6 py-5">
+                    {(() => {
+                      const config = getCropConfig(cropState.kind);
+                      const baseScale = Math.max(
+                        config.previewWidth / cropState.naturalWidth,
+                        config.previewHeight / cropState.naturalHeight
+                      );
+                      const scale = baseScale * cropState.zoom;
+                      const scaledWidth = cropState.naturalWidth * scale;
+                      const scaledHeight = cropState.naturalHeight * scale;
+                      const maxOffsetX = Math.max(
+                        0,
+                        (scaledWidth - config.previewWidth) / 2
+                      );
+                      const maxOffsetY = Math.max(
+                        0,
+                        (scaledHeight - config.previewHeight) / 2
+                      );
+                      const translateX = (cropState.offsetX / 100) * maxOffsetX;
+                      const translateY = (cropState.offsetY / 100) * maxOffsetY;
+
+                      return (
+                        <>
+                          <div className="flex justify-center">
+                            <div
+                              className="relative overflow-hidden rounded-[18px] border border-white/10 bg-[#181818] shadow-[0_24px_70px_-36px_rgba(0,0,0,0.9)]"
+                              style={{
+                                width: config.previewWidth,
+                                height: config.previewHeight,
+                              }}
+                            >
+                              <img
+                                src={cropState.objectUrl}
+                                alt={cropState.fileName}
+                                className="pointer-events-none absolute left-1/2 top-1/2 max-w-none select-none"
+                                style={{
+                                  width: scaledWidth,
+                                  height: scaledHeight,
+                                  transform: `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px))`,
+                                }}
+                              />
+                              <div className="pointer-events-none absolute inset-0 border border-white/10" />
+                            </div>
+                          </div>
+
+                          <div className="mt-6 space-y-5">
+                            <div>
+                              <div className="mb-2 flex items-center justify-between text-sm">
+                                <span className="text-[#f0ede6]">Zoom</span>
+                                <span className="text-[#8a8880]">
+                                  {cropState.zoom.toFixed(2)}x
+                                </span>
+                              </div>
+                              <Slider
+                                value={[cropState.zoom]}
+                                min={1}
+                                max={2.5}
+                                step={0.01}
+                                onValueChange={([value]) =>
+                                  setCropState(current =>
+                                    current
+                                      ? { ...current, zoom: value }
+                                      : current
+                                  )
+                                }
+                                className="[&_[data-slot=slider-range]]:bg-[#c9a84c]"
+                              />
+                            </div>
+
+                            <div>
+                              <div className="mb-2 flex items-center justify-between text-sm">
+                                <span className="text-[#f0ede6]">
+                                  Horizontal
+                                </span>
+                                <span className="text-[#8a8880]">
+                                  {cropState.offsetX}%
+                                </span>
+                              </div>
+                              <Slider
+                                value={[cropState.offsetX]}
+                                min={-100}
+                                max={100}
+                                step={1}
+                                onValueChange={([value]) =>
+                                  setCropState(current =>
+                                    current
+                                      ? { ...current, offsetX: value }
+                                      : current
+                                  )
+                                }
+                                className="[&_[data-slot=slider-range]]:bg-[#c9a84c]"
+                              />
+                            </div>
+
+                            <div>
+                              <div className="mb-2 flex items-center justify-between text-sm">
+                                <span className="text-[#f0ede6]">Vertical</span>
+                                <span className="text-[#8a8880]">
+                                  {cropState.offsetY}%
+                                </span>
+                              </div>
+                              <Slider
+                                value={[cropState.offsetY]}
+                                min={-100}
+                                max={100}
+                                step={1}
+                                onValueChange={([value]) =>
+                                  setCropState(current =>
+                                    current
+                                      ? { ...current, offsetY: value }
+                                      : current
+                                  )
+                                }
+                                className="[&_[data-slot=slider-range]]:bg-[#c9a84c]"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  <DialogFooter className="border-t border-white/8 px-6 py-5 sm:justify-between">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={closeCropDialog}
+                      className="border border-white/10 bg-transparent text-[#8a8880] hover:bg-white/[0.04] hover:text-[#f0ede6]"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        void confirmCrop();
+                      }}
+                      className="bg-[#c9a84c] text-[#0e0e0e] hover:bg-[#f0c040]"
+                    >
+                      Use image
+                    </Button>
+                  </DialogFooter>
+                </>
+              ) : null}
+            </DialogContent>
+          </Dialog>
 
           <div className="sticky top-0 z-20 -mx-4 border-b border-white/8 bg-[#141414]/92 px-4 backdrop-blur-xl md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
             <div className="mx-auto flex max-w-[1120px] items-center gap-1 overflow-x-auto">
