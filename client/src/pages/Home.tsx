@@ -1,5 +1,18 @@
-import { useState } from "react";
-import { ArrowRight, Loader2, LogOut } from "lucide-react";
+import { useState, type CSSProperties, type ReactNode } from "react";
+import {
+  ArrowRight,
+  BookOpen,
+  CircleHelp,
+  Crown,
+  FileText,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
+  ShieldCheck,
+  Sparkles,
+  Trophy,
+  type LucideIcon,
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 import AuthModal from "@/components/AuthModal";
@@ -25,50 +38,47 @@ const HERO_PROOF_POINTS = [
 const PLATFORM_PILLARS = [
   {
     eyebrow: "Practice",
-    title: "Question solving that stays focused.",
-    description:
-      "PrepBros keeps daily solving simple with a quiet question desk, clean filters, and less visual clutter while you work.",
+    title: "Quiet question desk",
+    description: "Fresh questions, clean filters, fewer distractions.",
+    meta: "Daily flow",
   },
   {
     eyebrow: "Review",
-    title: "Weak areas surface naturally.",
-    description:
-      "Incorrect attempts, weak topics, bookmarks, and retry queues stay connected so revision is easier to return to every day.",
+    title: "Revision that returns",
+    description: "Wrong answers and weak topics stay easy to revisit.",
+    meta: "Retry ready",
   },
   {
     eyebrow: "Progress",
-    title: "A dashboard that shows what matters.",
-    description:
-      "Track solved questions, accuracy, streaks, and daily pace without turning your prep flow into a noisy analytics screen.",
+    title: "Signals, not noise",
+    description: "Accuracy, streak, pace, and coverage in one glance.",
+    meta: "Clear progress",
   },
 ];
 
 const PLATFORM_FLOW = [
   {
     step: "01",
-    title: "Start with daily questions",
-    description:
-      "Open the practice desk, pick up fresh questions, and keep momentum without setup friction.",
+    title: "Solve",
+    description: "Start with fresh daily questions.",
   },
   {
     step: "02",
-    title: "Review weak topics",
-    description:
-      "Use retries, solved status, and saved questions to close gaps before they become repeated mistakes.",
+    title: "Review",
+    description: "Return to misses before they pile up.",
   },
   {
     step: "03",
-    title: "Return to a steady rhythm",
-    description:
-      "The dashboard, profile, and premium tools are all shaped to make consistent prep easier, not heavier.",
+    title: "Track",
+    description: "Keep rhythm with a calm dashboard.",
   },
 ];
 
-const PLATFORM_HIGHIGHTS = [
-  "Question library with exam, topic, year, and review filters",
-  "Bookmarks, retry flow, and saved progress across sessions",
-  "Dashboard summaries for accuracy, streak, pace, and coverage",
-  "Resources, premium plans, support, and account controls in one place",
+const PLATFORM_HIGHLIGHTS = [
+  "Questions first",
+  "Weak-topic review",
+  "Progress snapshot",
+  "Resources and support",
 ];
 
 const PRICING_PREVIEW = [
@@ -77,67 +87,80 @@ const PRICING_PREVIEW = [
     price: "₹0",
     cadence: "",
     badge: "Start here",
-    description:
-      "Daily practice access, basic progress visibility, and a calm place to build consistency.",
-    features: [
-      "Question practice access",
-      "Basic dashboard progress",
-      "Core resources",
-    ],
+    description: "Build consistency.",
+    features: ["Practice", "Basic dashboard", "Core resources"],
   },
   {
     name: "Pro Monthly",
     price: "₹199",
     cadence: "/ month",
     badge: "Most flexible",
-    description:
-      "Unlock deeper usage for active prep cycles and keep your study flow moving without limits.",
-    features: [
-      "Extended question access",
-      "Better analytics and review signals",
-      "Priority help and planning support",
-    ],
+    description: "More room for active prep.",
+    features: ["More access", "Better review signals", "Priority help"],
   },
   {
     name: "Annual",
     price: "₹999",
     cadence: "/ year",
     badge: "Best value",
-    description:
-      "Built for long preparation cycles when you want the platform ready for the full run.",
-    features: [
-      "Everything in Pro",
-      "Lower long-cycle cost",
-      "Better fit for serious annual prep",
-    ],
+    description: "Best fit for long cycles.",
+    features: ["Everything in Pro", "Lower yearly cost", "Long-run prep"],
   },
 ];
 
-const ESSENTIAL_LINKS = [
-  { label: "Practice Questions", href: "/practice" },
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Resources", href: "/resources" },
-  { label: "Premium Plans", href: "/premium" },
-  { label: "Support", href: "/support" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Terms & Conditions", href: "/terms" },
-  { label: "System Status", href: "/status" },
-];
-
-const PLATFORM_FAQS = [
+const ESSENTIAL_LINKS: Array<{
+  label: string;
+  href: string;
+  note: string;
+  icon: LucideIcon;
+}> = [
   {
-    question: "Who is PrepBros for?",
-    answer:
-      "PrepBros is designed for aspirants who want a calmer way to practice daily, review weak areas, and stay consistent across long prep cycles.",
+    label: "Practice",
+    href: "/practice",
+    note: "Question desk",
+    icon: BookOpen,
   },
   {
-    question: "What do I get with an account?",
-    answer:
-      "Your account keeps bookmarks, attempts, streaks, dashboard metrics, and profile settings tied together in one workspace.",
+    label: "Dashboard",
+    href: "/dashboard",
+    note: "Progress view",
+    icon: LayoutDashboard,
   },
   {
-    question: "Where can I get help?",
-    answer: `You can reach us at ${siteConfig.supportEmail} or open the support page for billing, access, or product questions.`,
+    label: "Resources",
+    href: "/resources",
+    note: "Study material",
+    icon: Sparkles,
+  },
+  {
+    label: "Premium",
+    href: "/premium",
+    note: "Plans",
+    icon: Crown,
+  },
+  {
+    label: "Support",
+    href: "/support",
+    note: "Help",
+    icon: CircleHelp,
+  },
+  {
+    label: "Privacy",
+    href: "/privacy",
+    note: "Policy",
+    icon: ShieldCheck,
+  },
+  {
+    label: "Terms",
+    href: "/terms",
+    note: "Conditions",
+    icon: FileText,
+  },
+  {
+    label: "Status",
+    href: "/status",
+    note: "Platform health",
+    icon: Trophy,
   },
 ];
 
@@ -341,6 +364,56 @@ function LandingAuthPanel({
           {panelError}
         </p>
       ) : null}
+    </div>
+  );
+}
+
+type InteractiveSurfaceProps = {
+  children: ReactNode;
+  className?: string;
+};
+
+const interactiveRestStyle = {
+  "--mx": "50%",
+  "--my": "50%",
+  transform: "perspective(1200px) rotateX(0deg) rotateY(0deg)",
+} as CSSProperties;
+
+function InteractiveSurface({
+  children,
+  className = "",
+}: InteractiveSurfaceProps) {
+  const [style, setStyle] = useState<CSSProperties>(interactiveRestStyle);
+
+  return (
+    <div
+      className={`group relative overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1 ${className}`}
+      style={style}
+      onPointerMove={event => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        const rotateY = ((x - 50) / 50) * 4;
+        const rotateX = ((50 - y) / 50) * 4;
+
+        setStyle({
+          "--mx": `${x}%`,
+          "--my": `${y}%`,
+          transform: `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+        } as CSSProperties);
+      }}
+      onPointerLeave={() => setStyle(interactiveRestStyle)}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100"
+        style={
+          {
+            background:
+              "radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.12), transparent 34%)",
+          } as CSSProperties
+        }
+      />
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }
@@ -558,73 +631,95 @@ export default function Home() {
 
       <div className="relative bg-[var(--page-background)] pb-4">
         <div className="mx-auto w-[min(1180px,calc(100vw-32px))] space-y-6 pb-8 pt-4 sm:space-y-7 sm:pb-10">
-          <section className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
+          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(300px,0.95fr)] lg:items-start">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                   Platform overview
                 </p>
                 <h2
-                  className="mt-4 max-w-[12ch] text-[clamp(2.6rem,6vw,4.4rem)] leading-[0.94] tracking-[-0.07em] text-[var(--text-primary)]"
+                  className="mt-4 max-w-[11ch] text-[clamp(2.6rem,6vw,4.2rem)] leading-[0.94] tracking-[-0.07em] text-[var(--text-primary)]"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
-                  Prep support built for real study days.
+                  PrepBros keeps the whole loop calm.
                 </h2>
-                <p className="mt-5 max-w-[42rem] text-[16px] leading-8 text-[var(--text-secondary)]">
-                  PrepBros is more than a question page. It gives you one quiet
-                  place to practice, review mistakes, understand progress, find
-                  resources, and decide when to upgrade without losing the calm
-                  feeling of the product.
+                <p className="mt-5 max-w-[34rem] text-[16px] leading-8 text-[var(--text-secondary)]">
+                  Practice, review, track progress, and upgrade only when you
+                  need more room.
                 </p>
-              </div>
 
-              <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-                  What the platform covers
-                </p>
-                <div className="mt-5 space-y-3">
-                  {PLATFORM_HIGHIGHTS.map(item => (
-                    <div
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {PLATFORM_HIGHLIGHTS.map(item => (
+                    <span
                       key={item}
-                      className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm leading-6 text-[var(--text-secondary)]"
+                      className="rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[13px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
                     >
                       {item}
-                    </div>
+                    </span>
                   ))}
                 </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { value: "Daily", label: "Practice flow" },
+                  { value: "Retry", label: "Weak-topic review" },
+                  { value: "Clear", label: "Dashboard signals" },
+                  { value: "Ready", label: "Support and plans" },
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
+                  >
+                    <p
+                      className="text-[2.4rem] leading-none tracking-[-0.06em] text-[var(--text-primary)]"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {item.value}
+                    </p>
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                      {item.label}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="mt-8 grid gap-4 lg:grid-cols-3">
               {PLATFORM_PILLARS.map(item => (
-                <article
+                <div
                   key={item.title}
-                  className="rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]"
+                  className="rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
                 >
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-                    {item.eyebrow}
-                  </p>
-                  <h3 className="mt-3 text-[1.7rem] tracking-[-0.045em] text-[var(--text-primary)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
+                      {item.eyebrow}
+                    </p>
+                    <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-secondary)]">
+                      {item.meta}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 text-[1.6rem] tracking-[-0.045em] text-[var(--text-primary)]">
                     {item.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
+                  <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
                     {item.description}
                   </p>
-                </article>
+                </div>
               ))}
             </div>
-          </section>
+          </InteractiveSurface>
 
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-            <div className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
-                How PrepBros works
+                Flow
               </p>
               <div className="mt-6 space-y-4">
                 {PLATFORM_FLOW.map(item => (
                   <div
                     key={item.step}
-                    className="grid gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 md:grid-cols-[auto_minmax(0,1fr)]"
+                    className="grid gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)] md:grid-cols-[auto_minmax(0,1fr)]"
                   >
                     <div
                       className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-sm font-semibold text-[var(--text-primary)]"
@@ -633,72 +728,80 @@ export default function Home() {
                       {item.step}
                     </div>
                     <div>
-                      <h3 className="text-[1.35rem] tracking-[-0.04em] text-[var(--text-primary)]">
+                      <h3 className="text-[1.3rem] tracking-[-0.04em] text-[var(--text-primary)]">
                         {item.title}
                       </h3>
-                      <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                      <p className="mt-1 text-sm leading-7 text-[var(--text-secondary)]">
                         {item.description}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </InteractiveSurface>
 
-            <div className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                 Essentials
               </p>
               <h3 className="mt-4 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
-                Everything important stays close.
+                Quick access, not clutter.
               </h3>
               <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-                Access the product, account help, legal pages, and platform
-                support from one place.
+                Product, support, pricing, and legal pages all stay one tap
+                away.
               </p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {ESSENTIAL_LINKS.map(item => (
                   <Link key={item.href} href={item.href}>
-                    <span className="flex cursor-pointer items-center justify-between rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
-                      {item.label}
+                    <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
+                      <span className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
+                          <item.icon size={16} />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-medium text-[var(--text-primary)]">
+                            {item.label}
+                          </span>
+                          <span className="block text-xs text-[var(--text-faint)]">
+                            {item.note}
+                          </span>
+                        </span>
+                      </span>
                       <ArrowRight size={15} className="text-[var(--text-faint)]" />
                     </span>
                   </Link>
                 ))}
               </div>
 
-              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5">
+              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
                   Contact
                 </p>
-                <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-                  Support: {siteConfig.supportEmail}
-                  <br />
-                  Billing: {siteConfig.billingEmail}
-                  <br />
-                  Address: {siteConfig.companyAddress}
-                </p>
+                <div className="mt-3 space-y-1 text-sm leading-7 text-[var(--text-secondary)]">
+                  <p>{siteConfig.supportEmail}</p>
+                  <p>{siteConfig.billingEmail}</p>
+                  <p>{siteConfig.companyAddress}</p>
+                </div>
               </div>
-            </div>
+            </InteractiveSurface>
           </section>
 
-          <section className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
+          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                   Pricing
                 </p>
                 <h2
-                  className="mt-4 text-[clamp(2.5rem,5vw,4rem)] leading-[0.96] tracking-[-0.07em] text-[var(--text-primary)]"
+                  className="mt-4 text-[clamp(2.4rem,5vw,3.8rem)] leading-[0.96] tracking-[-0.07em] text-[var(--text-primary)]"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
-                  Pick the prep cycle that fits you.
+                  Start free. Upgrade when it helps.
                 </h2>
-                <p className="mt-4 max-w-[42rem] text-[16px] leading-8 text-[var(--text-secondary)]">
-                  Start free, move to Pro when you need more room, and use the
-                  annual plan if you want the platform to stay with you through
-                  a longer preparation run.
+                <p className="mt-4 max-w-[34rem] text-[16px] leading-8 text-[var(--text-secondary)]">
+                  Simple plans for short bursts or long prep cycles.
                 </p>
               </div>
 
@@ -712,9 +815,9 @@ export default function Home() {
 
             <div className="mt-8 grid gap-4 lg:grid-cols-3">
               {PRICING_PREVIEW.map(plan => (
-                <article
+                <div
                   key={plan.name}
-                  className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]"
+                  className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
                 >
                   <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
                     {plan.badge}
@@ -735,93 +838,56 @@ export default function Home() {
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
+                  <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
                     {plan.description}
                   </p>
-                  <div className="mt-5 space-y-3">
+                  <div className="mt-5 flex flex-wrap gap-2">
                     {plan.features.map(feature => (
-                      <div
+                      <span
                         key={feature}
-                        className="rounded-[16px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-secondary)]"
+                        className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)]"
                       >
                         {feature}
-                      </div>
+                      </span>
                     ))}
                   </div>
-                </article>
+                </div>
               ))}
             </div>
-          </section>
+          </InteractiveSurface>
 
-          <section className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-            <div className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
-                FAQ
-              </p>
-              <div className="mt-6 space-y-4">
-                {PLATFORM_FAQS.map(item => (
-                  <article
-                    key={item.question}
-                    className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5"
-                  >
-                    <h3 className="text-[1.25rem] tracking-[-0.03em] text-[var(--text-primary)]">
-                      {item.question}
-                    </h3>
-                    <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-                      {item.answer}
-                    </p>
-                  </article>
-                ))}
+          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                  Trust and legal
+                </p>
+                <h3 className="mt-3 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+                  Policies stay visible.
+                </h3>
               </div>
+              <p className="max-w-[28rem] text-sm leading-7 text-[var(--text-secondary)]">
+                Privacy, terms, support, and platform status stay easy to find
+                across the product.
+              </p>
             </div>
 
-            <div className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
-                Legal and trust
-              </p>
-              <h3 className="mt-4 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
-                The platform basics are visible and easy to reach.
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
-                Policies, support, billing help, and platform status should
-                never be hidden. PrepBros keeps them available from the landing
-                page all the way through the product.
-              </p>
-
-              <div className="mt-6 space-y-3">
-                <a
-                  href={getPolicyUrl("/privacy")}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]"
-                >
-                  Privacy Policy
-                  <ArrowRight size={15} className="text-[var(--text-faint)]" />
-                </a>
-                <a
-                  href={getPolicyUrl("/terms")}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]"
-                >
-                  Terms & Conditions
-                  <ArrowRight size={15} className="text-[var(--text-faint)]" />
-                </a>
-                <Link href="/support">
-                  <span className="flex cursor-pointer items-center justify-between rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
-                    Support and billing help
+            <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {[
+                { label: "Privacy Policy", href: "/privacy" },
+                { label: "Terms & Conditions", href: "/terms" },
+                { label: "Support and Billing", href: "/support" },
+                { label: "Platform Status", href: "/status" },
+              ].map(item => (
+                <Link key={item.href} href={item.href}>
+                  <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
+                    {item.label}
                     <ArrowRight size={15} className="text-[var(--text-faint)]" />
                   </span>
                 </Link>
-                <Link href="/status">
-                  <span className="flex cursor-pointer items-center justify-between rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
-                    Platform status
-                    <ArrowRight size={15} className="text-[var(--text-faint)]" />
-                  </span>
-                </Link>
-              </div>
+              ))}
             </div>
-          </section>
+          </InteractiveSurface>
         </div>
 
         <Footer />
