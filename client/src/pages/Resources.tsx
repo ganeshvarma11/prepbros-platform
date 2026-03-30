@@ -177,7 +177,7 @@ export default function Resources() {
   }, [activeTab, query, resources]);
 
   return (
-    <AppShell contentClassName="max-w-[1040px]">
+    <AppShell contentClassName="max-w-[1120px]">
       <div className="space-y-8">
         <PageHeader
           eyebrow="Progress"
@@ -189,7 +189,7 @@ export default function Resources() {
           ]}
         />
 
-        <section className="card grid gap-5 overflow-hidden p-5 md:grid-cols-[minmax(0,1fr)_280px] md:p-6">
+        <section className="card grid gap-5 overflow-hidden p-5 lg:grid-cols-[minmax(0,1fr)_240px] md:p-6">
           <div>
             <p className="section-label">Library</p>
             <h2 className="mt-3 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
@@ -215,21 +215,30 @@ export default function Resources() {
         </section>
 
         <section className="card space-y-5">
-          <label className="relative block">
-            <Search
-              size={18}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-3)]"
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={event => setQuery(event.target.value)}
-              placeholder="Search resources"
-              className="w-full pl-12"
-            />
-          </label>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-1">
+              <p className="section-label">Search and filter</p>
+              <p className="text-sm text-[var(--text-secondary)]">
+                Narrow the list by exam or format and jump straight into the
+                material you need.
+              </p>
+            </div>
+            <label className="relative block w-full lg:max-w-[420px]">
+              <Search
+                size={18}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-2)]"
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={event => setQuery(event.target.value)}
+                placeholder="Search resources"
+                className="w-full pl-12"
+              />
+            </label>
+          </div>
 
-          <div className="border-b border-[var(--border-1)] pb-4">
+          <div className="border-t border-[var(--border-1)] pt-4">
             <div className="flex flex-wrap gap-2">
               {FILTER_TABS.map(tab => {
                 const active = tab === activeTab;
@@ -241,7 +250,7 @@ export default function Resources() {
                     onClick={() => setActiveTab(tab)}
                     className={cn(
                       active ? "btn-primary" : "btn-ghost",
-                      "min-w-[72px]"
+                      "min-w-[80px]"
                     )}
                   >
                     {tab}

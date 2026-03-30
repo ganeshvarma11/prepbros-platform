@@ -1049,8 +1049,8 @@ export default function Profile() {
             </DialogContent>
           </Dialog>
 
-          <div className="sticky top-0 z-20 mb-6 rounded-[22px] border border-[var(--border)] bg-[color:rgba(255,255,255,0.92)] px-4 shadow-[var(--shadow-sm)] backdrop-blur-xl dark:bg-[color:rgba(8,15,29,0.82)] md:px-6">
-            <div className="flex items-center gap-1 overflow-x-auto">
+          <div className="sticky top-0 z-20 mb-6 rounded-[24px] border border-[var(--border-2)] bg-[var(--bg-card)] px-3 py-2 shadow-[var(--shadow-sm)] backdrop-blur-xl md:px-4">
+            <div className="flex items-center gap-2 overflow-x-auto">
               {[
                 { key: "profile", label: "Profile" },
                 { key: "settings", label: "Settings" },
@@ -1060,10 +1060,10 @@ export default function Profile() {
                   key={item.key}
                   type="button"
                   onClick={() => setActiveTab(item.key as ActiveTab)}
-                  className={`border-b-2 px-4 py-4 text-sm font-medium transition ${
+                  className={`inline-flex items-center rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
                     activeTab === item.key
-                      ? "border-[var(--brand)] text-[var(--text-primary)]"
-                      : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      ? "border-[var(--border-2)] bg-[var(--surface-2)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
+                      : "border-transparent bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {item.label}

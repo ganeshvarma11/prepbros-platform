@@ -110,14 +110,13 @@ export default function Premium() {
           eyebrow="Progress"
           title="Premium"
           description="Choose a plan that fits your preparation cycle."
-          align="center"
           crumbs={[
             { label: "Dashboard", href: "/dashboard" },
             { label: "Premium" },
           ]}
         />
 
-        <section className="card mx-auto grid max-w-6xl gap-6 overflow-hidden p-6 md:p-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="card mx-auto grid max-w-6xl gap-6 overflow-hidden p-6 md:p-8 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div>
             <p className="section-label">Why premium</p>
             <h2 className="mt-3 text-[2.2rem] tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.8rem]">
@@ -157,7 +156,7 @@ export default function Premium() {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
+        <section className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-3">
           {plans.map(plan => {
             const paidPlanKey =
               plan.planKey === "monthly" || plan.planKey === "annual"
@@ -167,7 +166,7 @@ export default function Premium() {
             return (
               <article
                 key={plan.name}
-                className={`card relative px-7 py-7 ${
+                className={`card relative flex h-full px-6 py-6 ${
                   plan.planKey === "free"
                     ? "border-[var(--border-strong)]"
                     : plan.highlighted
@@ -181,7 +180,7 @@ export default function Premium() {
                   </div>
                 ) : null}
 
-                <div>
+                <div className="flex h-full flex-col">
                   <h2 className="text-3xl font-medium tracking-[-0.05em] text-[var(--text-1)]">
                     {plan.name}
                   </h2>
@@ -221,8 +220,8 @@ export default function Premium() {
                     }}
                     className={
                       plan.planKey === "free"
-                        ? "btn-ghost mt-10 w-full cursor-not-allowed"
-                        : "btn-primary mt-10 w-full"
+                        ? "btn-ghost mt-auto w-full cursor-not-allowed"
+                        : "btn-primary mt-auto w-full"
                     }
                   >
                     {plan.cta}

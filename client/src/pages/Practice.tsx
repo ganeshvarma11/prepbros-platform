@@ -9,7 +9,6 @@ import {
   Flag,
   Loader2,
   Search,
-  Shuffle,
   SlidersHorizontal,
   Sparkles,
   X,
@@ -909,15 +908,6 @@ export default function Practice() {
     resetQuestionState();
   };
 
-  const openRandom = () => {
-    const pool = filtered.length > 0 ? filtered : questions;
-    const random = pool[Math.floor(Math.random() * pool.length)];
-    if (random) {
-      setActiveQ(random);
-      resetQuestionState();
-    }
-  };
-
   const openQuestion = (question: Question) => {
     setActiveQ(question);
     resetQuestionState();
@@ -1376,13 +1366,13 @@ export default function Practice() {
     <AppShell
       allowDesktopSidebarToggle
       shellClassName="practice-shell"
-      contentClassName="max-w-[1440px]"
+      contentClassName="max-w-[1240px]"
     >
       <div className="space-y-6">
         {!activeQ ? (
           <>
             <section className={panelClassName}>
-              <div className="grid gap-5 px-5 py-5 md:px-6 md:py-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+              <div className="px-5 py-5 md:px-6 md:py-6">
                 <div className="min-w-0 space-y-5">
                   <div className="space-y-3">
                     <span
@@ -1486,42 +1476,6 @@ export default function Practice() {
                           {filterCount}
                         </span>
                       ) : null}
-                    </button>
-                  </div>
-                </div>
-
-                <div className={softPanelClassName + " px-5 py-5"}>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                    Library flow
-                  </p>
-                  <div className="mt-4 space-y-4">
-                    <div className={`${insetCardClassName} px-4 py-4`}>
-                      <p className="text-sm font-medium text-[var(--text-primary)]">
-                        New questions first
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                        Once you attempt the first page, the library
-                        automatically pushes fresh questions upward so you are
-                        not stuck revisiting the same set every time.
-                      </p>
-                    </div>
-                    <div className={`${insetCardClassName} px-4 py-4`}>
-                      <p className="text-sm font-medium text-[var(--text-primary)]">
-                        Saved filtering
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                        Choose exam group, topic, year, question type, or
-                        status, then save once. The table updates only when your
-                        filter draft is ready.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={openRandom}
-                      className={`${primaryButtonClassName} h-12 w-full gap-2 px-5 text-sm font-semibold`}
-                    >
-                      <Shuffle size={15} />
-                      Open a random question
                     </button>
                   </div>
                 </div>
@@ -1855,17 +1809,17 @@ export default function Practice() {
                 <div
                   className={cn(
                     softPanelClassName,
-                    "relative overflow-hidden bg-[var(--bg-card-strong)] px-5 py-5 md:px-6 md:py-6"
+                    "relative overflow-hidden bg-[var(--bg-card-strong)] px-5 py-4 md:px-6 md:py-5"
                   )}
                 >
                   <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--brand)_60%,transparent_100%)]" />
                   <p className={sectionLabelClassName}>Question</p>
-                  <div className="mt-5 max-w-[46rem] whitespace-pre-line text-[1.22rem] font-semibold leading-[1.6] tracking-[-0.03em] text-[var(--text-primary)] md:text-[1.6rem]">
+                  <div className="mt-4 max-w-[46rem] whitespace-pre-line text-[1.14rem] font-semibold leading-[1.58] tracking-[-0.03em] text-[var(--text-primary)] md:text-[1.42rem]">
                     {formattedActiveQuestion}
                   </div>
                 </div>
 
-                <div className="grid gap-3">
+                <div className="grid gap-2.5">
                   {activeQ.options.map((option, index) => {
                     const isSelected = selectedOption === index;
                     const isSubmitted = submittedOption !== null;
@@ -1930,7 +1884,7 @@ export default function Practice() {
                   })}
                 </div>
 
-                <div className="flex flex-col gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] px-5 py-4 shadow-[var(--shadow-sm)] md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-3 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] px-5 py-4 shadow-[var(--shadow-sm)] md:flex-row md:items-center md:justify-between">
                   <p className="text-sm leading-6 text-[var(--text-secondary)] md:max-w-[38rem]">
                     {submittedOption === null
                       ? selectedOption === null
@@ -2008,7 +1962,7 @@ export default function Practice() {
             </div>
 
             <div className="border-t border-[var(--border)] px-5 py-5 md:px-6">
-              <div className="mx-auto grid max-w-[1040px] gap-3 md:grid-cols-[1fr_auto_1fr]">
+              <div className="mx-auto grid max-w-[1040px] gap-3 md:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -2022,14 +1976,6 @@ export default function Practice() {
                 >
                   <ChevronLeft size={15} />
                   Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={openRandom}
-                  className={`${navigationButtonClassName} h-12 gap-2 px-5 text-sm font-semibold`}
-                >
-                  <Shuffle size={15} />
-                  Random
                 </button>
                 <button
                   type="button"

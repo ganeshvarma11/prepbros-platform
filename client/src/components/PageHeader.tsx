@@ -33,7 +33,13 @@ export default function PageHeader({
 }: PageHeaderProps) {
   return (
     <header
-      className={cn("page-header md:flex-row md:items-end md:justify-between", className)}
+      className={cn(
+        "page-header",
+        align === "center"
+          ? "items-center text-center"
+          : "md:flex-row md:items-end md:justify-between",
+        className
+      )}
       data-align={align}
     >
       <div className="page-header-content">

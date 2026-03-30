@@ -434,7 +434,7 @@ pre {
 }
 
 .container-shell {
-  width: min(1180px, calc(100vw - 32px));
+  width: min(1180px, 100%);
   margin-inline: auto;
 }
 
@@ -1206,10 +1206,10 @@ html:not(.dark) .landing-minimal-page::before {
 .option-btn {
   width: 100%;
   text-align: left;
-  padding: 18px 20px;
+  padding: 16px 18px;
   background: var(--bg-card-strong);
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: 22px;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition:

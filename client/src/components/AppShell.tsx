@@ -114,11 +114,11 @@ function NavLink({
       <span
         onClick={onNavigate}
         className={cn(
-          "group relative flex cursor-pointer items-center rounded-[18px] border text-[13px] transition-all",
+          "group relative flex cursor-pointer items-center rounded-[18px] border text-[14px] transition-all",
           collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3",
           active
             ? "border-[var(--border-2)] bg-[var(--surface-2)] font-semibold text-[var(--text-1)] shadow-[var(--shadow-sm)]"
-            : "border-transparent text-[var(--text-2)] hover:border-[var(--border-1)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
+            : "border-transparent text-[var(--text-1)] hover:border-[var(--border-1)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
         )}
         title={collapsed ? item.label : undefined}
       >
@@ -165,7 +165,7 @@ function SidebarBody({
   const initials = getInitials(displayName);
 
   return (
-    <div className="relative flex h-full flex-col border-r border-[var(--border-1)] bg-[color:rgba(248,250,252,0.92)] px-3 py-4 shadow-[var(--shadow-sm)] backdrop-blur-xl dark:bg-[color:rgba(2,6,23,0.42)] dark:shadow-none">
+    <div className="relative flex h-full flex-col border-r border-[var(--border-2)] bg-[linear-gradient(180deg,rgba(250,251,253,0.98)_0%,rgba(243,246,251,0.96)_100%)] px-3 py-4 shadow-[var(--shadow-md)] backdrop-blur-xl dark:border-[var(--border-1)] dark:bg-[color:rgba(2,6,23,0.42)] dark:shadow-none">
       <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
         {collapsed ? (
           <Link href="/">
@@ -201,12 +201,14 @@ function SidebarBody({
         </button>
       </div>
 
-      <div className="flex-1 space-y-6 overflow-y-auto py-5 pr-1">
-        {NAV_GROUPS.map(group => (
-          <div key={group.label}>
-            {!collapsed ? (
-              <p className="section-label px-3">{group.label}</p>
-            ) : null}
+        <div className="flex-1 space-y-6 overflow-y-auto py-5 pr-1">
+          {NAV_GROUPS.map(group => (
+            <div key={group.label}>
+              {!collapsed ? (
+                <p className="section-label px-3 text-[var(--text-2)]">
+                  {group.label}
+                </p>
+              ) : null}
             <div className="mt-2 space-y-1">
               {group.items.map(item => (
                 <NavLink
