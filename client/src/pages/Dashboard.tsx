@@ -4,6 +4,7 @@ import { Link } from "wouter";
 
 import AppShell from "@/components/AppShell";
 import OnboardingModal from "@/components/OnboardingModal";
+import PageHeader from "@/components/PageHeader";
 import { PageEmpty, PageSkeleton } from "@/components/PageState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
@@ -98,23 +99,25 @@ function DashboardListLink({
 }) {
   return (
     <Link href={href}>
-      <span className="group flex cursor-pointer items-start justify-between gap-4 border-b border-white/8 py-3.5 transition hover:border-white/14 hover:bg-white/[0.02]">
+      <span className="group flex cursor-pointer items-start justify-between gap-4 rounded-[18px] border border-transparent px-3 py-3 transition hover:border-[var(--border)] hover:bg-[var(--surface-1)]">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-[#f0ede6] transition group-hover:text-white">
+          <p className="text-sm font-semibold text-[var(--text-primary)] transition group-hover:text-[var(--text-primary)]">
             {title}
           </p>
-          <p className="mt-1 text-sm leading-6 text-[#9f9a90]">{detail}</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
+            {detail}
+          </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
           {meta ? (
-            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#7f796f]">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
               {meta}
             </span>
           ) : null}
           <ArrowRight
             size={14}
-            className="text-[#cdbca6] transition group-hover:translate-x-0.5 group-hover:text-white"
+            className="text-[var(--text-faint)] transition group-hover:translate-x-0.5 group-hover:text-[var(--text-primary)]"
           />
         </div>
       </span>
@@ -452,7 +455,7 @@ export default function Dashboard() {
 
   if (loading || pageLoading || questionsSyncing) {
     return (
-      <AppShell shellClassName="bg-[#050505]">
+      <AppShell>
         <div className="mx-auto w-full max-w-[1120px] py-4">
           <PageSkeleton rows={6} />
         </div>
@@ -462,14 +465,14 @@ export default function Dashboard() {
 
   if (!user) {
     return (
-      <AppShell shellClassName="bg-[#050505]">
+      <AppShell>
         <div className="mx-auto w-full max-w-[1120px] py-10">
           <PageEmpty
             title="Sign in to unlock your prep workspace"
             description="Your dashboard ties together practice history, streak, and focus areas once your progress is attached to an account."
             actionLabel="Go back home"
             actionHref="/"
-            className="rounded-[24px] border-white/10 bg-[#090807] py-14"
+            className="rounded-[24px] border-[var(--border)] bg-[var(--bg-card)] py-14"
           />
         </div>
       </AppShell>
@@ -477,7 +480,7 @@ export default function Dashboard() {
   }
 
   return (
-    <AppShell shellClassName="bg-[#050505]" contentClassName="max-w-none">
+    <AppShell contentClassName="max-w-none">
       <OnboardingModal
         isOpen={showOnboarding}
         userId={user.id}
@@ -496,195 +499,150 @@ export default function Dashboard() {
       />
 
       <div className="relative">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(164,118,76,0.09),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(120,78,42,0.16),transparent_24%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.03),transparent_38%),linear-gradient(180deg,#060505_0%,#090807_46%,#050505_100%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.11] [background-image:linear-gradient(to_right,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:150px_150px]" />
-
-        <div className="relative z-10 mx-auto w-full max-w-[1120px] pb-6">
-          <section className="border-b border-white/8 pb-8 pt-2">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-[720px]">
-                <p className="text-[0.72rem] font-medium uppercase tracking-[0.26em] text-[#8f8174]">
-                  Dashboard
-                </p>
-                <h1
-                  className="mt-3 text-[2.9rem] leading-none tracking-[-0.045em] text-[#f0ede6] sm:text-[3.35rem]"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  Study with a calmer, clearer rhythm.
-                </h1>
-                <p className="mt-4 max-w-[58ch] text-[15px] leading-7 text-[#a99888]">
-                  {displayName}, you&apos;re preparing for{" "}
-                  <span className="text-[#f0ede6]">{targetExam}</span>.{" "}
-                  {formatLongDate(new Date())} and you have{" "}
-                  <span className="text-[#e8d5a3]">
-                    {dailyRemaining > 0
-                      ? `${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} left today`
-                      : "today's goal completed"}
-                  </span>
-                  .
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm text-[#cdbca6]">
-                  <Target size={15} />
-                  {todayAttempts} / {dailyGoal} today
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm text-[#cdbca6]">
-                  <Flame size={15} />
-                  {streak} day{streak === 1 ? "" : "s"} streak
-                </span>
-                <Link href="/practice">
-                  <span className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#c9a84c] bg-[#c9a84c] px-5 py-3 text-sm font-medium text-[#0e0e0e] transition hover:bg-[#e8d5a3]">
-                    Continue practice
-                    <ArrowRight size={15} />
-                  </span>
-                </Link>
-              </div>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.78),transparent_32%),radial-gradient(circle_at_82%_12%,rgba(191,219,254,0.34),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.14),transparent_32%),radial-gradient(circle_at_82%_12%,rgba(59,130,246,0.14),transparent_24%)]" />
+        <div className="relative z-10 mx-auto w-full max-w-[1120px] space-y-6 pb-6">
+          <section className="card overflow-hidden p-6 md:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <PageHeader
+                eyebrow="Dashboard"
+                title="Study with a calmer, clearer rhythm."
+                description={`${displayName}, you're preparing for ${targetExam}. ${formatLongDate(new Date())} and you ${dailyRemaining > 0 ? `have ${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} left today.` : "have already completed today's goal."}`}
+                className="mb-0 flex-1"
+                actions={
+                  <div className="flex flex-wrap gap-3">
+                    <span className="badge">
+                      <Target size={13} />
+                      {todayAttempts} / {dailyGoal} today
+                    </span>
+                    <span className="badge">
+                      <Flame size={13} />
+                      {streak} day{streak === 1 ? "" : "s"} streak
+                    </span>
+                    <Link href="/practice">
+                      <span className="btn-primary cursor-pointer px-5">
+                        Continue practice
+                        <ArrowRight size={15} />
+                      </span>
+                    </Link>
+                  </div>
+                }
+              />
             </div>
           </section>
 
-          <section className="grid gap-5 border-b border-white/8 py-7 md:grid-cols-2 xl:grid-cols-4">
-            {summaryStats.map((item, index) => (
-              <div
-                key={item.label}
-                className={
-                  index > 0 ? "xl:border-l xl:border-white/8 xl:pl-6" : ""
-                }
-              >
-                <p className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#7f796f]">
-                  {item.label}
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {summaryStats.map(item => (
+              <div key={item.label} className="stat-card">
+                <p className="stat-card-label">{item.label}</p>
+                <p className="stat-card-value">{item.value}</p>
+                <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+                  {item.detail}
                 </p>
-                <p
-                  className="mt-3 text-[2.6rem] leading-none tracking-[-0.045em] text-[#f0ede6]"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  {item.value}
-                </p>
-                <p className="mt-2 text-sm text-[#9f9a90]">{item.detail}</p>
               </div>
             ))}
           </section>
 
-          <section className="grid gap-10 py-8 xl:grid-cols-[minmax(0,1.25fr)_310px]">
-            <div className="space-y-8">
-              <div className="grid gap-8 border-b border-white/8 pb-8 lg:grid-cols-[170px_minmax(0,1fr)]">
+          <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_340px]">
+            <div className="space-y-6">
+              <div className="card grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
                 <div>
-                  <p className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#7f796f]">
-                    Coverage
-                  </p>
-                  <p
-                    className="mt-3 text-[4.2rem] leading-none tracking-[-0.05em] text-[#f0ede6]"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {solvedPercent}%
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-[#9f9a90]">
-                    {formatCount(totalSolved)} solved and{" "}
-                    {formatCount(totalUnattempted)} still untouched.
-                  </p>
-                </div>
-
-                <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_240px]">
-                  <div>
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-[#f0ede6]">
-                          Today&apos;s target
-                        </p>
-                        <p className="mt-1 text-sm text-[#9f9a90]">
-                          {dailyRemaining > 0
-                            ? "A small finish line keeps the day focused."
-                            : "Today is open for revision and retries."}
-                        </p>
-                      </div>
-                      <span className="rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#cdbca6]">
+                  <p className="section-label">Coverage</p>
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p
+                        className="text-[3.7rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]"
+                        style={{ fontFamily: "var(--font-display)" }}
+                      >
+                        {solvedPercent}%
+                      </p>
+                      <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+                        {formatCount(totalSolved)} solved and{" "}
+                        {formatCount(totalUnattempted)} still untouched.
+                      </p>
+                    </div>
+                    <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                        Today&apos;s target
+                      </p>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
                         {dailyRemaining > 0
-                          ? `${dailyRemaining} left`
-                          : "Complete"}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full bg-[linear-gradient(90deg,#f0ede6_0%,#c9a84c_100%)] transition-all duration-500"
-                        style={{
-                          width: `${Math.max(
-                            dailyProgressPercent,
-                            todayAttempts > 0 ? 6 : 0
-                          )}%`,
-                        }}
-                      />
-                    </div>
-
-                    <div className="mt-6 space-y-4">
-                      {solvedCoverage.byDifficulty.map(item => {
-                        const percent =
-                          item.total > 0
-                            ? clampPercent(
-                                Math.round((item.solved / item.total) * 100)
-                              )
-                            : 0;
-
-                        return (
-                          <div
-                            key={item.difficulty}
-                            className="grid gap-3 sm:grid-cols-[68px_minmax(0,1fr)_56px] sm:items-center"
-                          >
-                            <span className="text-sm text-[#c9c3b7]">
-                              {item.difficulty}
-                            </span>
-                            <div className="h-1.5 overflow-hidden rounded-full bg-white/8">
-                              <div
-                                className="h-full rounded-full bg-[linear-gradient(90deg,#e8d5a3_0%,#c9a84c_100%)] transition-all duration-500"
-                                style={{
-                                  width: `${Math.max(
-                                    percent,
-                                    item.solved > 0 ? 7 : 0
-                                  )}%`,
-                                }}
-                              />
-                            </div>
-                            <span className="text-right text-sm text-[#8f897f]">
-                              {formatCount(item.solved)} /{" "}
-                              {formatCount(item.total)}
-                            </span>
-                          </div>
-                        );
-                      })}
+                          ? "A small finish line keeps the day focused."
+                          : "Today is open for revision and retries."}
+                      </p>
+                      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--bg-muted)]">
+                        <div
+                          className="h-full rounded-full bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--brand)_100%)] transition-all duration-500"
+                          style={{
+                            width: `${Math.max(
+                              dailyProgressPercent,
+                              todayAttempts > 0 ? 6 : 0
+                            )}%`,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="border-t border-white/8 pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-                    <p className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#7f796f]">
-                      Strongest topic
-                    </p>
-                    {strongestTopic ? (
-                      <>
-                        <p className="mt-3 text-xl font-medium tracking-[-0.03em] text-[#f0ede6]">
-                          {strongestTopic.topic}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 text-[#9f9a90]">
-                          {strongestTopic.accuracy}% accuracy across{" "}
-                          {strongestTopic.total} attempt
-                          {strongestTopic.total === 1 ? "" : "s"}.
-                        </p>
-                      </>
-                    ) : (
-                      <p className="mt-3 text-sm leading-6 text-[#9f9a90]">
-                        Your strongest topic will appear once there is enough
-                        answer history.
-                      </p>
-                    )}
+                  <div className="mt-6 space-y-4">
+                    {solvedCoverage.byDifficulty.map(item => {
+                      const percent =
+                        item.total > 0
+                          ? clampPercent(
+                              Math.round((item.solved / item.total) * 100)
+                            )
+                          : 0;
 
-                    <div className="mt-6 border-t border-white/8 pt-5">
-                      <p className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#7f796f]">
+                      return (
+                        <div
+                          key={item.difficulty}
+                          className="grid gap-3 sm:grid-cols-[70px_minmax(0,1fr)_64px] sm:items-center"
+                        >
+                          <span className="text-sm font-medium text-[var(--text-secondary)]">
+                            {item.difficulty}
+                          </span>
+                          <div className="h-2 overflow-hidden rounded-full bg-[var(--bg-muted)]">
+                            <div
+                              className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent)_0%,var(--brand)_100%)] transition-all duration-500"
+                              style={{
+                                width: `${Math.max(percent, item.solved > 0 ? 7 : 0)}%`,
+                              }}
+                            />
+                          </div>
+                          <span className="text-right text-sm text-[var(--text-faint)]">
+                            {formatCount(item.solved)} /{" "}
+                            {formatCount(item.total)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                  <p className="section-label">Signals</p>
+                  <div className="mt-4 space-y-5">
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
+                        Strongest topic
+                      </p>
+                      <p className="mt-2 text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+                        {strongestTopic?.topic || "Still emerging"}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                        {strongestTopic
+                          ? `${strongestTopic.accuracy}% accuracy across ${strongestTopic.total} attempt${strongestTopic.total === 1 ? "" : "s"}.`
+                          : "Your strongest topic will appear once there is enough answer history."}
+                      </p>
+                    </div>
+
+                    <div className="border-t border-[var(--border)] pt-5">
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
                         Retry queue
                       </p>
-                      <p className="mt-3 text-2xl tracking-[-0.04em] text-[#f0ede6]">
+                      <p className="mt-2 text-[2.1rem] tracking-[-0.05em] text-[var(--text-primary)]">
                         {formatCount(totalRetry)}
                       </p>
-                      <p className="mt-2 text-sm leading-6 text-[#9f9a90]">
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                         Questions worth revisiting before starting fresh sets.
                       </p>
                     </div>
@@ -692,17 +650,15 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div>
+              <div className="card">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#7f796f]">
-                      Activity
-                    </p>
-                    <p className="mt-2 text-lg font-medium tracking-[-0.02em] text-[#f0ede6]">
+                    <p className="section-label">Activity</p>
+                    <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
                       Weekly practice pattern
                     </p>
                   </div>
-                  <p className="text-sm text-[#9f9a90]">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     {weeklyActivity.total > 0
                       ? `${weeklyActivity.total} attempts in the last 7 days`
                       : "Your weekly rhythm will appear after your next session"}
@@ -726,20 +682,20 @@ export default function Dashboard() {
                         key={day.key}
                         className="flex flex-1 flex-col items-center gap-3"
                       >
-                        <span className="text-[11px] text-[#7f796f]">
+                        <span className="text-[11px] text-[var(--text-faint)]">
                           {day.count}
                         </span>
-                        <div className="relative flex h-[160px] w-full items-end">
+                        <div className="relative flex h-[160px] w-full items-end rounded-[18px] bg-[var(--surface-1)] px-2 pb-2">
                           <div
                             title={`${day.title}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
-                            className="w-full rounded-t-[16px] bg-[linear-gradient(180deg,rgba(232,213,163,0.92)_0%,rgba(201,168,76,0.9)_56%,rgba(121,86,27,0.88)_100%)] transition duration-300 hover:-translate-y-1"
+                            className="w-full rounded-[14px] bg-[linear-gradient(180deg,var(--accent)_0%,var(--brand)_100%)] transition duration-300 hover:-translate-y-1"
                             style={{
                               height: `${height}%`,
-                              opacity: day.count === 0 ? 0.18 : 1,
+                              opacity: day.count === 0 ? 0.18 : 0.94,
                             }}
                           />
                         </div>
-                        <span className="text-xs text-[#c9c3b7]">
+                        <span className="text-xs text-[var(--text-secondary)]">
                           {day.label}
                         </span>
                       </div>
@@ -749,23 +705,19 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <aside className="space-y-8 xl:border-l xl:border-white/8 xl:pl-8">
-              <div>
+            <aside className="space-y-6">
+              <div className="card">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#7f796f]">
-                      Focus
-                    </p>
-                    <p className="mt-2 text-lg font-medium tracking-[-0.02em] text-[#f0ede6]">
+                    <p className="section-label">Focus</p>
+                    <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
                       Next best actions
                     </p>
                   </div>
-                  <span className="rounded-full border border-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-[#cdbca6]">
-                    Priority
-                  </span>
+                  <span className="badge-amber">Priority</span>
                 </div>
 
-                <div className="mt-3">
+                <div className="mt-3 space-y-2">
                   {focusAreas.length > 0 ? (
                     focusAreas.map((item, index) => (
                       <DashboardListLink
@@ -777,7 +729,7 @@ export default function Dashboard() {
                       />
                     ))
                   ) : (
-                    <p className="mt-4 text-sm leading-6 text-[#9f9a90]">
+                    <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
                       Your next focus areas will appear after a few more
                       answers.
                     </p>
@@ -785,15 +737,13 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="border-t border-white/8 pt-8">
-                <p className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#7f796f]">
-                  Weak topics
-                </p>
-                <p className="mt-2 text-lg font-medium tracking-[-0.02em] text-[#f0ede6]">
+              <div className="card">
+                <p className="section-label">Weak topics</p>
+                <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
                   Areas to revisit
                 </p>
 
-                <div className="mt-3">
+                <div className="mt-3 space-y-2">
                   {weakTopics.length > 0 ? (
                     weakTopics.map(topic => (
                       <DashboardListLink
@@ -808,22 +758,20 @@ export default function Dashboard() {
                       />
                     ))
                   ) : (
-                    <p className="mt-4 text-sm leading-6 text-[#9f9a90]">
+                    <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
                       Weak topics will show up once you build more history.
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="border-t border-white/8 pt-8">
-                <p className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[#7f796f]">
-                  Recent
-                </p>
-                <p className="mt-2 text-lg font-medium tracking-[-0.02em] text-[#f0ede6]">
+              <div className="card">
+                <p className="section-label">Recent</p>
+                <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
                   Latest activity
                 </p>
 
-                <div className="mt-4 space-y-4">
+                <div className="mt-4 space-y-3">
                   {recentSessions.length > 0 ? (
                     recentSessions.map(session => (
                       <Link
@@ -837,25 +785,27 @@ export default function Dashboard() {
                               : undefined,
                         })}
                       >
-                        <span className="group flex cursor-pointer items-start gap-3 border-b border-white/8 py-3.5 transition hover:border-white/14 hover:bg-white/[0.02]">
+                        <span className="group flex cursor-pointer items-start gap-3 rounded-[18px] border border-transparent px-3 py-3 transition hover:border-[var(--border)] hover:bg-[var(--surface-1)]">
                           <span
-                            className={`mt-2 h-2 w-2 shrink-0 rounded-full ${
-                              session.correct ? "bg-[#4caf7d]" : "bg-[#e05252]"
+                            className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${
+                              session.correct
+                                ? "bg-[var(--green)]"
+                                : "bg-[var(--red)]"
                             }`}
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-[#f0ede6] transition group-hover:text-white">
+                            <p className="text-sm font-semibold text-[var(--text-primary)]">
                               {session.topic}
                             </p>
-                            <p className="mt-1 text-sm text-[#9f9a90]">
+                            <p className="mt-1 text-sm text-[var(--text-secondary)]">
                               {session.date}
                             </p>
                           </div>
                           <span
-                            className={`rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] ${
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
                               session.correct
-                                ? "bg-[#112117] text-[#b6d3bc]"
-                                : "bg-[#241613] text-[#efc8bb]"
+                                ? "bg-[var(--green-bg)] text-[var(--green)]"
+                                : "bg-[var(--red-bg)] text-[var(--red)]"
                             }`}
                           >
                             {session.correct ? "Correct" : "Retry"}
@@ -864,7 +814,7 @@ export default function Dashboard() {
                       </Link>
                     ))
                   ) : (
-                    <p className="text-sm leading-6 text-[#9f9a90]">
+                    <p className="text-sm leading-6 text-[var(--text-secondary)]">
                       Recent activity will appear after your next practice
                       session.
                     </p>

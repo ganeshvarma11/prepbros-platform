@@ -65,8 +65,7 @@ const starterPaths = [
   },
 ];
 
-const sectionClassName =
-  "card p-4 md:p-5";
+const sectionClassName = "card p-4 md:p-5";
 
 const listRowClassName =
   "card group flex items-center justify-between gap-4 rounded-[var(--radius-md)] px-4 py-3";
@@ -88,9 +87,11 @@ export default function Explore() {
     return `/practice?question=${toQuestionId(randomQuestion.id)}`;
   }, [questions]);
 
-  const targetExam = String(user?.user_metadata?.target_exam || "").toUpperCase();
-  const preferredExam = examTracks.find((track) =>
-    targetExam.includes(track.label === "Railway" ? "RRB" : track.label),
+  const targetExam = String(
+    user?.user_metadata?.target_exam || ""
+  ).toUpperCase();
+  const preferredExam = examTracks.find(track =>
+    targetExam.includes(track.label === "Railway" ? "RRB" : track.label)
   );
 
   const recommendedQuestion = useMemo(() => {
@@ -101,10 +102,10 @@ export default function Explore() {
 
     return (
       questions.find(
-        (question) => question.exam === preferredKey && question.type === "PYQ",
+        question => question.exam === preferredKey && question.type === "PYQ"
       ) ||
-      questions.find((question) => question.exam === preferredKey) ||
-      questions.find((question) => question.type === "PYQ") ||
+      questions.find(question => question.exam === preferredKey) ||
+      questions.find(question => question.type === "PYQ") ||
       questions[0]
     );
   }, [preferredExam, questions]);
@@ -149,9 +150,34 @@ export default function Explore() {
           ]}
         />
 
+        <section className="card grid gap-5 overflow-hidden p-5 md:grid-cols-[minmax(0,1fr)_280px] md:p-6">
+          <div>
+            <p className="section-label">Discovery</p>
+            <h2 className="mt-3 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+              Find the next right thing to study.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+              Explore is your low-friction starting point for exam tracks, short
+              paths, and focused entry into practice.
+            </p>
+          </div>
+          <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+            <p className="section-label">Quick start</p>
+            <p
+              className="mt-3 text-[2.6rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {questions.length}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+              Questions currently available to explore and practice from.
+            </p>
+          </div>
+        </section>
+
         <section className={sectionClassName}>
           <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-            {quickActions.map((action) => {
+            {quickActions.map(action => {
               const Icon = action.icon;
 
               return (
@@ -168,7 +194,7 @@ export default function Explore() {
                         size={15}
                         className={
                           action.primary
-                            ? "text-[#1d1408]"
+                            ? "text-[var(--text-on-brand)]"
                             : "text-[var(--text-2)]"
                         }
                       />
@@ -178,7 +204,7 @@ export default function Explore() {
                       size={15}
                       className={
                         action.primary
-                          ? "text-[#1d1408]"
+                          ? "text-[var(--text-on-brand)]"
                           : "text-[var(--text-3)]"
                       }
                     />
@@ -204,7 +230,7 @@ export default function Explore() {
             </div>
 
             <div className="mt-4 space-y-2">
-              {examTracks.map((track) => (
+              {examTracks.map(track => (
                 <Link key={track.label} href={track.href}>
                   <span className={listRowClassName}>
                     <span className="min-w-0">
@@ -236,7 +262,7 @@ export default function Explore() {
             </div>
 
             <div className="mt-4 space-y-2">
-              {starterPaths.map((path) => (
+              {starterPaths.map(path => (
                 <Link key={path.title} href={path.href}>
                   <span className={listRowClassName}>
                     <span className="min-w-0 flex-1">
@@ -244,9 +270,7 @@ export default function Explore() {
                         <span className="truncate text-sm font-medium text-[var(--text-primary)]">
                           {path.title}
                         </span>
-                        <span className="badge">
-                          {path.duration}
-                        </span>
+                        <span className="badge">{path.duration}</span>
                       </span>
                       <span className="mt-1 block text-xs text-[var(--text-muted)]">
                         {path.summary}
@@ -276,14 +300,17 @@ export default function Explore() {
               </div>
             </div>
 
-            <Link href={`/practice?question=${toQuestionId(recommendedQuestion.id)}`}>
+            <Link
+              href={`/practice?question=${toQuestionId(recommendedQuestion.id)}`}
+            >
               <span className="card mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-[var(--radius-md)] px-4 py-3">
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium text-[var(--text-primary)]">
                     {recommendedQuestion.topic} warm-up
                   </span>
                   <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                    {examLabels[recommendedQuestion.exam] || recommendedQuestion.exam}
+                    {examLabels[recommendedQuestion.exam] ||
+                      recommendedQuestion.exam}
                     {recommendedQuestion.year
                       ? ` • PYQ ${recommendedQuestion.year}`
                       : ` • ${recommendedQuestion.type}`}

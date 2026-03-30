@@ -122,9 +122,9 @@ const defaultSettings: EditableSettings = {
 };
 
 const fieldClassName =
-  "h-[46px] rounded-[12px] border border-white/8 bg-white/[0.03] px-4 text-[14px] text-[#f0ede6] shadow-none placeholder:text-[#5f5d58] focus-visible:border-[#c9a84c] focus-visible:ring-0";
+  "h-[46px] rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] px-4 text-[14px] text-[var(--text-primary)] shadow-none placeholder:text-[var(--text-faint)] focus-visible:border-[var(--border-strong)] focus-visible:bg-[var(--surface-2)] focus-visible:ring-0";
 const textareaClassName =
-  "min-h-[110px] rounded-[12px] border border-white/8 bg-white/[0.03] px-4 py-3 text-[14px] text-[#f0ede6] shadow-none placeholder:text-[#5f5d58] focus-visible:border-[#c9a84c] focus-visible:ring-0";
+  "min-h-[110px] rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 text-[14px] text-[var(--text-primary)] shadow-none placeholder:text-[var(--text-faint)] focus-visible:border-[var(--border-strong)] focus-visible:bg-[var(--surface-2)] focus-visible:ring-0";
 
 const clampGoal = (value: string) => {
   const digitsOnly = value.replace(/[^\d]/g, "");
@@ -253,10 +253,12 @@ function SettingField({
 }) {
   return (
     <div className={fullWidth ? "md:col-span-2" : ""}>
-      <label className="block text-[11px] uppercase tracking-[0.18em] text-[#66635e]">
+      <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
         {label}
       </label>
-      {hint ? <p className="mt-2 text-sm text-[#8a8880]">{hint}</p> : null}
+      {hint ? (
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">{hint}</p>
+      ) : null}
       <div className="mt-3">{children}</div>
     </div>
   );
@@ -274,10 +276,14 @@ function PreferenceRow({
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-white/8 py-4">
+    <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] py-4">
       <div className="pr-4">
-        <p className="text-sm font-medium text-[#f0ede6]">{title}</p>
-        <p className="mt-1 text-sm text-[#8a8880]">{description}</p>
+        <p className="text-sm font-semibold text-[var(--text-primary)]">
+          {title}
+        </p>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          {description}
+        </p>
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
@@ -294,10 +300,12 @@ function AccountRow({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 border-b border-white/8 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-4 border-b border-[var(--border)] py-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="text-sm font-medium text-[#f0ede6]">{label}</p>
-        <p className="mt-1 text-sm text-[#8a8880]">{detail}</p>
+        <p className="text-sm font-semibold text-[var(--text-primary)]">
+          {label}
+        </p>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">{detail}</p>
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
@@ -823,10 +831,10 @@ export default function Profile() {
 
   if (loading || pageLoading || questionsSyncing) {
     return (
-      <AppShell shellClassName="bg-[#050505]">
+      <AppShell>
         <div className="flex min-h-[62vh] items-center justify-center">
-          <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm text-[#a39a91]">
-            <Loader2 size={16} className="animate-spin text-[#c9a84c]" />
+          <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-5 py-3 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
+            <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
             Loading profile...
           </div>
         </div>
@@ -836,14 +844,14 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <AppShell shellClassName="bg-[#050505]">
+      <AppShell>
         <div className="mx-auto max-w-2xl py-14">
           <PageEmpty
             title="Sign in to manage your profile"
             description="Your profile, preferences, and account details live in one quiet workspace."
             actionLabel="Back to home"
             actionHref="/"
-            className="rounded-[24px] border-white/10 bg-[#090807] py-14"
+            className="rounded-[24px] border-[var(--border)] bg-[var(--bg-card)] py-14"
           />
         </div>
       </AppShell>
@@ -851,10 +859,10 @@ export default function Profile() {
   }
 
   return (
-    <AppShell shellClassName="bg-[#050505]" contentClassName="max-w-none">
+    <AppShell contentClassName="max-w-none">
       <div className="relative">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(164,118,76,0.08),transparent_34%),radial-gradient(circle_at_80%_18%,rgba(120,78,42,0.14),transparent_25%),linear-gradient(180deg,#060505_0%,#090807_46%,#050505_100%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.09] [background-image:linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:150px_150px]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.76),transparent_34%),radial-gradient(circle_at_80%_18%,rgba(191,219,254,0.24),transparent_25%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.1),transparent_34%),radial-gradient(circle_at_80%_18%,rgba(59,130,246,0.12),transparent_25%)]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:linear-gradient(to_right,rgba(148,163,184,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:150px_150px] dark:opacity-[0.08]" />
 
         <div className="relative z-10 mx-auto w-full max-w-[1120px] pb-10">
           <input
@@ -877,15 +885,15 @@ export default function Profile() {
               if (!open) closeCropDialog();
             }}
           >
-            <DialogContent className="max-w-[min(92vw,720px)] border-white/10 bg-[#111111] p-0 text-[#f0ede6]">
+            <DialogContent className="max-w-[min(92vw,720px)] border-[var(--border)] bg-[var(--bg-card)] p-0 text-[var(--text-primary)]">
               {cropState ? (
                 <>
-                  <DialogHeader className="border-b border-white/8 px-6 py-5">
-                    <DialogTitle className="text-xl tracking-[-0.03em] text-[#f0ede6]">
+                  <DialogHeader className="border-b border-[var(--border)] px-6 py-5">
+                    <DialogTitle className="text-xl tracking-[-0.03em] text-[var(--text-primary)]">
                       Crop{" "}
                       {cropState.kind === "avatar" ? "profile photo" : "banner"}
                     </DialogTitle>
-                    <DialogDescription className="text-sm text-[#8a8880]">
+                    <DialogDescription className="text-sm text-[var(--text-secondary)]">
                       Adjust the framing before upload. The image will be
                       compressed automatically for faster loading.
                     </DialogDescription>
@@ -916,7 +924,7 @@ export default function Profile() {
                         <>
                           <div className="flex justify-center">
                             <div
-                              className="relative overflow-hidden rounded-[18px] border border-white/10 bg-[#181818] shadow-[0_24px_70px_-36px_rgba(0,0,0,0.9)]"
+                              className="relative overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] shadow-[var(--shadow-md)]"
                               style={{
                                 width: config.previewWidth,
                                 height: config.previewHeight,
@@ -932,15 +940,17 @@ export default function Profile() {
                                   transform: `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px))`,
                                 }}
                               />
-                              <div className="pointer-events-none absolute inset-0 border border-white/10" />
+                              <div className="pointer-events-none absolute inset-0 border border-[var(--border)]" />
                             </div>
                           </div>
 
                           <div className="mt-6 space-y-5">
                             <div>
                               <div className="mb-2 flex items-center justify-between text-sm">
-                                <span className="text-[#f0ede6]">Zoom</span>
-                                <span className="text-[#8a8880]">
+                                <span className="text-[var(--text-primary)]">
+                                  Zoom
+                                </span>
+                                <span className="text-[var(--text-secondary)]">
                                   {cropState.zoom.toFixed(2)}x
                                 </span>
                               </div>
@@ -956,16 +966,16 @@ export default function Profile() {
                                       : current
                                   )
                                 }
-                                className="[&_[data-slot=slider-range]]:bg-[#c9a84c]"
+                                className="[&_[data-slot=slider-range]]:bg-[var(--brand)]"
                               />
                             </div>
 
                             <div>
                               <div className="mb-2 flex items-center justify-between text-sm">
-                                <span className="text-[#f0ede6]">
+                                <span className="text-[var(--text-primary)]">
                                   Horizontal
                                 </span>
-                                <span className="text-[#8a8880]">
+                                <span className="text-[var(--text-secondary)]">
                                   {cropState.offsetX}%
                                 </span>
                               </div>
@@ -981,14 +991,16 @@ export default function Profile() {
                                       : current
                                   )
                                 }
-                                className="[&_[data-slot=slider-range]]:bg-[#c9a84c]"
+                                className="[&_[data-slot=slider-range]]:bg-[var(--brand)]"
                               />
                             </div>
 
                             <div>
                               <div className="mb-2 flex items-center justify-between text-sm">
-                                <span className="text-[#f0ede6]">Vertical</span>
-                                <span className="text-[#8a8880]">
+                                <span className="text-[var(--text-primary)]">
+                                  Vertical
+                                </span>
+                                <span className="text-[var(--text-secondary)]">
                                   {cropState.offsetY}%
                                 </span>
                               </div>
@@ -1004,7 +1016,7 @@ export default function Profile() {
                                       : current
                                   )
                                 }
-                                className="[&_[data-slot=slider-range]]:bg-[#c9a84c]"
+                                className="[&_[data-slot=slider-range]]:bg-[var(--brand)]"
                               />
                             </div>
                           </div>
@@ -1013,12 +1025,12 @@ export default function Profile() {
                     })()}
                   </div>
 
-                  <DialogFooter className="border-t border-white/8 px-6 py-5 sm:justify-between">
+                  <DialogFooter className="border-t border-[var(--border)] px-6 py-5 sm:justify-between">
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={closeCropDialog}
-                      className="border border-white/10 bg-transparent text-[#8a8880] hover:bg-white/[0.04] hover:text-[#f0ede6]"
+                      className="border border-[var(--border)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]"
                     >
                       Cancel
                     </Button>
@@ -1027,7 +1039,7 @@ export default function Profile() {
                       onClick={() => {
                         void confirmCrop();
                       }}
-                      className="bg-[#c9a84c] text-[#0e0e0e] hover:bg-[#f0c040]"
+                      className="bg-[var(--brand)] text-[var(--text-on-brand)] hover:bg-[var(--brand-light)]"
                     >
                       Use image
                     </Button>
@@ -1037,7 +1049,7 @@ export default function Profile() {
             </DialogContent>
           </Dialog>
 
-          <div className="sticky top-0 z-20 -mx-4 border-b border-white/8 bg-[#141414]/92 px-4 backdrop-blur-xl md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
+          <div className="sticky top-0 z-20 -mx-4 border-b border-[var(--border)] bg-[color:rgba(247,250,252,0.76)] px-4 backdrop-blur-xl dark:bg-[color:rgba(8,15,29,0.76)] md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
             <div className="mx-auto flex max-w-[1120px] items-center gap-1 overflow-x-auto">
               {[
                 { key: "profile", label: "Profile" },
@@ -1050,8 +1062,8 @@ export default function Profile() {
                   onClick={() => setActiveTab(item.key as ActiveTab)}
                   className={`border-b-2 px-4 py-4 text-sm transition ${
                     activeTab === item.key
-                      ? "border-[#c9a84c] text-[#c9a84c]"
-                      : "border-transparent text-[#8a8880] hover:text-[#f0ede6]"
+                      ? "border-[var(--brand)] text-[var(--brand)]"
+                      : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {item.label}
@@ -1062,7 +1074,7 @@ export default function Profile() {
 
           {activeTab === "profile" ? (
             <section className="overflow-hidden">
-              <div className="relative h-[190px] overflow-hidden border-b border-white/8 bg-[linear-gradient(135deg,#1a1200_0%,#2a1f00_38%,#1a1200_100%)]">
+              <div className="relative h-[190px] overflow-hidden rounded-[28px] border border-[var(--border)] bg-[linear-gradient(135deg,#eef4fb_0%,#dfeaf6_38%,#eef4fb_100%)] dark:bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_38%,#0f172a_100%)]">
                 {bannerUrl ? (
                   <img
                     src={bannerUrl}
@@ -1070,14 +1082,14 @@ export default function Profile() {
                     className="absolute inset-0 h-full w-full object-cover"
                   />
                 ) : null}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(201,168,76,0.12),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(201,168,76,0.07),transparent_45%)]" />
-                <div className="absolute inset-0 opacity-[0.18] [background-image:linear-gradient(to_right,rgba(201,168,76,0.16)_1px,transparent_1px),linear-gradient(to_bottom,rgba(201,168,76,0.12)_1px,transparent_1px)] [background-size:180px_180px]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(15,23,42,0.08),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(37,99,235,0.08),transparent_45%)] dark:bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.08),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(147,197,253,0.08),transparent_45%)]" />
+                <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(to_right,rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.14)_1px,transparent_1px)] [background-size:180px_180px]" />
                 <div className="absolute right-4 top-4 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => bannerInputRef.current?.click()}
                     disabled={uploadingMedia.banner}
-                    className="inline-flex items-center gap-2 rounded-[10px] border border-white/12 bg-black/35 px-3 py-2 text-xs text-[#f0ede6] backdrop-blur-sm transition hover:bg-black/55 disabled:opacity-70"
+                    className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[color:rgba(255,255,255,0.68)] px-3 py-2 text-xs text-[var(--text-primary)] backdrop-blur-sm transition hover:bg-[color:rgba(255,255,255,0.86)] disabled:opacity-70 dark:bg-[color:rgba(2,6,23,0.48)] dark:hover:bg-[color:rgba(2,6,23,0.68)]"
                   >
                     {uploadingMedia.banner ? (
                       <Loader2 size={13} className="animate-spin" />
@@ -1093,7 +1105,7 @@ export default function Profile() {
                         void removeMedia("banner");
                       }}
                       disabled={uploadingMedia.banner}
-                      className="inline-flex items-center gap-2 rounded-[10px] border border-white/12 bg-black/35 px-3 py-2 text-xs text-[#f0ede6] backdrop-blur-sm transition hover:bg-black/55 disabled:opacity-70"
+                      className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[color:rgba(255,255,255,0.68)] px-3 py-2 text-xs text-[var(--text-primary)] backdrop-blur-sm transition hover:bg-[color:rgba(255,255,255,0.86)] disabled:opacity-70 dark:bg-[color:rgba(2,6,23,0.48)] dark:hover:bg-[color:rgba(2,6,23,0.68)]"
                     >
                       Remove
                     </button>
@@ -1101,12 +1113,12 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="border-b border-white/8 px-0 pb-8">
+              <div className="border-b border-[var(--border)] px-0 pb-8">
                 <div className="px-0">
                   <div className="mx-auto max-w-[1120px]">
                     <div className="-mt-10 flex flex-col gap-6 px-0 sm:-mt-12 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
-                        <div className="relative flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full border-[3px] border-[#050505] bg-[#222] text-[30px] text-[#c9a84c] shadow-[0_24px_60px_-28px_rgba(0,0,0,0.9)]">
+                        <div className="relative flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full border-[3px] border-[var(--bg-base)] bg-[var(--surface-2)] text-[30px] text-[var(--brand)] shadow-[var(--shadow-lg)]">
                           {avatarUrl ? (
                             <img
                               src={avatarUrl}
@@ -1122,7 +1134,7 @@ export default function Profile() {
                             type="button"
                             onClick={() => avatarInputRef.current?.click()}
                             disabled={uploadingMedia.avatar}
-                            className="absolute bottom-0 right-0 inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#050505] bg-[#c9a84c] text-[#0e0e0e] transition hover:bg-[#f0c040] disabled:opacity-70"
+                            className="absolute bottom-0 right-0 inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[var(--bg-base)] bg-[var(--brand)] text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)] disabled:opacity-70"
                             aria-label="Upload profile photo"
                           >
                             {uploadingMedia.avatar ? (
@@ -1135,12 +1147,12 @@ export default function Profile() {
 
                         <div className="mt-4">
                           <h1
-                            className="text-[2rem] leading-none tracking-[-0.04em] text-[#f0ede6] sm:text-[2.2rem]"
+                            className="text-[2rem] leading-none tracking-[-0.04em] text-[var(--text-primary)] sm:text-[2.2rem]"
                             style={{ fontFamily: "var(--font-display)" }}
                           >
                             {displayName}
                           </h1>
-                          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[#5f5d58]">
+                          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[var(--text-faint)]">
                             <span>@{settings.username}</span>
                             {settings.location || settings.state ? (
                               <>
@@ -1155,7 +1167,7 @@ export default function Profile() {
                               </>
                             ) : null}
                           </div>
-                          <p className="mt-3 max-w-[60ch] text-[15px] leading-7 text-[#8a8880]">
+                          <p className="mt-3 max-w-[60ch] text-[15px] leading-7 text-[var(--text-secondary)]">
                             {settings.bio ||
                               "A focused profile that keeps your prep identity, progress, and settings in one place."}
                           </p>
@@ -1165,8 +1177,8 @@ export default function Profile() {
                                 key={tag}
                                 className={`rounded-full border px-3 py-1.5 text-[11px] ${
                                   index === 0
-                                    ? "border-[#c9a84c] bg-[#1a1200] text-[#c9a84c]"
-                                    : "border-white/10 text-[#8a8880]"
+                                    ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand)]"
+                                    : "border-[var(--border)] text-[var(--text-secondary)]"
                                 }`}
                               >
                                 {tag}
@@ -1180,7 +1192,7 @@ export default function Profile() {
                         <button
                           type="button"
                           onClick={() => setActiveTab("settings")}
-                          className="inline-flex items-center gap-2 rounded-[10px] bg-[#c9a84c] px-4 py-2.5 text-sm font-medium text-[#0e0e0e] transition hover:bg-[#f0c040]"
+                          className="inline-flex items-center gap-2 rounded-[10px] bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)]"
                         >
                           <PencilLine size={14} />
                           Edit details
@@ -1190,13 +1202,13 @@ export default function Profile() {
                           onClick={() => {
                             void copyHandle();
                           }}
-                          className="inline-flex items-center gap-2 rounded-[10px] border border-white/10 px-4 py-2.5 text-sm text-[#8a8880] transition hover:bg-white/[0.04] hover:text-[#f0ede6]"
+                          className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
                         >
                           <Copy size={14} />
                           Copy handle
                         </button>
                         <Link href="/practice">
-                          <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-white/10 px-4 py-2.5 text-sm text-[#8a8880] transition hover:bg-white/[0.04] hover:text-[#f0ede6]">
+                          <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]">
                             Continue practice
                             <ArrowRight size={14} />
                           </span>
@@ -1208,7 +1220,7 @@ export default function Profile() {
                               void removeMedia("avatar");
                             }}
                             disabled={uploadingMedia.avatar}
-                            className="inline-flex items-center gap-2 rounded-[10px] border border-white/10 px-4 py-2.5 text-sm text-[#8a8880] transition hover:bg-white/[0.04] hover:text-[#f0ede6] disabled:opacity-70"
+                            className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] disabled:opacity-70"
                           >
                             Remove photo
                           </button>
@@ -1219,8 +1231,8 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="border-b border-white/8 py-8">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#5f5d58]">
+              <div className="border-b border-[var(--border)] py-8">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
                   Prep stats
                 </p>
                 <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -1235,21 +1247,21 @@ export default function Profile() {
                   ].map((item, index) => (
                     <div
                       key={item.label}
-                      className={`rounded-[14px] border border-white/8 bg-[#141414] px-5 py-5 text-center ${
-                        index === 0
-                          ? "shadow-[0_18px_40px_-28px_rgba(201,168,76,0.32)]"
-                          : ""
+                      className={`rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] px-5 py-5 text-center ${
+                        index === 0 ? "shadow-[var(--shadow-md)]" : ""
                       }`}
                     >
                       <p
                         className={`text-[2.25rem] leading-none tracking-[-0.04em] ${
-                          index === 0 ? "text-[#c9a84c]" : "text-[#f0ede6]"
+                          index === 0
+                            ? "text-[var(--brand)]"
+                            : "text-[var(--text-primary)]"
                         }`}
                         style={{ fontFamily: "var(--font-display)" }}
                       >
                         {item.value}
                       </p>
-                      <p className="mt-2 text-[11px] uppercase tracking-[0.14em] text-[#5f5d58]">
+                      <p className="mt-2 text-[11px] uppercase tracking-[0.14em] text-[var(--text-faint)]">
                         {item.label}
                       </p>
                     </div>
@@ -1257,8 +1269,8 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="border-b border-white/8 py-8">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#5f5d58]">
+              <div className="border-b border-[var(--border)] py-8">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
                   Achievements
                 </p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -1267,15 +1279,15 @@ export default function Profile() {
                       key={item.title}
                       className={`rounded-[12px] border px-4 py-4 text-center ${
                         item.unlocked
-                          ? "border-white/10 bg-[#141414]"
-                          : "border-white/6 bg-[#141414]/70 opacity-45 grayscale"
+                          ? "border-[var(--border)] bg-[var(--bg-card)]"
+                          : "border-[var(--border)] bg-[var(--surface-1)] opacity-45 grayscale"
                       }`}
                     >
                       <div
                         className={`mx-auto flex h-9 w-9 items-center justify-center rounded-[10px] ${
                           item.unlocked
-                            ? "bg-[#1a1200] text-[#c9a84c]"
-                            : "bg-[#181818] text-[#66635e]"
+                            ? "bg-[var(--brand-subtle)] text-[var(--brand)]"
+                            : "bg-[var(--surface-3)] text-[var(--text-faint)]"
                         }`}
                       >
                         {item.title === "First solve" ? (
@@ -1288,10 +1300,10 @@ export default function Profile() {
                           <Trophy size={16} />
                         )}
                       </div>
-                      <p className="mt-3 text-sm font-medium text-[#f0ede6]">
+                      <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">
                         {item.title}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-[#66635e]">
+                      <p className="mt-1 text-xs leading-5 text-[var(--text-faint)]">
                         {item.description}
                       </p>
                     </div>
@@ -1300,14 +1312,14 @@ export default function Profile() {
               </div>
 
               <div className="py-8">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#5f5d58]">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
                   Profile visibility
                 </p>
-                <div className="mt-4 rounded-[14px] border border-white/8 bg-[#141414] px-5 py-5">
+                <div className="mt-4 rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] px-5 py-5">
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className="rounded-[10px] border border-white/8 bg-[#1a1a1a] px-3 py-2 text-sm text-[#8a8880]">
+                        <span className="rounded-[10px] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-secondary)]">
                           @{settings.username}
                         </span>
                         <button
@@ -1315,21 +1327,23 @@ export default function Profile() {
                           onClick={() => {
                             void copyHandle();
                           }}
-                          className="inline-flex items-center gap-2 rounded-[10px] border border-white/10 px-3.5 py-2 text-sm text-[#f0ede6] transition hover:bg-white/[0.04]"
+                          className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] px-3.5 py-2 text-sm text-[var(--text-primary)] transition hover:bg-[var(--surface-1)]"
                         >
                           <Copy size={14} />
                           Copy handle
                         </button>
                       </div>
-                      <p className="mt-4 max-w-[58ch] text-sm leading-6 text-[#8a8880]">
+                      <p className="mt-4 max-w-[58ch] text-sm leading-6 text-[var(--text-secondary)]">
                         Public profile visibility is saved now and will be used
                         by PrepBros public profile surfaces as they roll out.
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="text-sm text-[#f0ede6]">Public profile</p>
-                        <p className="text-xs text-[#66635e]">
+                        <p className="text-sm text-[var(--text-primary)]">
+                          Public profile
+                        </p>
+                        <p className="text-xs text-[var(--text-faint)]">
                           {settings.publicProfile ? "Enabled" : "Private"}
                         </p>
                       </div>
@@ -1352,17 +1366,17 @@ export default function Profile() {
           {activeTab === "settings" ? (
             <section className="max-w-[720px] py-9">
               <div className="mb-8">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#5f5d58]">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
                   Settings
                 </p>
-                <h2 className="mt-3 text-2xl tracking-[-0.04em] text-[#f0ede6]">
+                <h2 className="mt-3 text-2xl tracking-[-0.04em] text-[var(--text-primary)]">
                   Personal and prep details
                 </h2>
               </div>
 
               <div className="space-y-9">
                 <div>
-                  <p className="border-b border-white/8 pb-3 text-sm font-medium text-[#f0ede6]">
+                  <p className="border-b border-[var(--border)] pb-3 text-sm font-semibold text-[var(--text-primary)]">
                     Personal info
                   </p>
                   <div className="mt-5 grid gap-5 md:grid-cols-2">
@@ -1443,7 +1457,7 @@ export default function Profile() {
                 </div>
 
                 <div>
-                  <p className="border-b border-white/8 pb-3 text-sm font-medium text-[#f0ede6]">
+                  <p className="border-b border-[var(--border)] pb-3 text-sm font-semibold text-[var(--text-primary)]">
                     Prep details
                   </p>
                   <div className="mt-5 grid gap-5 md:grid-cols-2">
@@ -1462,7 +1476,7 @@ export default function Profile() {
                           <option
                             key={exam}
                             value={exam}
-                            className="bg-[#1a1a1a] text-[#f0ede6]"
+                            className="bg-[var(--surface-2)] text-[var(--text-primary)]"
                           >
                             {exam}
                           </option>
@@ -1485,7 +1499,7 @@ export default function Profile() {
                           <option
                             key={level}
                             value={level}
-                            className="bg-[#1a1a1a] text-[#f0ede6]"
+                            className="bg-[var(--surface-2)] text-[var(--text-primary)]"
                           >
                             {level}
                           </option>
@@ -1513,7 +1527,7 @@ export default function Profile() {
                 </div>
 
                 <div>
-                  <p className="border-b border-white/8 pb-3 text-sm font-medium text-[#f0ede6]">
+                  <p className="border-b border-[var(--border)] pb-3 text-sm font-semibold text-[var(--text-primary)]">
                     Preferences
                   </p>
                   <div className="mt-2">
@@ -1565,15 +1579,15 @@ export default function Profile() {
                 </div>
 
                 <div>
-                  <p className="border-b border-white/8 pb-3 text-sm font-medium text-[#f0ede6]">
+                  <p className="border-b border-[var(--border)] pb-3 text-sm font-semibold text-[var(--text-primary)]">
                     Appearance
                   </p>
-                  <div className="mt-5 flex items-center justify-between rounded-[14px] border border-white/8 bg-[#141414] px-4 py-4">
+                  <div className="mt-5 flex items-center justify-between rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-4">
                     <div>
-                      <p className="text-sm font-medium text-[#f0ede6]">
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
                         Theme
                       </p>
-                      <p className="mt-1 text-sm text-[#8a8880]">
+                      <p className="mt-1 text-sm text-[var(--text-secondary)]">
                         Change light, dark, or system theme for your workspace.
                       </p>
                     </div>
@@ -1587,17 +1601,17 @@ export default function Profile() {
           {activeTab === "account" ? (
             <section className="max-w-[720px] py-9">
               <div className="mb-8">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#5f5d58]">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
                   Account
                 </p>
-                <h2 className="mt-3 text-2xl tracking-[-0.04em] text-[#f0ede6]">
+                <h2 className="mt-3 text-2xl tracking-[-0.04em] text-[var(--text-primary)]">
                   Subscription, identity, and access
                 </h2>
               </div>
 
               <div className="space-y-9">
                 <div>
-                  <p className="border-b border-white/8 pb-3 text-sm font-medium text-[#f0ede6]">
+                  <p className="border-b border-[var(--border)] pb-3 text-sm font-semibold text-[var(--text-primary)]">
                     Subscription
                   </p>
                   <div className="mt-2">
@@ -1606,7 +1620,7 @@ export default function Profile() {
                       detail="Free plan with access to daily practice, basic progress, and resources."
                       action={
                         <Link href="/premium">
-                          <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] bg-[#c9a84c] px-4 py-2.5 text-sm font-medium text-[#0e0e0e] transition hover:bg-[#f0c040]">
+                          <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)]">
                             <Crown size={14} />
                             Upgrade to Pro
                           </span>
@@ -1618,7 +1632,7 @@ export default function Profile() {
                       detail={`${formatCount(questions.length)} questions available in your current bank.`}
                       action={
                         <Link href="/practice">
-                          <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-white/10 px-4 py-2.5 text-sm text-[#8a8880] transition hover:bg-white/[0.04] hover:text-[#f0ede6]">
+                          <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--border)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]">
                             Open practice
                             <ArrowRight size={14} />
                           </span>
@@ -1629,7 +1643,7 @@ export default function Profile() {
                 </div>
 
                 <div>
-                  <p className="border-b border-white/8 pb-3 text-sm font-medium text-[#f0ede6]">
+                  <p className="border-b border-[var(--border)] pb-3 text-sm font-semibold text-[var(--text-primary)]">
                     Account details
                   </p>
                   <div className="mt-2">
@@ -1637,7 +1651,7 @@ export default function Profile() {
                       label="Email"
                       detail={user.email || "Not available"}
                       action={
-                        <span className="inline-flex items-center gap-2 rounded-[10px] border border-white/8 px-3 py-2 text-xs text-[#8a8880]">
+                        <span className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] px-3 py-2 text-xs text-[var(--text-secondary)]">
                           <Mail size={13} />
                           Verified account
                         </span>
@@ -1661,24 +1675,24 @@ export default function Profile() {
                 </div>
 
                 <div>
-                  <p className="border-b border-white/8 pb-3 text-sm font-medium text-[#f0ede6]">
+                  <p className="border-b border-[var(--border)] pb-3 text-sm font-semibold text-[var(--text-primary)]">
                     Actions
                   </p>
                   <div className="mt-5 flex flex-wrap gap-3">
                     <Link href="/dashboard">
-                      <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-white/10 px-4 py-2.5 text-sm text-[#8a8880] transition hover:bg-white/[0.04] hover:text-[#f0ede6]">
+                      <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--border)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]">
                         Open dashboard
                       </span>
                     </Link>
                     <Link href="/support">
-                      <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-white/10 px-4 py-2.5 text-sm text-[#8a8880] transition hover:bg-white/[0.04] hover:text-[#f0ede6]">
+                      <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--border)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]">
                         Contact support
                       </span>
                     </Link>
                     <button
                       type="button"
                       onClick={() => signOut()}
-                      className="inline-flex items-center gap-2 rounded-[10px] border border-[rgba(217,91,91,0.28)] px-4 py-2.5 text-sm text-[#d95b5b] transition hover:bg-[rgba(217,91,91,0.08)]"
+                      className="inline-flex items-center gap-2 rounded-[10px] border border-[rgba(220,38,38,0.18)] px-4 py-2.5 text-sm text-[var(--red)] transition hover:bg-[rgba(220,38,38,0.08)]"
                     >
                       <LogOut size={14} />
                       Sign out
@@ -1689,13 +1703,13 @@ export default function Profile() {
             </section>
           ) : null}
 
-          <div className="mt-2 border-t border-white/8 pt-6">
+          <div className="mt-2 border-t border-[var(--border)] pt-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <p
                 className={`text-sm ${
                   saveNotice?.tone === "error"
-                    ? "text-[#d95b5b]"
-                    : "text-[#8a8880]"
+                    ? "text-[var(--red)]"
+                    : "text-[var(--text-secondary)]"
                 }`}
               >
                 {saveNotice?.message ||
@@ -1708,7 +1722,7 @@ export default function Profile() {
                   void saveSettings();
                 }}
                 disabled={saving}
-                className="inline-flex min-w-[168px] items-center justify-center gap-2 rounded-[10px] bg-[#c9a84c] px-5 py-3 text-sm font-medium text-[#0e0e0e] transition hover:bg-[#f0c040] disabled:opacity-70"
+                className="inline-flex min-w-[168px] items-center justify-center gap-2 rounded-[10px] bg-[var(--brand)] px-5 py-3 text-sm font-medium text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)] disabled:opacity-70"
               >
                 {saving ? (
                   <>

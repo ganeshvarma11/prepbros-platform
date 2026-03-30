@@ -15,7 +15,11 @@ const NAV_ITEMS = [
   { label: "Pricing", href: "/premium", type: "route" as const },
 ];
 
-const HERO_PROOF_POINTS = ["Daily MCQs", "Weak topic review", "Phone OTP login"];
+const HERO_PROOF_POINTS = [
+  "Daily MCQs",
+  "Weak topic review",
+  "Phone OTP login",
+];
 
 function GoogleIcon() {
   return (
@@ -66,17 +70,17 @@ function LandingActionButton({
 }: LandingActionButtonProps) {
   const variantClasses =
     variant === "primary"
-      ? "border-[#f3e8dc] bg-[#f3e8dc] text-[#16120f] hover:bg-white"
+      ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] hover:brightness-110"
       : variant === "ghost"
-        ? "border-white/10 bg-transparent text-[#f5efe8] hover:border-white/16 hover:bg-white/[0.04]"
-        : "border-white/10 bg-white/[0.03] text-[#f5efe8] hover:border-white/16 hover:bg-white/[0.06]";
+        ? "border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]"
+        : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]";
 
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex h-14 w-full items-center justify-center gap-3 rounded-full border px-5 text-[15px] font-medium tracking-[-0.01em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${variantClasses} ${className}`}
+      className={`inline-flex h-14 w-full items-center justify-center gap-3 rounded-full border px-5 text-[15px] font-semibold tracking-[-0.01em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${variantClasses} ${className}`}
     >
       {icon}
       <span>{children}</span>
@@ -107,26 +111,31 @@ function LandingAuthPanel({
 }: LandingAuthPanelProps) {
   if (user) {
     return (
-      <div className="w-full max-w-[410px] rounded-[30px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_30px_90px_-56px_rgba(0,0,0,0.95)] backdrop-blur-sm sm:p-8">
-        <p className="text-[0.72rem] font-medium uppercase tracking-[0.28em] text-[#a99888]">
+      <div className="w-full max-w-[430px] rounded-[34px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
           Account
         </p>
-        <h2 className="mt-4 text-[2rem] font-semibold tracking-[-0.04em] text-[#f7f0e8]">
+        <h2 className="mt-4 text-[2.15rem] tracking-[-0.05em] text-[var(--text-primary)]">
           Welcome back.
         </h2>
-        <p className="mt-3 max-w-sm text-[15px] leading-7 text-[#b7aca2]">
-          {displayName}, your dashboard and daily practice flow are ready when you are.
+        <p className="mt-3 max-w-sm text-[15px] leading-7 text-[var(--text-secondary)]">
+          {displayName}, your dashboard and daily practice flow are ready when
+          you are.
         </p>
 
         <div className="mt-8 space-y-3">
           <Link href="/dashboard">
-            <span className="inline-flex h-14 w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-[#f3e8dc] bg-[#f3e8dc] px-5 text-[15px] font-medium tracking-[-0.01em] text-[#16120f] transition duration-200 hover:bg-white">
+            <span className="inline-flex h-14 w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-[var(--brand)] bg-[var(--brand)] px-5 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition duration-200 hover:brightness-110">
               Go to dashboard
               <ArrowRight size={17} />
             </span>
           </Link>
 
-          <LandingActionButton variant="ghost" onClick={onSignOut} icon={<LogOut size={16} />}>
+          <LandingActionButton
+            variant="ghost"
+            onClick={onSignOut}
+            icon={<LogOut size={16} />}
+          >
             Sign out
           </LandingActionButton>
         </div>
@@ -135,14 +144,14 @@ function LandingAuthPanel({
   }
 
   return (
-    <div className="w-full max-w-[410px] rounded-[30px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_30px_90px_-56px_rgba(0,0,0,0.95)] backdrop-blur-sm sm:p-8">
-      <p className="text-[0.72rem] font-medium uppercase tracking-[0.28em] text-[#a99888]">
+    <div className="w-full max-w-[430px] rounded-[34px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
         PrepBros
       </p>
-      <h2 className="mt-4 text-[2.2rem] font-semibold tracking-[-0.05em] text-[#f7f0e8]">
+      <h2 className="mt-4 text-[2.3rem] tracking-[-0.055em] text-[var(--text-primary)]">
         Join today.
       </h2>
-      <p className="mt-3 max-w-sm text-[15px] leading-7 text-[#b7aca2]">
+      <p className="mt-3 max-w-sm text-[15px] leading-7 text-[var(--text-secondary)]">
         Keep daily practice in one calm, consistent loop.
       </p>
 
@@ -152,15 +161,23 @@ function LandingAuthPanel({
             void onGoogleAuth();
           }}
           disabled={oauthLoading}
-          icon={oauthLoading ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
+          icon={
+            oauthLoading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <GoogleIcon />
+            )
+          }
         >
           Sign up with Google
         </LandingActionButton>
 
         <div className="flex items-center gap-4 py-1">
-          <div className="h-px flex-1 bg-white/10" />
-          <span className="text-xs uppercase tracking-[0.26em] text-[#86796f]">or</span>
-          <div className="h-px flex-1 bg-white/10" />
+          <div className="h-px flex-1 bg-[var(--border)]" />
+          <span className="text-xs uppercase tracking-[0.26em] text-[var(--text-faint)]">
+            or
+          </span>
+          <div className="h-px flex-1 bg-[var(--border)]" />
         </div>
 
         <LandingActionButton variant="primary" onClick={onOpenSignup}>
@@ -168,13 +185,13 @@ function LandingAuthPanel({
         </LandingActionButton>
       </div>
 
-      <p className="mt-5 text-[12px] leading-6 text-[#8d8178]">
+      <p className="mt-5 text-[12px] leading-6 text-[var(--text-muted)]">
         By signing up, you agree to the{" "}
         <a
           href={getPolicyUrl("/terms")}
           target="_blank"
           rel="noreferrer"
-          className="text-[#d9cdc1] transition hover:text-white"
+          className="text-[var(--text-primary)] transition hover:text-[var(--brand)]"
         >
           Terms
         </a>{" "}
@@ -183,22 +200,24 @@ function LandingAuthPanel({
           href={getPolicyUrl("/privacy")}
           target="_blank"
           rel="noreferrer"
-          className="text-[#d9cdc1] transition hover:text-white"
+          className="text-[var(--text-primary)] transition hover:text-[var(--brand)]"
         >
           Privacy Policy
         </a>
         .
       </p>
 
-      <div className="mt-8 border-t border-white/8 pt-6">
-        <p className="text-[14px] text-[#a99888]">Already have an account?</p>
+      <div className="mt-8 border-t border-[var(--border)] pt-6">
+        <p className="text-[14px] text-[var(--text-secondary)]">
+          Already have an account?
+        </p>
         <LandingActionButton className="mt-3" onClick={onOpenLogin}>
           Sign in
         </LandingActionButton>
       </div>
 
       {panelError ? (
-        <p className="mt-5 rounded-[18px] border border-[#6b3028] bg-[#2a1715] px-4 py-3 text-[13px] leading-6 text-[#f0beb5]">
+        <p className="mt-5 rounded-[18px] border border-[rgba(220,38,38,0.18)] bg-[rgba(220,38,38,0.08)] px-4 py-3 text-[13px] leading-6 text-[var(--red)]">
           {panelError}
         </p>
       ) : null}
@@ -215,7 +234,9 @@ export default function Home() {
   const [panelError, setPanelError] = useState("");
 
   const displayName =
-    user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Aspirant";
+    user?.user_metadata?.full_name?.split(" ")[0] ||
+    user?.email?.split("@")[0] ||
+    "Aspirant";
 
   const openSignup = () => {
     setPanelError("");
@@ -256,7 +277,9 @@ export default function Home() {
     const { error } = await signInWithGoogle();
 
     if (error) {
-      setPanelError(error.message || "Google sign in is not available right now.");
+      setPanelError(
+        error.message || "Google sign in is not available right now."
+      );
       setOauthLoading(false);
       return;
     }
@@ -269,37 +292,37 @@ export default function Home() {
 
   return (
     <>
-      <div className="relative min-h-screen overflow-hidden bg-[#050505] text-[#f5efe8]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(164,118,76,0.09),transparent_34%),radial-gradient(circle_at_78%_18%,rgba(120,78,42,0.16),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.03),transparent_38%),linear-gradient(180deg,#060505_0%,#090807_46%,#050505_100%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:linear-gradient(to_right,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:160px_160px]" />
-        <div className="pointer-events-none absolute left-[-12%] top-[14%] h-[320px] w-[320px] rounded-full bg-[#8e653d]/[0.08] blur-[120px]" />
-        <div className="pointer-events-none absolute right-[-8%] top-[8%] h-[360px] w-[360px] rounded-full bg-[#765033]/[0.12] blur-[140px]" />
+      <div className="relative min-h-screen overflow-hidden bg-[var(--page-background)] text-[var(--text-primary)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.72),transparent_32%),radial-gradient(circle_at_78%_12%,rgba(148,163,184,0.16),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.22),transparent_38%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.14),transparent_32%),radial-gradient(circle_at_78%_12%,rgba(59,130,246,0.16),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.03),transparent_38%)]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.24] [background-image:linear-gradient(to_right,rgba(148,163,184,0.11)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.09)_1px,transparent_1px)] [background-size:160px_160px] dark:opacity-[0.12]" />
+        <div className="pointer-events-none absolute left-[-12%] top-[14%] h-[320px] w-[320px] rounded-full bg-[#dbeafe]/60 blur-[120px] dark:bg-[#1d4ed8]/20" />
+        <div className="pointer-events-none absolute right-[-8%] top-[8%] h-[360px] w-[360px] rounded-full bg-[#e2e8f0]/70 blur-[140px] dark:bg-[#475569]/22" />
 
         <div className="relative z-10 mx-auto flex min-h-screen w-[min(1180px,calc(100vw-32px))] flex-col">
           <nav className="flex items-center justify-between gap-4 py-5 sm:py-6 lg:py-7">
             <BrandLogo
               compact
               className="gap-2.5"
-              textClassName="text-[1.55rem] font-medium tracking-[-0.055em] text-[#f5efe8] md:text-[1.72rem]"
+              textClassName="text-[1.55rem] font-semibold tracking-[-0.055em] text-[var(--text-primary)] md:text-[1.72rem]"
             />
 
             <div className="hidden items-center gap-7 lg:flex">
-              {NAV_ITEMS.map((item) =>
+              {NAV_ITEMS.map(item =>
                 item.type === "anchor" ? (
                   <a
                     key={item.label}
                     href={item.href}
-                    className="text-[15px] font-medium tracking-[-0.01em] text-[#b5aaa0] transition hover:text-[#f5efe8]"
+                    className="text-[15px] font-medium tracking-[-0.01em] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
                   >
                     {item.label}
                   </a>
                 ) : (
                   <Link key={item.label} href={item.href}>
-                    <span className="cursor-pointer text-[15px] font-medium tracking-[-0.01em] text-[#b5aaa0] transition hover:text-[#f5efe8]">
+                    <span className="cursor-pointer text-[15px] font-medium tracking-[-0.01em] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]">
                       {item.label}
                     </span>
                   </Link>
-                ),
+                )
               )}
             </div>
 
@@ -307,7 +330,7 @@ export default function Home() {
               {user ? (
                 <>
                   <Link href="/dashboard">
-                    <span className="inline-flex cursor-pointer items-center justify-center rounded-full border border-white/10 px-4 py-2.5 text-[14px] font-medium tracking-[-0.01em] text-[#f5efe8] transition hover:border-white/16 hover:bg-white/[0.05] sm:px-5">
+                    <span className="inline-flex cursor-pointer items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] sm:px-5">
                       Dashboard
                     </span>
                   </Link>
@@ -316,7 +339,7 @@ export default function Home() {
                     onClick={() => {
                       void handleSignOut();
                     }}
-                    className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2.5 text-[14px] font-medium tracking-[-0.01em] text-[#b5aaa0] transition hover:border-white/16 hover:text-[#f5efe8] sm:px-5"
+                    className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] sm:px-5"
                   >
                     Sign out
                   </button>
@@ -326,14 +349,14 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={openLogin}
-                    className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2.5 text-[14px] font-medium tracking-[-0.01em] text-[#d5cbc2] transition hover:border-white/16 hover:bg-white/[0.04] hover:text-white sm:px-5"
+                    className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] sm:px-5"
                   >
                     Log in
                   </button>
                   <button
                     type="button"
                     onClick={handleHeroStart}
-                    className="inline-flex items-center justify-center rounded-full border border-[#f3e8dc] bg-[#f3e8dc] px-4 py-2.5 text-[14px] font-medium tracking-[-0.01em] text-[#17130f] transition hover:bg-white sm:px-5"
+                    className="inline-flex items-center justify-center rounded-full border border-[var(--brand)] bg-[var(--brand)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:brightness-110 sm:px-5"
                   >
                     Start free
                   </button>
@@ -344,11 +367,14 @@ export default function Home() {
 
           <section
             id="review-system"
-            className="grid flex-1 items-center gap-10 pb-10 pt-8 sm:pb-12 sm:pt-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(390px,430px)] lg:gap-8 lg:pb-14"
+            className="grid flex-1 items-center gap-10 pb-10 pt-8 sm:pb-12 sm:pt-12 lg:grid-cols-[minmax(0,1.06fr)_minmax(390px,430px)] lg:gap-10 lg:pb-14"
           >
             <div className="max-w-[760px] pl-3 sm:pl-5 lg:pl-8 pr-0 lg:pr-2">
+              <p className="mb-5 inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
+                Calm prep workspace
+              </p>
               <h1
-                className="text-[clamp(5.4rem,13vw,10.4rem)] font-semibold leading-[0.83] tracking-[-0.078em] text-[#f7f0e8] [text-wrap:balance]"
+                className="text-[clamp(4.2rem,11vw,8.8rem)] leading-[0.86] tracking-[-0.085em] text-[var(--text-primary)] [text-wrap:balance]"
                 style={{ fontFamily: "var(--font-display)" }}
               >
                 <span className="block">Daily practice</span>
@@ -356,16 +382,16 @@ export default function Home() {
                 <span className="block">steady and clear.</span>
               </h1>
 
-              <p className="mt-6 max-w-[30rem] text-[18px] leading-8 text-[#b7aca2] sm:text-[19px]">
-                Solve daily questions, review weak areas, and stay consistent in a calmer prep
-                flow that feels easy to return to.
+              <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-[var(--text-secondary)] sm:text-[19px]">
+                Solve daily questions, review weak areas, and stay consistent in
+                a calmer prep flow that feels easy to return to.
               </p>
 
               <div className="mt-9 flex flex-wrap items-center gap-3 pl-1 sm:pl-2">
                 <button
                   type="button"
                   onClick={handleHeroStart}
-                  className="inline-flex items-center gap-3 rounded-full border border-[#f3e8dc] bg-[#f3e8dc] px-8 py-4 text-[16px] font-medium tracking-[-0.01em] text-[#16120f] shadow-[0_18px_46px_-28px_rgba(243,232,220,0.85)] transition duration-200 hover:translate-y-[-1px] hover:bg-white"
+                  className="inline-flex items-center gap-3 rounded-full border border-[var(--brand)] bg-[var(--brand)] px-8 py-4 text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-lg)] transition duration-200 hover:translate-y-[-1px] hover:brightness-110"
                 >
                   Start free
                   <ArrowRight size={18} />
@@ -373,17 +399,17 @@ export default function Home() {
 
                 <a
                   href="#join-panel"
-                  className="inline-flex items-center gap-3 rounded-full border border-white/10 px-7 py-4 text-[15px] font-medium tracking-[-0.01em] text-[#d5cbc2] transition hover:border-white/16 hover:bg-white/[0.04] hover:text-white"
+                  className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-7 py-4 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
                 >
                   Explore signup
                 </a>
               </div>
 
               <div className="mt-7 flex flex-wrap gap-3 pl-1 sm:pl-2">
-                {HERO_PROOF_POINTS.map((item) => (
+                {HERO_PROOF_POINTS.map(item => (
                   <span
                     key={item}
-                    className="rounded-full border border-white/8 bg-white/[0.025] px-4 py-2 text-[13px] font-medium tracking-[-0.01em] text-[#c7bbb0]"
+                    className="rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[13px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]"
                   >
                     {item}
                   </span>
@@ -393,7 +419,7 @@ export default function Home() {
 
             <div
               id="join-panel"
-              className="w-full lg:justify-self-start lg:border-l lg:border-white/[0.08] lg:pl-7"
+              className="w-full lg:justify-self-start lg:border-l lg:border-[var(--border)] lg:pl-8"
             >
               <LandingAuthPanel
                 user={user}
@@ -410,7 +436,11 @@ export default function Home() {
         </div>
       </div>
 
-      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultTab={authTab} />
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        defaultTab={authTab}
+      />
     </>
   );
 }

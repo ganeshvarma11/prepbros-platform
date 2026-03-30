@@ -68,30 +68,36 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
     location === href || (href !== "/" && location.startsWith(`${href}/`));
 
   const displayName =
-    user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Aspirant";
+    user?.user_metadata?.full_name?.split(" ")[0] ||
+    user?.email?.split("@")[0] ||
+    "Aspirant";
 
   const navSurfaceClassName = isLanding
-    ? "border border-[var(--border)] bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)]"
-    : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]";
+    ? "border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] backdrop-blur-xl"
+    : "border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] backdrop-blur-xl";
 
   return (
     <>
       <nav
         className={cn(
           "navbar transition-all duration-300",
-          scrolled && "shadow-[0_24px_70px_-40px_rgba(0,0,0,0.95)]",
+          scrolled && "shadow-[0_24px_70px_-40px_rgba(0,0,0,0.95)]"
         )}
       >
         <div
           className={cn(
             "container-shell flex items-center justify-between gap-4 py-4",
-            isLanding ? "min-h-[84px]" : "min-h-[88px]",
+            isLanding ? "min-h-[84px]" : "min-h-[88px]"
           )}
         >
-          <BrandLogo compact className="shrink-0" textClassName="text-[1.5rem] md:text-[1.7rem]" />
+          <BrandLogo
+            compact
+            className="shrink-0"
+            textClassName="text-[1.5rem] md:text-[1.7rem]"
+          />
 
           <div className="hidden items-center gap-6 lg:flex">
-            {navLinks.map((item) =>
+            {navLinks.map(item =>
               item.anchor ? (
                 <a
                   key={item.label}
@@ -105,13 +111,13 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                   <span
                     className={cn(
                       "cursor-pointer text-lg font-medium text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]",
-                      activeRoute(item.href) && "text-[var(--text-primary)]",
+                      activeRoute(item.href) && "text-[var(--text-primary)]"
                     )}
                   >
                     {item.label}
                   </span>
                 </Link>
-              ),
+              )
             )}
           </div>
 
@@ -124,7 +130,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                     <span
                       className={`inline-flex cursor-pointer items-center gap-3 rounded-[16px] px-4 py-3 text-sm font-medium transition hover:border-[var(--border-strong)] ${navSurfaceClassName}`}
                     >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-[rgba(255,255,255,0.05)] text-sm font-semibold text-[var(--text-primary)]">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-[var(--surface-3)] text-sm font-semibold text-[var(--text-primary)]">
                         {displayName.charAt(0).toUpperCase()}
                       </span>
                       <span className="max-w-28 truncate">{displayName}</span>
@@ -140,18 +146,18 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                   </button>
                 </>
               ) : (
-                <div className="overflow-hidden rounded-[18px] border border-[var(--border)] bg-[rgba(255,255,255,0.03)]">
+                <div className="overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]">
                   <button
                     type="button"
                     onClick={openLogin}
-                    className="px-7 py-3.5 text-lg font-medium text-[var(--text-primary)] transition hover:bg-[rgba(255,255,255,0.03)]"
+                    className="px-7 py-3.5 text-lg font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
                   >
                     Login
                   </button>
                   <button
                     type="button"
                     onClick={openSignup}
-                    className="border-l border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-7 py-3.5 text-lg font-medium text-[var(--text-primary)] transition hover:bg-[rgba(255,255,255,0.06)]"
+                    className="border-l border-[var(--border)] bg-[var(--surface-2)] px-7 py-3.5 text-lg font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-3)]"
                   >
                     Start
                   </button>
@@ -194,7 +200,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                   <button
                     type="button"
                     onClick={openSignup}
-                    className="inline-flex items-center justify-center rounded-[14px] bg-[linear-gradient(180deg,#ff9838_0%,#ff7a12_100%)] px-8 py-3 text-lg font-medium text-white shadow-[0_18px_40px_-24px_rgba(255,122,18,0.9)] transition hover:brightness-105"
+                    className="inline-flex items-center justify-center rounded-[14px] bg-[linear-gradient(180deg,var(--brand-light)_0%,var(--brand)_100%)] px-8 py-3 text-lg font-medium text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:brightness-105"
                   >
                     Start Free
                   </button>
@@ -207,7 +213,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
             <ThemeToggle />
             <button
               type="button"
-              onClick={() => setIsOpen((value) => !value)}
+              onClick={() => setIsOpen(value => !value)}
               className={`flex h-11 w-11 items-center justify-center rounded-[14px] ${navSurfaceClassName}`}
               aria-label="Open menu"
             >
@@ -220,7 +226,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
           <div className="border-t border-[var(--border)] bg-[var(--bg-base)] px-4 pb-5 pt-4 md:hidden">
             <div className="container-shell space-y-4">
               <div className="grid gap-2">
-                {navLinks.map((item) =>
+                {navLinks.map(item =>
                   item.anchor ? (
                     <a
                       key={item.label}
@@ -228,7 +234,10 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                       onClick={() => setIsOpen(false)}
                       className={`inline-flex items-center gap-3 rounded-[14px] px-4 py-3 text-sm font-medium ${navSurfaceClassName}`}
                     >
-                      <LayoutDashboard size={16} className="text-[var(--brand)]" />
+                      <LayoutDashboard
+                        size={16}
+                        className="text-[var(--brand)]"
+                      />
                       {item.label}
                     </a>
                   ) : (
@@ -239,14 +248,17 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                           "inline-flex cursor-pointer items-center gap-3 rounded-[14px] border px-4 py-3 text-sm font-medium transition",
                           activeRoute(item.href)
                             ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-light)]"
-                            : navSurfaceClassName,
+                            : navSurfaceClassName
                         )}
                       >
-                        <LayoutDashboard size={16} className="text-[var(--brand)]" />
+                        <LayoutDashboard
+                          size={16}
+                          className="text-[var(--brand)]"
+                        />
                         {item.label}
                       </span>
                     </Link>
-                  ),
+                  )
                 )}
               </div>
 
@@ -297,8 +309,8 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                       className={cn(
                         "inline-flex items-center justify-center gap-2 rounded-[12px] px-4 py-3 text-sm font-medium text-white",
                         isLanding
-                          ? "bg-[rgba(255,255,255,0.06)]"
-                          : "bg-[linear-gradient(180deg,#ff9838_0%,#ff7a12_100%)]",
+                          ? "bg-[var(--surface-2)] text-[var(--text-primary)]"
+                          : "bg-[linear-gradient(180deg,var(--brand-light)_0%,var(--brand)_100%)] text-[var(--text-on-brand)]"
                       )}
                     >
                       <ArrowRight size={14} />
@@ -319,7 +331,11 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
         ) : null}
       </nav>
 
-      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultTab={authTab} />
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        defaultTab={authTab}
+      />
     </>
   );
 }

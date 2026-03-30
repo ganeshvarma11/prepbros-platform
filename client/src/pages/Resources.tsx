@@ -189,19 +189,44 @@ export default function Resources() {
           ]}
         />
 
+        <section className="card grid gap-5 overflow-hidden p-5 md:grid-cols-[minmax(0,1fr)_280px] md:p-6">
+          <div>
+            <p className="section-label">Library</p>
+            <h2 className="mt-3 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+              Study material without the clutter.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
+              Search by exam, keep only the formats you want, and jump straight
+              to the material that fits the current study block.
+            </p>
+          </div>
+          <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+            <p className="section-label">Available now</p>
+            <p
+              className="mt-3 text-[2.6rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {filteredResources.length}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+              Curated items visible with your current filters.
+            </p>
+          </div>
+        </section>
+
         <section className="card space-y-5">
           <label className="relative block">
-              <Search
-                size={18}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-3)]"
-              />
-              <input
-                type="search"
-                value={query}
-                onChange={event => setQuery(event.target.value)}
-                placeholder="Search resources"
-                className="w-full pl-12"
-              />
+            <Search
+              size={18}
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-3)]"
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+              placeholder="Search resources"
+              className="w-full pl-12"
+            />
           </label>
 
           <div className="border-b border-[var(--border-1)] pb-4">
@@ -216,7 +241,7 @@ export default function Resources() {
                     onClick={() => setActiveTab(tab)}
                     className={cn(
                       active ? "btn-primary" : "btn-ghost",
-                      "min-w-[72px]",
+                      "min-w-[72px]"
                     )}
                   >
                     {tab}
@@ -230,10 +255,7 @@ export default function Resources() {
         <section>
           {loading ? (
             <div className="card flex min-h-[180px] items-center gap-3 text-sm text-[var(--text-2)]">
-              <Loader2
-                size={16}
-                className="animate-spin text-[var(--amber)]"
-              />
+              <Loader2 size={16} className="animate-spin text-[var(--amber)]" />
               Loading resources...
             </div>
           ) : filteredResources.length > 0 ? (
@@ -274,7 +296,7 @@ export default function Resources() {
                         <h2 className="mt-4 text-xl font-medium tracking-[-0.03em] text-[var(--text-1)]">
                           {resource.title}
                         </h2>
-                        <p className="mt-2 text-sm text-[var(--text-2)]">
+                        <p className="mt-2 text-sm font-medium text-[var(--text-2)]">
                           {subject}
                         </p>
                         <p className="mt-1 text-xs text-[var(--text-3)]">

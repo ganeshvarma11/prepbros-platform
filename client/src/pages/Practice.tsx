@@ -122,19 +122,19 @@ const TABLE_COLUMNS = [
 ];
 
 const panelClassName =
-  "overflow-hidden rounded-[30px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-lg)] backdrop-blur-xl";
+  "overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-lg)] backdrop-blur-xl";
 const softPanelClassName =
-  "rounded-[24px] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]";
+  "rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] shadow-[var(--shadow-md)] backdrop-blur-xl";
 const fieldClassName =
-  "w-full rounded-[18px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--border-focus)] focus:bg-[var(--bg-card-strong)] focus:ring-4 focus:ring-[color:var(--brand-glow)]";
+  "w-full rounded-[18px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--border-focus)] focus:bg-[var(--surface-2)] focus:ring-4 focus:ring-[color:var(--brand-glow)]";
 const accentChipClassName =
-  "rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-light)]";
+  "rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand)]";
 const ghostButtonClassName =
-  "inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]";
+  "inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]";
 const primaryButtonClassName =
-  "inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--brand)_0%,var(--brand-dark)_100%)] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:translate-y-[-1px]";
+  "inline-flex items-center justify-center rounded-full bg-[linear-gradient(180deg,var(--brand-light)_0%,var(--brand)_100%)] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:translate-y-[-1px] hover:brightness-105";
 const insetCardClassName =
-  "rounded-[20px] border border-[var(--border)] bg-[var(--bg-card-strong)]";
+  "rounded-[20px] border border-[var(--border)] bg-[var(--surface-2)]";
 
 function createEmptyFilters(): PracticeFilters {
   return {
@@ -174,28 +174,28 @@ function getExamFilterLabel(exam: string): ExamFilter {
 function getExamPillClass(exam: string) {
   switch (getExamFilterLabel(exam)) {
     case "UPSC":
-      return "border-[rgba(72,96,184,0.18)] bg-[rgba(72,96,184,0.1)] text-[#4459b7]";
+      return "border-[rgba(37,99,235,0.16)] bg-[rgba(37,99,235,0.08)] text-[var(--blue)]";
     case "SSC CGL":
-      return "border-[rgba(32,108,156,0.18)] bg-[rgba(32,108,156,0.1)] text-[#216b9e]";
+      return "border-[rgba(14,116,144,0.16)] bg-[rgba(14,116,144,0.08)] text-[#0f766e]";
     case "Other State Services":
-      return "border-[rgba(97,122,71,0.18)] bg-[rgba(97,122,71,0.1)] text-[#5d7443]";
+      return "border-[rgba(21,128,61,0.16)] bg-[rgba(21,128,61,0.08)] text-[var(--green)]";
     case "Banking":
-      return "border-[rgba(7,138,113,0.18)] bg-[rgba(7,138,113,0.1)] text-[#087c66]";
+      return "border-[rgba(8,145,178,0.16)] bg-[rgba(8,145,178,0.08)] text-[#0891b2]";
     default:
-      return "border-[rgba(126,92,62,0.15)] bg-[rgba(126,92,62,0.08)] text-[#76553a]";
+      return "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)]";
   }
 }
 
 function getDifficultyPillClass(difficulty: string) {
   switch (difficulty) {
     case "Easy":
-      return "border-[rgba(53,139,94,0.18)] bg-[rgba(53,139,94,0.1)] text-[#2d7b53]";
+      return "border-[rgba(21,128,61,0.16)] bg-[rgba(21,128,61,0.08)] text-[var(--green)]";
     case "Medium":
-      return "border-[rgba(196,127,42,0.2)] bg-[rgba(196,127,42,0.1)] text-[#a86218]";
+      return "border-[rgba(180,83,9,0.18)] bg-[rgba(180,83,9,0.08)] text-[var(--yellow)]";
     case "Hard":
-      return "border-[rgba(194,79,79,0.18)] bg-[rgba(194,79,79,0.1)] text-[#b34a4a]";
+      return "border-[rgba(220,38,38,0.16)] bg-[rgba(220,38,38,0.08)] text-[var(--red)]";
     default:
-      return "border-[rgba(126,92,62,0.15)] bg-[rgba(126,92,62,0.08)] text-[#76553a]";
+      return "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)]";
   }
 }
 
@@ -204,7 +204,7 @@ function getStatusPill(status?: "correct" | "wrong") {
     return {
       label: "Solved",
       className:
-        "border-[rgba(53,139,94,0.18)] bg-[rgba(53,139,94,0.1)] text-[#2d7b53]",
+        "border-[rgba(21,128,61,0.16)] bg-[rgba(21,128,61,0.08)] text-[var(--green)]",
       icon: <Check size={12} />,
     };
   }
@@ -213,7 +213,7 @@ function getStatusPill(status?: "correct" | "wrong") {
     return {
       label: "Incorrect",
       className:
-        "border-[rgba(194,79,79,0.18)] bg-[rgba(194,79,79,0.1)] text-[#b34a4a]",
+        "border-[rgba(220,38,38,0.16)] bg-[rgba(220,38,38,0.08)] text-[var(--red)]",
       icon: <X size={12} />,
     };
   }
@@ -1386,6 +1386,9 @@ export default function Practice() {
                     <div className="space-y-2">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div>
+                          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                            Practice workspace
+                          </p>
                           <h1 className="text-[2.35rem] font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-[3rem]">
                             Question Library
                           </h1>
@@ -1433,7 +1436,10 @@ export default function Practice() {
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                           {item.label}
                         </p>
-                        <p className="mt-3 text-[1.9rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                        <p
+                          className="mt-3 text-[1.9rem] tracking-[-0.06em] text-[var(--text-primary)]"
+                          style={{ fontFamily: "var(--font-display)" }}
+                        >
                           {item.value}
                         </p>
                         <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -1462,7 +1468,7 @@ export default function Practice() {
                     <button
                       type="button"
                       onClick={openFilterPanel}
-                      className={`${ghostButtonClassName} h-13 gap-2 px-5 text-sm font-medium`}
+                      className={`${ghostButtonClassName} h-13 gap-2 px-5 text-sm font-semibold`}
                     >
                       <SlidersHorizontal size={16} />
                       Filters
@@ -1540,7 +1546,7 @@ export default function Practice() {
                   <button
                     type="button"
                     onClick={openFilterPanel}
-                    className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-medium`}
+                    className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-semibold`}
                   >
                     <SlidersHorizontal size={14} />
                     Adjust
@@ -1565,7 +1571,7 @@ export default function Practice() {
                 <PracticeTableSkeleton rows={10} />
               ) : reviewModeSyncing ? (
                 <div className="flex min-h-[420px] items-center justify-center px-6 py-10">
-                  <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-5 py-3 text-sm text-[var(--text-secondary)]">
+                  <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
                     <Loader2 size={16} className="animate-spin" />
                     Restoring saved progress...
                   </div>
@@ -1613,7 +1619,7 @@ export default function Practice() {
                             <tr
                               key={question.id}
                               onClick={() => openQuestion(question)}
-                              className="cursor-pointer border-b border-[var(--border)] transition hover:bg-[var(--brand-subtle)]"
+                              className="cursor-pointer border-b border-[var(--border)] transition hover:bg-[var(--surface-1)]"
                             >
                               <td className="px-5 py-4 align-middle text-sm text-[var(--text-muted)]">
                                 {rowNumber}
@@ -1715,7 +1721,7 @@ export default function Practice() {
                                 className={
                                   isActive
                                     ? `${primaryButtonClassName} h-10 min-w-10 px-3 text-sm font-semibold`
-                                    : `${ghostButtonClassName} h-10 min-w-10 px-3 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]`
+                                    : `${ghostButtonClassName} h-10 min-w-10 px-3 text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)]`
                                 }
                               >
                                 {currentPage}
@@ -1759,7 +1765,7 @@ export default function Practice() {
                   <button
                     type="button"
                     onClick={closeQuestion}
-                    className={`${ghostButtonClassName} h-11 gap-2 px-4 text-sm font-medium`}
+                    className={`${ghostButtonClassName} h-11 gap-2 px-4 text-sm font-semibold`}
                   >
                     <ChevronLeft size={14} />
                     Back to library
@@ -1955,8 +1961,8 @@ export default function Practice() {
                         className={cn(
                           "rounded-[20px] border px-4 py-4",
                           submittedOption === activeQ.correct
-                            ? "border-[rgba(53,139,94,0.2)] bg-[rgba(53,139,94,0.1)]"
-                            : "border-[rgba(194,79,79,0.18)] bg-[rgba(245,180,129,0.14)]"
+                            ? "border-[rgba(21,128,61,0.16)] bg-[rgba(21,128,61,0.08)]"
+                            : "border-[rgba(220,38,38,0.16)] bg-[rgba(220,38,38,0.08)]"
                         )}
                       >
                         <p className="text-sm font-semibold text-[var(--text-primary)]">
@@ -1992,19 +1998,19 @@ export default function Practice() {
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {activeQ.topic !== getTopicBucket(activeQ) ? (
-                        <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                        <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
                           {activeQ.topic}
                         </span>
                       ) : null}
                       {activeQ.subtopic ? (
-                        <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                        <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
                           {activeQ.subtopic}
                         </span>
                       ) : null}
                       {activeQ.tags.map(tag => (
                         <span
                           key={tag}
-                          className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]"
+                          className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]"
                         >
                           #{tag}
                         </span>
@@ -2025,7 +2031,7 @@ export default function Practice() {
                   }
                 }}
                 disabled={activeIdx === 0}
-                className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-medium disabled:opacity-40`}
+                className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-semibold disabled:opacity-40`}
               >
                 <ChevronLeft size={14} />
                 Previous
@@ -2033,7 +2039,7 @@ export default function Practice() {
               <button
                 type="button"
                 onClick={openRandom}
-                className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-medium`}
+                className={`${ghostButtonClassName} h-10 gap-2 px-4 text-sm font-semibold`}
               >
                 <Shuffle size={14} />
                 Random

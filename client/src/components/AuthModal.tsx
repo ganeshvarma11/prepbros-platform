@@ -109,7 +109,7 @@ export default function AuthModal({
       </p>
     ) : null;
 
-  const handleLogin = loginForm.handleSubmit(async (data) => {
+  const handleLogin = loginForm.handleSubmit(async data => {
     setLoading(true);
     setSubmitError("");
     const { error: authError } = await signIn(data.email, data.password);
@@ -118,7 +118,7 @@ export default function AuthModal({
     if (authError) {
       setSubmitError(
         authError.message ||
-          "We could not sign you in. Check your email and password, then try again.",
+          "We could not sign you in. Check your email and password, then try again."
       );
       return;
     }
@@ -127,7 +127,7 @@ export default function AuthModal({
     onClose();
   });
 
-  const handleSignup = signupForm.handleSubmit(async (data) => {
+  const handleSignup = signupForm.handleSubmit(async data => {
     setLoading(true);
     setSubmitError("");
 
@@ -135,14 +135,14 @@ export default function AuthModal({
       data.email,
       data.password,
       data.fullName,
-      data.targetExam,
+      data.targetExam
     );
     setLoading(false);
 
     if (authError) {
       setSubmitError(
         authError.message ||
-          "We could not create your account. Try again in a moment or use a different email.",
+          "We could not create your account. Try again in a moment or use a different email."
       );
       return;
     }
@@ -156,44 +156,42 @@ export default function AuthModal({
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 md:p-4">
       <button
         type="button"
-        className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-950/40 backdrop-blur-md"
         onClick={onClose}
         aria-label="Close authentication modal"
       />
 
-      <div className="relative max-h-[92svh] w-full max-w-4xl overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--bg-card-strong)] shadow-[0_40px_120px_-32px_rgba(0,0,0,0.82)] md:max-h-[90vh] md:rounded-[24px]">
+      <div className="relative max-h-[92svh] w-full max-w-4xl overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--bg-card-strong)] shadow-[var(--shadow-xl)] md:max-h-[90vh] md:rounded-[28px]">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] md:right-4 md:top-4 md:h-10 md:w-10"
+          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:text-[var(--text-primary)] md:right-4 md:top-4 md:h-10 md:w-10"
         >
           <X size={16} />
         </button>
 
         <div className="grid md:grid-cols-[1.05fr_0.95fr]">
-          <div
-            className="relative hidden overflow-hidden border-r border-[var(--border)] bg-[linear-gradient(180deg,#181818_0%,#111111_100%)] px-6 py-8 text-white md:block md:px-8 md:py-10"
-          >
-            <div className="absolute inset-0 hero-grid opacity-10" />
+          <div className="relative hidden overflow-hidden border-r border-[var(--border)] bg-[linear-gradient(180deg,#eef4fb_0%,#dfeaf6_100%)] px-6 py-8 text-[var(--text-primary)] md:block md:px-8 md:py-10 dark:bg-[linear-gradient(180deg,#0f172a_0%,#101828_100%)] dark:text-white">
+            <div className="absolute inset-0 hero-grid opacity-30 dark:opacity-10" />
             <div className="absolute -right-16 top-16 h-40 w-40 rounded-full bg-[var(--brand-glow)] blur-3xl" />
             <div className="relative">
               <BrandLogo
-                textClassName="text-white"
-                markClassName="border-[rgba(255,161,22,0.28)]"
-                className="[&_p:last-child]:text-white/70"
+                textClassName="text-[var(--text-primary)] dark:text-white"
+                className="[&_p:last-child]:text-[var(--text-secondary)] dark:[&_p:last-child]:text-white/70"
               />
 
               <div className="mt-10 space-y-4">
-                <p className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--brand-subtle)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-light)]">
+                <p className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--brand-subtle)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
                   <Sparkles size={14} />
                   Built for serious aspirants
                 </p>
-                <h2 className="max-w-md text-4xl font-semibold tracking-[-0.06em] text-white">
+                <h2 className="max-w-md text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] dark:text-white">
                   Practice with the kind of interface users actually trust.
                 </h2>
-                <p className="max-w-md text-sm text-white/78 md:text-base">
-                  Your account keeps solved questions, streaks, bookmarks, and weak-topic review
-                  in one place so progress feels tangible after every session.
+                <p className="max-w-md text-sm text-[var(--text-secondary)] md:text-base dark:text-white/78">
+                  Your account keeps solved questions, streaks, bookmarks, and
+                  weak-topic review in one place so progress feels tangible
+                  after every session.
                 </p>
               </div>
 
@@ -202,13 +200,18 @@ export default function AuthModal({
                   "Follow one clean loop: solve, review, and improve.",
                   "Return to a dashboard that shows momentum instead of noise.",
                   "Keep the same account, streak, and prep context across sessions.",
-                ].map((item) => (
+                ].map(item => (
                   <div
                     key={item}
-                    className="flex items-start gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-elevated)] p-4"
+                    className="flex items-start gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] p-4 shadow-[var(--shadow-sm)] dark:bg-[var(--bg-elevated)]"
                   >
-                    <ShieldCheck size={18} className="mt-0.5 text-[var(--brand)]" />
-                    <p className="text-sm text-white/82">{item}</p>
+                    <ShieldCheck
+                      size={18}
+                      className="mt-0.5 text-[var(--brand)]"
+                    />
+                    <p className="text-sm text-[var(--text-secondary)] dark:text-white/82">
+                      {item}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -226,8 +229,11 @@ export default function AuthModal({
                 </h3>
                 <p className="mt-3 text-sm text-[var(--text-secondary)]">
                   We sent a confirmation link to{" "}
-                  <span className="font-semibold text-[var(--text-primary)]">{confirmedEmail}</span>.
-                  Open it to activate your account and start syncing your progress.
+                  <span className="font-semibold text-[var(--text-primary)]">
+                    {confirmedEmail}
+                  </span>
+                  . Open it to activate your account and start syncing your
+                  progress.
                 </p>
                 <button
                   type="button"
@@ -262,21 +268,25 @@ export default function AuthModal({
                   </p>
                 </div>
 
-                <div className="mb-5 grid w-full grid-cols-2 rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] p-1 md:mb-6 md:inline-flex md:w-auto">
-                  {(["login", "signup"] as const).map((item) => (
+                <div className="mb-5 grid w-full grid-cols-2 rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] p-1 md:mb-6 md:inline-flex md:w-auto">
+                  {(["login", "signup"] as const).map(item => (
                     <button
                       key={item}
                       type="button"
                       onClick={() => {
                         setTab(item);
                         setSubmitError("");
-                        trackEvent(item === "login" ? "auth_tab_login_opened" : "auth_tab_signup_opened");
+                        trackEvent(
+                          item === "login"
+                            ? "auth_tab_login_opened"
+                            : "auth_tab_signup_opened"
+                        );
                       }}
                       className={cn(
                         "rounded-[10px] px-4 py-2 text-sm font-medium capitalize transition",
                         tab === item
-                          ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm"
-                          : "text-[var(--text-muted)] hover:text-[var(--text-primary)]",
+                          ? "bg-[var(--surface-2)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
+                          : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                       )}
                     >
                       {item === "login" ? "Log in" : "Sign up"}
@@ -285,7 +295,11 @@ export default function AuthModal({
                 </div>
 
                 {tab === "login" ? (
-                  <form onSubmit={handleLogin} className="space-y-3.5 md:space-y-4" noValidate>
+                  <form
+                    onSubmit={handleLogin}
+                    className="space-y-3.5 md:space-y-4"
+                    noValidate
+                  >
                     <div>
                       <label
                         htmlFor="auth-login-email"
@@ -301,7 +315,8 @@ export default function AuthModal({
                         placeholder="you@example.com"
                         className={cn(
                           fieldClasses,
-                          loginForm.formState.errors.email && "border-[var(--red)]/40",
+                          loginForm.formState.errors.email &&
+                            "border-[var(--red)]/40"
                         )}
                         aria-invalid={Boolean(loginForm.formState.errors.email)}
                       />
@@ -337,16 +352,23 @@ export default function AuthModal({
                           className={cn(
                             fieldClasses,
                             "pr-11",
-                            loginForm.formState.errors.password && "border-[var(--red)]/40",
+                            loginForm.formState.errors.password &&
+                              "border-[var(--red)]/40"
                           )}
-                          aria-invalid={Boolean(loginForm.formState.errors.password)}
+                          aria-invalid={Boolean(
+                            loginForm.formState.errors.password
+                          )}
                         />
                         <button
                           type="button"
-                          onClick={() => setShowPassword((current) => !current)}
+                          onClick={() => setShowPassword(current => !current)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
                         >
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {showPassword ? (
+                            <EyeOff size={16} />
+                          ) : (
+                            <Eye size={16} />
+                          )}
                         </button>
                       </div>
                       {fieldError(loginForm.formState.errors.password?.message)}
@@ -388,7 +410,11 @@ export default function AuthModal({
                     </p>
                   </form>
                 ) : (
-                  <form onSubmit={handleSignup} className="space-y-3.5 md:space-y-4" noValidate>
+                  <form
+                    onSubmit={handleSignup}
+                    className="space-y-3.5 md:space-y-4"
+                    noValidate
+                  >
                     <div>
                       <label
                         htmlFor="auth-signup-name"
@@ -404,11 +430,16 @@ export default function AuthModal({
                         placeholder="Priya Sharma"
                         className={cn(
                           fieldClasses,
-                          signupForm.formState.errors.fullName && "border-[var(--red)]/40",
+                          signupForm.formState.errors.fullName &&
+                            "border-[var(--red)]/40"
                         )}
-                        aria-invalid={Boolean(signupForm.formState.errors.fullName)}
+                        aria-invalid={Boolean(
+                          signupForm.formState.errors.fullName
+                        )}
                       />
-                      {fieldError(signupForm.formState.errors.fullName?.message)}
+                      {fieldError(
+                        signupForm.formState.errors.fullName?.message
+                      )}
                     </div>
                     <div>
                       <label
@@ -425,9 +456,12 @@ export default function AuthModal({
                         placeholder="you@example.com"
                         className={cn(
                           fieldClasses,
-                          signupForm.formState.errors.email && "border-[var(--red)]/40",
+                          signupForm.formState.errors.email &&
+                            "border-[var(--red)]/40"
                         )}
-                        aria-invalid={Boolean(signupForm.formState.errors.email)}
+                        aria-invalid={Boolean(
+                          signupForm.formState.errors.email
+                        )}
                       />
                       {fieldError(signupForm.formState.errors.email?.message)}
                     </div>
@@ -448,19 +482,28 @@ export default function AuthModal({
                           className={cn(
                             fieldClasses,
                             "pr-11",
-                            signupForm.formState.errors.password && "border-[var(--red)]/40",
+                            signupForm.formState.errors.password &&
+                              "border-[var(--red)]/40"
                           )}
-                          aria-invalid={Boolean(signupForm.formState.errors.password)}
+                          aria-invalid={Boolean(
+                            signupForm.formState.errors.password
+                          )}
                         />
                         <button
                           type="button"
-                          onClick={() => setShowPassword((current) => !current)}
+                          onClick={() => setShowPassword(current => !current)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
                         >
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {showPassword ? (
+                            <EyeOff size={16} />
+                          ) : (
+                            <Eye size={16} />
+                          )}
                         </button>
                       </div>
-                      {fieldError(signupForm.formState.errors.password?.message)}
+                      {fieldError(
+                        signupForm.formState.errors.password?.message
+                      )}
                     </div>
                     <div>
                       <label
@@ -475,15 +518,20 @@ export default function AuthModal({
                         className={cn(
                           fieldClasses,
                           "appearance-none",
-                          signupForm.formState.errors.targetExam && "border-[var(--red)]/40",
+                          signupForm.formState.errors.targetExam &&
+                            "border-[var(--red)]/40"
                         )}
-                        aria-invalid={Boolean(signupForm.formState.errors.targetExam)}
+                        aria-invalid={Boolean(
+                          signupForm.formState.errors.targetExam
+                        )}
                       >
-                        {EXAM_OPTIONS.map((exam) => (
+                        {EXAM_OPTIONS.map(exam => (
                           <option key={exam}>{exam}</option>
                         ))}
                       </select>
-                      {fieldError(signupForm.formState.errors.targetExam?.message)}
+                      {fieldError(
+                        signupForm.formState.errors.targetExam?.message
+                      )}
                     </div>
 
                     {submitError ? (

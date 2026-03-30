@@ -117,119 +117,156 @@ export default function Premium() {
           ]}
         />
 
+        <section className="card mx-auto grid max-w-6xl gap-6 overflow-hidden p-6 md:p-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div>
+            <p className="section-label">Why premium</p>
+            <h2 className="mt-3 text-[2.2rem] tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.8rem]">
+              A calmer upgrade for serious preparation.
+            </h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-secondary)] md:text-base">
+              Premium is for aspirants who want less friction, deeper
+              visibility, and more room to stay consistent over long prep
+              cycles.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {trustPoints.map(item => (
+                <span key={item} className="badge">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+            <p className="section-label">Best fit</p>
+            <p className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+              Pro monthly
+            </p>
+            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+              Start light, upgrade fast, and keep your current progress exactly
+              where it is.
+            </p>
+            <button
+              type="button"
+              onClick={() => handlePlanClick("monthly")}
+              className="btn-primary mt-5 w-full"
+            >
+              Upgrade now
+              <ArrowRight size={15} />
+            </button>
+          </div>
+        </section>
+
         <section className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
-            {plans.map(plan => {
-              const paidPlanKey =
-                plan.planKey === "monthly" || plan.planKey === "annual"
-                  ? plan.planKey
-                  : null;
+          {plans.map(plan => {
+            const paidPlanKey =
+              plan.planKey === "monthly" || plan.planKey === "annual"
+                ? plan.planKey
+                : null;
 
-              return (
-                <article
-                  key={plan.name}
-                  className={`card relative px-7 py-7 ${
-                    plan.planKey === "free"
-                      ? "border-2 border-[var(--amber)]"
-                      : plan.highlighted
-                        ? "border-[var(--amber)]"
-                        : ""
-                  }`}
-                >
-                  {plan.highlighted ? (
-                    <div className="absolute right-6 top-6">
-                      <span className="badge-amber">Most Popular</span>
-                    </div>
-                  ) : null}
-
-                  <div>
-                    <h2 className="text-3xl font-medium tracking-[-0.05em] text-[var(--text-1)]">
-                      {plan.name}
-                    </h2>
-
-                    <div className="mt-5 flex items-end gap-2">
-                      <span className="font-serif text-6xl font-normal tracking-[-0.04em] text-[var(--text-1)]">
-                        {plan.price}
-                      </span>
-                      {plan.period ? (
-                        <span className="pb-2 text-base text-[var(--text-2)]">
-                          {plan.period}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    <div className="mt-5 h-px bg-[var(--border-1)]" />
-
-                    <div className="mt-6 space-y-4">
-                      {plan.features.map(feature => (
-                        <div key={feature} className="flex items-start gap-3">
-                          <Check
-                            size={18}
-                            className="mt-0.5 text-[var(--amber)]"
-                          />
-                          <span className="text-sm leading-7 text-[var(--text-2)] md:text-[1.02rem]">
-                            {feature}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button
-                      type="button"
-                      disabled={plan.planKey === "free"}
-                      onClick={() => {
-                        if (paidPlanKey) handlePlanClick(paidPlanKey);
-                      }}
-                      className={
-                        plan.planKey === "free"
-                          ? "btn-ghost mt-10 w-full cursor-not-allowed"
-                          : "btn-primary mt-10 w-full"
-                      }
-                    >
-                      {plan.cta}
-                    </button>
+            return (
+              <article
+                key={plan.name}
+                className={`card relative px-7 py-7 ${
+                  plan.planKey === "free"
+                    ? "border-[var(--border-strong)]"
+                    : plan.highlighted
+                      ? "border-[var(--brand-muted)] shadow-[var(--shadow-lg)]"
+                      : ""
+                }`}
+              >
+                {plan.highlighted ? (
+                  <div className="absolute right-6 top-6">
+                    <span className="badge-amber">Most Popular</span>
                   </div>
-                </article>
-              );
-            })}
+                ) : null}
+
+                <div>
+                  <h2 className="text-3xl font-medium tracking-[-0.05em] text-[var(--text-1)]">
+                    {plan.name}
+                  </h2>
+
+                  <div className="mt-5 flex items-end gap-2">
+                    <span className="font-serif text-6xl font-normal tracking-[-0.04em] text-[var(--text-1)]">
+                      {plan.price}
+                    </span>
+                    {plan.period ? (
+                      <span className="pb-2 text-base text-[var(--text-2)]">
+                        {plan.period}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-5 h-px bg-[var(--border-1)]" />
+
+                  <div className="mt-6 space-y-4">
+                    {plan.features.map(feature => (
+                      <div key={feature} className="flex items-start gap-3">
+                        <Check
+                          size={18}
+                          className="mt-0.5 text-[var(--brand)]"
+                        />
+                        <span className="text-sm leading-7 text-[var(--text-2)] md:text-[1.02rem]">
+                          {feature}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={plan.planKey === "free"}
+                    onClick={() => {
+                      if (paidPlanKey) handlePlanClick(paidPlanKey);
+                    }}
+                    className={
+                      plan.planKey === "free"
+                        ? "btn-ghost mt-10 w-full cursor-not-allowed"
+                        : "btn-primary mt-10 w-full"
+                    }
+                  >
+                    {plan.cta}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </section>
 
         <section className="mx-auto max-w-4xl">
           <div className="card flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center text-sm leading-6 text-[var(--text-2)] md:text-base">
-              {trustPoints.map((item, index) => (
-                <div key={item} className="inline-flex items-center gap-4">
-                  {index > 0 ? (
-                    <span className="hidden text-[var(--text-3)] md:inline">•</span>
-                  ) : null}
-                  <span>{item}</span>
-                </div>
-              ))}
+            {trustPoints.map((item, index) => (
+              <div key={item} className="inline-flex items-center gap-4">
+                {index > 0 ? (
+                  <span className="hidden text-[var(--text-3)] md:inline">
+                    •
+                  </span>
+                ) : null}
+                <span>{item}</span>
+              </div>
+            ))}
           </div>
         </section>
 
         <section className="mx-auto max-w-5xl">
-            <div className="grid gap-1 md:grid-cols-2 md:gap-x-10">
-              {faqs.map((item, index) => (
-                <div
-                  key={item.question}
-                  className={`card py-5 ${
-                    index % 2 === 0 ? "md:mr-3" : "md:ml-3"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-lg font-medium tracking-[-0.03em] text-[var(--text-1)]">
-                      {item.question}
-                    </p>
-                    <ArrowRight
-                      size={16}
-                      className="shrink-0 text-[var(--text-3)]"
-                    />
-                  </div>
-                  <p className="mt-3 max-w-[34ch] text-sm leading-7 text-[var(--text-2)]">
-                    {item.answer}
+          <div className="grid gap-4 md:grid-cols-2">
+            {faqs.map(item => (
+              <div key={item.question} className="card py-5">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-lg font-medium tracking-[-0.03em] text-[var(--text-1)]">
+                    {item.question}
                   </p>
+                  <ArrowRight
+                    size={16}
+                    className="shrink-0 text-[var(--text-3)]"
+                  />
                 </div>
-              ))}
-            </div>
+                <p className="mt-3 max-w-[34ch] text-sm leading-7 text-[var(--text-2)]">
+                  {item.answer}
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </AppShell>

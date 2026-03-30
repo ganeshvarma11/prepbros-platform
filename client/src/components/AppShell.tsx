@@ -113,18 +113,18 @@ function NavLink({
       <span
         onClick={onNavigate}
         className={cn(
-          "group relative flex cursor-pointer items-center rounded-[var(--radius-md)] border border-transparent text-[13px] transition-colors",
+          "group relative flex cursor-pointer items-center rounded-[18px] border text-[13px] transition-all",
           collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3",
           active
-            ? "bg-[var(--surface-3)] font-medium text-[var(--text-1)]"
-            : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]",
+            ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] font-semibold text-[var(--text-1)] shadow-[var(--shadow-sm)]"
+            : "border-transparent text-[var(--text-2)] hover:border-[var(--border-1)] hover:bg-[var(--surface-1)] hover:text-[var(--text-1)]"
         )}
         title={collapsed ? item.label : undefined}
       >
         <span
           className={cn(
-            "absolute left-[10px] top-1/2 h-1 w-1 -translate-y-1/2 rounded-full transition",
-            active ? "bg-[var(--amber)]" : "bg-transparent",
+            "absolute left-[10px] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full transition",
+            active ? "bg-[var(--brand)]" : "bg-transparent"
           )}
         />
         <Icon size={16} className="shrink-0 text-current" />
@@ -164,7 +164,7 @@ function SidebarBody({
   const initials = getInitials(displayName);
 
   return (
-    <div className="relative flex h-full flex-col border-r border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-4">
+    <div className="relative flex h-full flex-col border-r border-[var(--border-1)] bg-[color:rgba(255,255,255,0.38)] px-3 py-4 backdrop-blur-xl dark:bg-[color:rgba(2,6,23,0.42)]">
       <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
         <BrandLogo
           compact
@@ -175,21 +175,25 @@ function SidebarBody({
           type="button"
           onClick={onToggle}
           className={cn(
-            "mt-4 inline-flex h-9 w-full items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-2)] text-[var(--text-2)] transition hover:border-[var(--border-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text-1)]",
-            collapsed ? "px-0" : "gap-2 px-3",
+            "mt-4 inline-flex h-10 w-full items-center justify-center rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--text-2)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]",
+            collapsed ? "px-0" : "gap-2 px-3"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          {!collapsed ? <span className="text-[13px] font-medium">Collapse</span> : null}
+          {!collapsed ? (
+            <span className="text-[13px] font-medium">Collapse</span>
+          ) : null}
         </button>
       </div>
 
       <div className="flex-1 space-y-6 overflow-y-auto py-5 pr-1">
         {NAV_GROUPS.map(group => (
           <div key={group.label}>
-            {!collapsed ? <p className="section-label px-3">{group.label}</p> : null}
+            {!collapsed ? (
+              <p className="section-label px-3">{group.label}</p>
+            ) : null}
             <div className="mt-2 space-y-1">
               {group.items.map(item => (
                 <NavLink
@@ -215,8 +219,10 @@ function SidebarBody({
 
         <div
           className={cn(
-            "flex items-center rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-2)]",
-            collapsed ? "justify-center px-0 py-2.5" : "justify-between px-3 py-2.5",
+            "flex items-center rounded-[18px] border border-[var(--border-1)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
+            collapsed
+              ? "justify-center px-0 py-2.5"
+              : "justify-between px-3 py-2.5"
           )}
         >
           {!collapsed ? <p className="section-label">Appearance</p> : null}
@@ -226,8 +232,8 @@ function SidebarBody({
         {user ? (
           <div
             className={cn(
-              "flex items-center rounded-[var(--radius-md)] transition hover:bg-[var(--surface-2)]",
-              collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
+              "flex items-center rounded-[18px] border border-transparent transition hover:border-[var(--border-1)] hover:bg-[var(--surface-1)]",
+              collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"
             )}
           >
             <Link href="/profile">
@@ -235,7 +241,7 @@ function SidebarBody({
                 onClick={onNavigate}
                 className={cn(
                   "flex cursor-pointer items-center",
-                  collapsed ? "justify-center" : "min-w-0 flex-1 gap-3",
+                  collapsed ? "justify-center" : "min-w-0 flex-1 gap-3"
                 )}
               >
                 <Avatar className="h-8 w-8 rounded-full">
@@ -244,7 +250,7 @@ function SidebarBody({
                     alt={displayName}
                     className="object-cover"
                   />
-                  <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--amber)]">
+                  <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--brand)]">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -281,7 +287,8 @@ function SidebarBody({
           <div className={cn("space-y-3", collapsed ? "px-0" : "px-3")}>
             {!collapsed ? (
               <p className="text-sm leading-6 text-[var(--text-2)]">
-                Sign in to keep your progress, bookmarks, and daily streak synced.
+                Sign in to keep your progress, bookmarks, and daily streak
+                synced.
               </p>
             ) : null}
             <Link href="/">
@@ -289,7 +296,7 @@ function SidebarBody({
                 onClick={onNavigate}
                 className={cn(
                   "btn-ghost inline-flex cursor-pointer",
-                  collapsed ? "h-9 w-9 p-0" : "px-4 py-2 text-sm",
+                  collapsed ? "h-9 w-9 p-0" : "px-4 py-2 text-sm"
                 )}
                 title="Go to home"
               >
@@ -312,7 +319,7 @@ function SidebarBody({
             className={cn(
               "absolute inset-y-0 left-1/2 w-[2px] -translate-x-1/2 rounded-full bg-transparent transition",
               isResizing && "bg-[var(--border-2)]",
-              "group-hover:bg-[var(--border-2)]",
+              "group-hover:bg-[var(--border-2)]"
             )}
           />
         </button>
@@ -368,8 +375,10 @@ export default function AppShell({
   const toggleSidebar = () => {
     setSidebarWidth(current =>
       current <= SIDEBAR_MIN_WIDTH
-        ? clampSidebarWidth(lastExpandedWidthRef.current || SIDEBAR_DEFAULT_WIDTH)
-        : SIDEBAR_MIN_WIDTH,
+        ? clampSidebarWidth(
+            lastExpandedWidthRef.current || SIDEBAR_DEFAULT_WIDTH
+          )
+        : SIDEBAR_MIN_WIDTH
     );
   };
 
@@ -442,14 +451,14 @@ export default function AppShell({
         </aside>
 
         <div className="relative min-w-0 flex-1">
-          <header className="sticky top-0 z-30 border-b border-[var(--border-1)] bg-[var(--surface-1)] backdrop-blur-xl lg:hidden">
+          <header className="sticky top-0 z-30 border-b border-[var(--border-1)] bg-[color:rgba(247,250,252,0.72)] backdrop-blur-xl dark:bg-[color:rgba(8,15,29,0.72)] lg:hidden">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
                 <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                   <button
                     type="button"
                     onClick={() => setMobileOpen(true)}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--text-1)]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--text-1)] shadow-[var(--shadow-sm)]"
                     aria-label="Open navigation"
                   >
                     <Menu size={18} />
@@ -467,9 +476,7 @@ export default function AppShell({
                 </Sheet>
 
                 <div className="min-w-0">
-                  <p className="page-label">
-                    Workspace
-                  </p>
+                  <p className="page-label">Workspace</p>
                   <p className="truncate text-sm font-medium text-[var(--text-1)]">
                     {currentLabel}
                   </p>
@@ -479,14 +486,14 @@ export default function AppShell({
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <Link href={user ? "/profile" : "/"}>
-                  <span className="flex cursor-pointer items-center rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-1)] p-1.5">
+                  <span className="flex cursor-pointer items-center rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] p-1.5 shadow-[var(--shadow-sm)]">
                     <Avatar className="h-8 w-8 rounded-full">
                       <AvatarImage
                         src={avatarUrl}
                         alt={displayName}
                         className="object-cover"
                       />
-                      <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--amber)]">
+                      <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--brand)]">
                         {getInitials(displayName)}
                       </AvatarFallback>
                     </Avatar>
@@ -497,9 +504,7 @@ export default function AppShell({
           </header>
 
           <main className="main">
-            <div className={cn("page-shell", contentClassName)}>
-              {children}
-            </div>
+            <div className={cn("page-shell", contentClassName)}>{children}</div>
           </main>
         </div>
       </div>

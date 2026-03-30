@@ -10,7 +10,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     setMounted(true);
   }, []);
 
-  const isDark = (resolvedTheme ?? "dark") === "dark";
+  const isDark = (resolvedTheme ?? "light") === "dark";
 
   return (
     <button
@@ -21,7 +21,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
       aria-pressed={mounted ? isDark : true}
       disabled={!mounted}
-      title={mounted ? `${isDark ? "Dark" : "Light"} mode` : "Toggle appearance"}
+      title={
+        mounted ? `${isDark ? "Dark" : "Light"} mode` : "Toggle appearance"
+      }
     />
   );
 }
