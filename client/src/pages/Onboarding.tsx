@@ -12,6 +12,7 @@ import {
   type GoalOption,
   type PrepExam,
   type PrepSubject,
+  setStoredProfile,
 } from "@/lib/prepbro";
 
 export default function Onboarding() {
@@ -38,6 +39,10 @@ export default function Onboarding() {
         dailyGoal: selectedGoal,
         weakSubjects,
         onboardedAt: new Date().toISOString(),
+      });
+      setStoredProfile({
+        displayName: "Rahul",
+        exam: selectedExam,
       });
       setLocation("/dashboard");
     }, 1500);

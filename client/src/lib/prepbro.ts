@@ -233,6 +233,9 @@ export function getStoredProfile() {
 
 export function setStoredProfile(next: EditableProfile) {
   safeWrite(PROFILE_STORAGE_KEY, next);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("prepbro:profile-updated"));
+  }
 }
 
 export function getStoredSessions() {
@@ -245,6 +248,9 @@ export function getStoredSessions() {
 export function appendStoredSession(session: PracticeSessionRecord) {
   const current = getStoredSessions();
   safeWrite(SESSION_STORAGE_KEY, [session, ...current].slice(0, 100));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("prepbro:sessions-updated"));
+  }
 }
 
 export function getDisplayName(user: User | null | undefined) {
@@ -557,6 +563,25 @@ export function formatDateLabel(value: string) {
     day: "numeric",
     month: "short",
   });
+}
+
+export function mergePracticeSessions(
+  localSessions: PracticeSessionRecord[],
+  remoteSessions: PracticeSessionRecord[]
+) {
+  const merged = new Map<string, PracticeSessionRecord>();
+
+  for (const session of [...remoteSessions, ...localSessions]) {
+    const key = session.id || `${session.completedAt}-${session.subject}`;
+    if (!merged.has(key)) {
+      merged.set(key, session);
+    }
+  }
+
+  return Array.from(merged.values()).sort(
+    (left, right) =>
+      new Date(right.completedAt).getTime() - new Date(left.completedAt).getTime()
+  );
 }
 
 export function formatLongDate(value: Date) {
