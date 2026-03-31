@@ -3,27 +3,40 @@
 
   <head>
     <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script>
       (function () {
         try {
           var d = document.documentElement;
-          var key = "prepbros-ui-theme";
-          var t = localStorage.getItem(key);
-          d.classList.remove("light", "dark");
-          if (t === "light") {
-            d.classList.add("light");
-          } else {
-            d.classList.add("dark");
-          }
-          d.style.colorScheme = d.classList.contains("dark") ? "dark" : "light";
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var themeKey = "prepbros-ui-theme";
+          var prefsKey = "prepbros-preferences-v2";
+          var storedTheme = localStorage.getItem(themeKey);
+          var storedPrefs = localStorage.getItem(prefsKey);
+          var parsedPrefs = storedPrefs ? JSON.parse(storedPrefs) : null;
+          var adaptiveDarkMode = Boolean(parsedPrefs && parsedPrefs.adaptiveDarkMode);
+          var isDark =
+            storedTheme === "dark" ||
+            storedTheme === "system"
+              ? prefersDark
+              : adaptiveDarkMode && prefersDark;
+
+          d.classList.remove("light", "dark", "prepbros-dark");
+          d.classList.add(isDark ? "dark" : "light");
+          if (isDark) d.classList.add("prepbros-dark");
+          d.dataset.language =
+            parsedPrefs && parsedPrefs.language === "hi" ? "hi" : "en";
+          d.lang = d.dataset.language;
+          d.style.colorScheme = isDark ? "dark" : "light";
         } catch (e) {}
       })();
     </script>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0e0e0e" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FAFAF8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0F1420" media="(prefers-color-scheme: dark)" />
     <meta name="application-name" content="PrepBros" />
     <meta name="apple-mobile-web-app-title" content="PrepBros" />
     <!-- SEO_HEAD_START -->

@@ -2,9 +2,10 @@
   "name": "PrepBros",
   "short_name": "PrepBros",
   "description": "Daily practice for UPSC, SSC, and state exam aspirants.",
-  "theme_color": "#111111",
-  "background_color": "#111111",
+  "theme_color": "#1A2E5A",
+  "background_color": "#FAFAF8",
   "display": "standalone",
+  "start_url": "/",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

@@ -1,910 +1,395 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowRight, Flame, Loader2, RotateCw, Target } from "lucide-react";
+import { Award, ChevronRight, Flame, TrendingUp } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 
-import AppShell from "@/components/AppShell";
-import OnboardingModal from "@/components/OnboardingModal";
-import PageHeader from "@/components/PageHeader";
-import { PageEmpty, PageSkeleton } from "@/components/PageState";
-import SwipeDismissNotice from "@/components/SwipeDismissNotice";
+import { PrepBottomNav } from "@/components/prep/PrepBottomNav";
+import { PrepButton } from "@/components/prep/PrepButton";
+import { PrepCard } from "@/components/prep/PrepCard";
+import { PrepLogo } from "@/components/prep/PrepLogo";
+import { ProgressRing } from "@/components/prep/ProgressRing";
+import { StreakBadge } from "@/components/prep/StreakBadge";
+import { SubjectChip } from "@/components/prep/SubjectChip";
+import { usePrepPreferences } from "@/contexts/PrepPreferencesContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { useQuestionBank } from "@/hooks/useQuestionBank";
 import {
-  createQuestionIdentityIndex,
-  toQuestionId,
-  type QuestionId,
-} from "@/lib/questionIdentity";
-import {
-  buildQuestionProgress,
-  countCurrentStreak,
-  getAnswerAttempts,
-} from "@/lib/userProgress";
-import { supabase } from "@/lib/supabase";
+  LEADERBOARD_SEED,
+  formatDateLabel,
+  formatLongDate,
+  getCurrentStreak,
+  getDailySubject,
+  getDailySubject as getSubjectOfDay,
+  getDisplayName,
+  getSevenDayActivity,
+  getStoredSessions,
+  getSubjectStats,
+  getTodaysSession,
+} from "@/lib/prepbro";
 
-type AnswerRow = {
-  question_id: QuestionId;
-  is_correct: boolean;
-  answered_at: string;
-};
-
-type ProfileRow = {
-  full_name?: string;
-  target_exam?: string;
-};
-
-type TopicPerformance = {
-  topic: string;
-  correct: number;
-  total: number;
-  incorrect: number;
-  accuracy: number;
-};
-
-const toDateKey = (value: Date | string) =>
-  new Date(value).toLocaleDateString("en-CA");
-
-const clampPercent = (value: number) =>
-  Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
-
-const formatCount = (value: number) =>
-  new Intl.NumberFormat("en-IN").format(value);
-
-const formatActivityStamp = (value: string) =>
-  new Date(value).toLocaleString("en-IN", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
-const formatLongDate = (value: Date) =>
-  new Intl.DateTimeFormat("en-IN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(value);
-
-const formatShortDay = (value: Date) =>
-  new Intl.DateTimeFormat("en-IN", { weekday: "short" }).format(value);
-
-const buildPracticeHref = ({
-  topic,
-  exam,
-  incorrect,
-  questionId,
-}: {
-  topic?: string;
-  exam?: string;
-  incorrect?: boolean;
-  questionId?: string | number;
-}) => {
-  const params = new URLSearchParams();
-  if (topic) params.set("topic", topic);
-  if (exam) params.set("exam", exam);
-  if (incorrect) params.set("incorrect", "1");
-  if (questionId) params.set("question", String(questionId));
-  const query = params.toString();
-  return query ? `/practice?${query}` : "/practice";
-};
-
-function DashboardListLink({
-  href,
-  title,
-  detail,
-  meta,
-}: {
-  href: string;
-  title: string;
-  detail: string;
-  meta?: string;
-}) {
-  return (
-    <Link href={href}>
-      <span className="group flex cursor-pointer items-start justify-between gap-4 rounded-[18px] border border-transparent px-3 py-3 transition hover:border-[var(--border)] hover:bg-[var(--surface-1)]">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-[var(--text-primary)] transition group-hover:text-[var(--text-primary)]">
-            {title}
-          </p>
-          <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
-            {detail}
-          </p>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-3">
-          {meta ? (
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-              {meta}
-            </span>
-          ) : null}
-          <ArrowRight
-            size={14}
-            className="text-[var(--text-faint)] transition group-hover:translate-x-0.5 group-hover:text-[var(--text-primary)]"
-          />
-        </div>
-      </span>
-    </Link>
-  );
+function formatRank(score: number) {
+  return new Intl.NumberFormat("en-IN").format(Math.max(341, 3000 - score * 91));
 }
 
 export default function Dashboard() {
-  const { user, loading } = useAuth();
-  const [profile, setProfile] = useState<ProfileRow | null>(null);
-  const [answers, setAnswers] = useState<AnswerRow[]>([]);
-  const [pageLoading, setPageLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [dailyGoalOverride, setDailyGoalOverride] = useState<number | null>(
-    null
-  );
-  const { questions, syncing: questionsSyncing } = useQuestionBank();
-  const loadDashboardData = useCallback(
-    async (mode: "initial" | "refresh" = "initial") => {
-      if (!user) {
-        setPageLoading(false);
-        setRefreshing(false);
-        return;
-      }
-
-      if (mode === "initial") {
-        setPageLoading(true);
-      } else {
-        setRefreshing(true);
-      }
-
-      try {
-        const [{ data: profileData }, answersData] = await Promise.all([
-          supabase.from("profiles").select("*").eq("id", user.id).single(),
-          getAnswerAttempts(user.id),
-        ]);
-
-        setProfile(profileData || null);
-        setAnswers(
-          (answersData || []).map(item => ({
-            ...item,
-            answered_at: item.answered_at ?? new Date(0).toISOString(),
-          }))
-        );
-
-        const metadata = user.user_metadata || {};
-        if (
-          !metadata.onboarding_completed_at &&
-          (answersData?.length ?? 0) === 0
-        ) {
-          setShowOnboarding(true);
-        }
-      } finally {
-        if (mode === "initial") {
-          setPageLoading(false);
-        } else {
-          setRefreshing(false);
-        }
-      }
-    },
-    [user]
-  );
+  const { user } = useAuth();
+  const { preferences } = usePrepPreferences();
+  const [sessions, setSessions] = useState(getStoredSessions());
+  const [showStreakDetail, setShowStreakDetail] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      setPageLoading(false);
-      return;
-    }
-
-    void loadDashboardData("initial");
-  }, [loadDashboardData, loading, user]);
-
-  const questionIdentity = useMemo(
-    () => createQuestionIdentityIndex(questions),
-    [questions]
-  );
-  const questionLookup = questionIdentity.questionLookup;
-
-  const resolvedAnswers = useMemo(
-    () =>
-      answers
-        .map(item => {
-          const questionId = questionIdentity.resolveQuestionId(
-            item.question_id
-          );
-          if (!questionId) return null;
-          return { ...item, question_id: questionId };
-        })
-        .filter((item): item is AnswerRow => Boolean(item)),
-    [answers, questionIdentity]
-  );
-
-  const questionProgress = useMemo(
-    () => Object.values(buildQuestionProgress(resolvedAnswers)),
-    [resolvedAnswers]
-  );
-
-  const solvedIds = useMemo(
-    () =>
-      new Set(
-        questionProgress
-          .filter(item => item.status === "correct")
-          .map(item => item.question_id)
-      ),
-    [questionProgress]
-  );
-
-  const attemptedIds = useMemo(
-    () => new Set(questionProgress.map(item => item.question_id)),
-    [questionProgress]
-  );
-
-  const sortedAnswers = useMemo(
-    () =>
-      [...resolvedAnswers].sort(
-        (a, b) =>
-          new Date(b.answered_at).getTime() - new Date(a.answered_at).getTime()
-      ),
-    [resolvedAnswers]
-  );
-
-  const totalAttempts = attemptedIds.size;
-  const totalSolved = solvedIds.size;
-  const totalRetry = Math.max(0, totalAttempts - totalSolved);
-  const totalUnattempted = Math.max(0, questions.length - totalAttempts);
-  const accuracy =
-    totalAttempts > 0 ? Math.round((totalSolved / totalAttempts) * 100) : 0;
-  const streak = countCurrentStreak(sortedAnswers);
-  const targetExam =
-    profile?.target_exam || user?.user_metadata?.target_exam || "UPSC CSE 2026";
-  const displayName =
-    user?.user_metadata?.full_name?.split(" ")[0] ||
-    profile?.full_name?.split(" ")[0] ||
-    user?.email?.split("@")[0] ||
-    "Aspirant";
-  const refreshDashboard = useCallback(async () => {
-    if (loading || !user) return;
-    await loadDashboardData("refresh");
-  }, [loadDashboardData, loading, user]);
-
-  const dailyGoal =
-    dailyGoalOverride ??
-    (Number.parseInt(String(user?.user_metadata?.daily_goal || "12"), 10) ||
-      12);
-  const todayKey = toDateKey(new Date());
-  const todayAnswers = sortedAnswers.filter(
-    item => toDateKey(item.answered_at) === todayKey
-  );
-  const todayAttempts = todayAnswers.length;
-  const dailyRemaining = Math.max(0, dailyGoal - todayAttempts);
-  const dailyProgressPercent =
-    dailyGoal > 0
-      ? clampPercent(Math.round((todayAttempts / dailyGoal) * 100))
-      : 0;
-
-  const topicPerformance = useMemo(() => {
-    const grouped = questionProgress.reduce<
-      Record<
-        string,
-        {
-          topic: string;
-          correct: number;
-          total: number;
-          incorrect: number;
-        }
-      >
-    >((acc, item) => {
-      const question = questionLookup.get(item.question_id);
-      if (!question) return acc;
-
-      const current = acc[question.topic] || {
-        topic: question.topic,
-        correct: 0,
-        total: 0,
-        incorrect: 0,
-      };
-
-      current.total += 1;
-      if (item.status === "correct") {
-        current.correct += 1;
-      } else {
-        current.incorrect += 1;
-      }
-
-      acc[question.topic] = current;
-      return acc;
-    }, {});
-
-    return Object.values(grouped)
-      .map(item => ({
-        topic: item.topic,
-        correct: item.correct,
-        total: item.total,
-        incorrect: item.incorrect,
-        accuracy: clampPercent(Math.round((item.correct / item.total) * 100)),
-      }))
-      .sort((a, b) => {
-        const aHasContext = a.total >= 2 ? 1 : 0;
-        const bHasContext = b.total >= 2 ? 1 : 0;
-        if (aHasContext !== bHasContext) return bHasContext - aHasContext;
-        if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
-        return b.total - a.total;
-      });
-  }, [questionLookup, questionProgress]);
-
-  const weakTopics: TopicPerformance[] = topicPerformance
-    .filter(topic => topic.incorrect > 0)
-    .slice(0, 3);
-
-  const focusAreas = useMemo(() => {
-    const reviewTopics = topicPerformance
-      .filter(topic => topic.incorrect > 0)
-      .sort((a, b) => {
-        if (a.incorrect !== b.incorrect) return b.incorrect - a.incorrect;
-        if (a.accuracy !== b.accuracy) return a.accuracy - b.accuracy;
-        return b.total - a.total;
-      })
-      .slice(0, 2)
-      .map(topic => ({
-        title: `Practice ${topic.topic}`,
-        detail: `${topic.incorrect} missed question${topic.incorrect === 1 ? "" : "s"} ready to revisit`,
-        href: buildPracticeHref({ topic: topic.topic, incorrect: true }),
-      }));
-
-    if (dailyRemaining > 0) {
-      return [
-        {
-          title: "Finish today's set",
-          detail: `${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} left to reach ${dailyGoal}`,
-          href: "/practice",
-        },
-        ...reviewTopics,
-      ].slice(0, 3);
-    }
-
-    return reviewTopics;
-  }, [dailyGoal, dailyRemaining, topicPerformance]);
-
-  const solvedCoverage = useMemo(() => {
-    const order = ["Easy", "Medium", "Hard"] as const;
-
-    return {
-      totalSolved,
-      totalQuestions: questions.length,
-      byDifficulty: order.map(difficulty => {
-        const pool = questions.filter(
-          question => question.difficulty === difficulty
-        );
-        const solved = pool.filter(question =>
-          solvedIds.has(toQuestionId(question.id))
-        ).length;
-
-        return {
-          difficulty,
-          solved,
-          total: pool.length,
-        };
-      }),
+    const refresh = () => setSessions(getStoredSessions());
+    window.addEventListener("focus", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("storage", refresh);
     };
-  }, [questions, solvedIds, totalSolved]);
+  }, []);
 
-  const solvedPercent =
-    solvedCoverage.totalQuestions > 0
-      ? clampPercent(
-          Math.round(
-            (solvedCoverage.totalSolved / solvedCoverage.totalQuestions) * 100
-          )
-        )
-      : 0;
-
-  const recentSessions = useMemo(
-    () =>
-      sortedAnswers.slice(0, 4).map(item => {
-        const question = questionLookup.get(item.question_id);
-        return {
-          id: item.question_id,
-          topic: question?.topic || "Practice session",
-          exam: question?.exam || "General",
-          correct: item.is_correct,
-          date: formatActivityStamp(item.answered_at),
-        };
-      }),
-    [questionLookup, sortedAnswers]
-  );
-
-  const weeklyActivity = useMemo(() => {
-    const counts = resolvedAnswers.reduce<Record<string, number>>(
-      (acc, item) => {
-        const key = toDateKey(item.answered_at);
-        acc[key] = (acc[key] || 0) + 1;
-        return acc;
-      },
-      {}
-    );
-
-    const days = Array.from({ length: 7 }, (_, index) => {
-      const date = new Date();
-      date.setHours(0, 0, 0, 0);
-      date.setDate(date.getDate() - (6 - index));
-      const key = toDateKey(date);
-
-      return {
-        key,
-        label: formatShortDay(date),
-        title: formatLongDate(date),
-        count: counts[key] || 0,
-      };
-    });
-
-    return {
-      days,
-      total: days.reduce((sum, day) => sum + day.count, 0),
-      maxCount: Math.max(1, ...days.map(day => day.count)),
+  const isHindi = preferences.language === "hi";
+  const displayName = getDisplayName(user);
+  const dailySubject = getDailySubject(preferences);
+  const todaysSession = getTodaysSession(sessions, dailySubject);
+  const streak = getCurrentStreak(sessions);
+  const activity = getSevenDayActivity(sessions);
+  const subjectStats = getSubjectStats(sessions).filter(item => item.totalQuestions > 0);
+  const latestSessions = sessions.slice(0, 5);
+  const latestScore = todaysSession?.correctCount ?? sessions[0]?.correctCount ?? 0;
+  const latestTotal = todaysSession?.totalQuestions ?? sessions[0]?.totalQuestions ?? 10;
+  const latestAccuracy = latestTotal
+    ? Math.round((latestScore / latestTotal) * 100)
+    : 0;
+  const leaderboard = useMemo(() => {
+    const userRow = {
+      rank: 2341,
+      name: displayName,
+      initials: displayName.slice(0, 2).toUpperCase(),
+      score: latestScore,
+      accuracy: latestAccuracy,
     };
-  }, [resolvedAnswers]);
+    return [...LEADERBOARD_SEED, userRow];
+  }, [displayName, latestAccuracy, latestScore]);
 
-  const strongestTopic = useMemo(() => {
-    const ranked = topicPerformance
-      .filter(topic => topic.total >= 2)
-      .sort((a, b) => {
-        if (a.accuracy !== b.accuracy) return b.accuracy - a.accuracy;
-        return b.total - a.total;
-      });
-
-    return ranked[0] || null;
-  }, [topicPerformance]);
-
-  const summaryStats = [
-    {
-      label: "Solved",
-      value: formatCount(totalSolved),
-      detail: `${formatCount(questions.length)} in current bank`,
-    },
-    {
-      label: "Accuracy",
-      value: `${accuracy}%`,
-      detail:
-        totalAttempts > 0
-          ? `${formatCount(totalRetry)} still worth revisiting`
-          : "Starts after your first attempt",
-    },
-    {
-      label: "Daily pace",
-      value: `${todayAttempts}/${dailyGoal}`,
-      detail:
-        dailyRemaining > 0
-          ? `${dailyRemaining} left today`
-          : "Target completed",
-    },
-    {
-      label: "Streak",
-      value: `${streak}d`,
-      detail:
-        streak > 0 ? "Consistency is building" : "Start a new streak today",
-    },
-  ];
-  const dashboardRefresh = usePullToRefresh({
-    enabled: Boolean(user) && !loading && !pageLoading && !questionsSyncing,
-    onRefresh: refreshDashboard,
-  });
-
-  if (loading || pageLoading || questionsSyncing) {
-    return (
-      <AppShell>
-        <div className="mx-auto w-full max-w-[1120px] py-4">
-          <PageSkeleton rows={6} />
-        </div>
-      </AppShell>
-    );
-  }
-
-  if (!user) {
-    return (
-      <AppShell>
-        <div className="mx-auto w-full max-w-[1120px] py-10">
-          <PageEmpty
-            title="Sign in to unlock your prep workspace"
-            description="Your dashboard ties together practice history, streak, and focus areas once your progress is attached to an account."
-            actionLabel="Go back home"
-            actionHref="/"
-            className="rounded-[24px] border-[var(--border)] bg-[var(--bg-card)] py-14"
-          />
-        </div>
-      </AppShell>
-    );
-  }
+  const streakCopy =
+    streak === 0
+      ? isHindi
+        ? "अपनी स्ट्रीक आज से शुरू करें"
+        : "Start your streak!"
+      : `${streak}`;
 
   return (
-    <AppShell contentClassName="max-w-none">
-      <OnboardingModal
-        isOpen={showOnboarding}
-        userId={user.id}
-        defaultExam={targetExam}
-        onClose={() => setShowOnboarding(false)}
-        onComplete={({
-          targetExam: nextTargetExam,
-          dailyGoal: nextDailyGoal,
-        }) => {
-          setProfile((current: ProfileRow | null) => ({
-            ...(current || {}),
-            target_exam: nextTargetExam,
-          }));
-          setDailyGoalOverride(Number.parseInt(nextDailyGoal, 10) || 12);
-        }}
-      />
-
-      <div className="relative">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.78),transparent_32%),radial-gradient(circle_at_82%_12%,rgba(191,219,254,0.34),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.14),transparent_32%),radial-gradient(circle_at_82%_12%,rgba(59,130,246,0.14),transparent_24%)]" />
-        <div
-          {...dashboardRefresh.bind}
-          className="relative z-10 mx-auto w-full max-w-[1120px] space-y-6 pb-6 transition-transform duration-200"
-          style={{
-            transform: `translateY(${dashboardRefresh.pullDistance}px)`,
-            transition: dashboardRefresh.pullDistance > 0 ? "none" : undefined,
-          }}
-        >
-          <div
-            className="pointer-events-none flex justify-center overflow-hidden transition-[max-height,opacity] duration-200"
-            style={{
-              maxHeight:
-                dashboardRefresh.pullDistance > 0 || refreshing ? "72px" : "0px",
-              opacity:
-                dashboardRefresh.pullDistance > 0 || refreshing ? 1 : 0,
-            }}
-          >
-            <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
-              {dashboardRefresh.isRefreshing || refreshing ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Refreshing
-                </>
-              ) : dashboardRefresh.readyToRefresh ? (
-                "Release to refresh"
-              ) : (
-                "Pull to refresh"
-              )}
+    <div className="min-h-screen bg-[var(--color-background)] pb-28">
+      <div className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[rgba(255,255,255,0.92)] shadow-[var(--shadow-sm)] backdrop-blur dark:bg-[rgba(34,40,64,0.92)]">
+        <div className="pb-container flex items-center justify-between px-0 py-4">
+          <div className="flex items-center gap-3">
+            <PrepLogo compact />
+            <div>
+              <p className="text-[var(--text-sm)] text-[var(--color-text-muted)]">
+                {isHindi ? "नमस्ते" : "Hi"}
+              </p>
+              <h1 className="font-[var(--font-body)] text-[var(--text-md)] font-bold">
+                {displayName}
+              </h1>
             </div>
           </div>
-
-          <section className="card overflow-hidden p-6 md:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <PageHeader
-                eyebrow="Dashboard"
-                title="Study with a calmer, clearer rhythm."
-                description={`${displayName}, you're preparing for ${targetExam}. ${formatLongDate(new Date())} and you ${dailyRemaining > 0 ? `have ${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} left today.` : "have already completed today's goal."}`}
-                className="mb-0 flex-1"
-                actions={
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void refreshDashboard();
-                      }}
-                      className="badge cursor-pointer transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]"
-                    >
-                      {refreshing ? (
-                        <Loader2 size={13} className="animate-spin" />
-                      ) : (
-                        <RotateCw size={13} />
-                      )}
-                      Refresh
-                    </button>
-                    <span className="badge">
-                      <Target size={13} />
-                      {todayAttempts} / {dailyGoal} today
-                    </span>
-                    <span className="badge">
-                      <Flame size={13} />
-                      {streak} day{streak === 1 ? "" : "s"} streak
-                    </span>
-                    <Link href="/practice">
-                      <span className="btn-primary cursor-pointer px-5">
-                        Continue practice
-                        <ArrowRight size={15} />
-                      </span>
-                    </Link>
-                  </div>
-                }
-              />
-            </div>
-          </section>
-
-          <SwipeDismissNotice
-            title="Refresh with a pull"
-            description="On mobile, pull down from the top to reload your dashboard. On desktop, use the refresh chip."
-            className="bg-[var(--bg-card)]"
-          />
-
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {summaryStats.map(item => (
-              <div key={item.label} className="stat-card">
-                <p className="stat-card-label">{item.label}</p>
-                <p className="stat-card-value">{item.value}</p>
-                <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
-                  {item.detail}
-                </p>
-              </div>
-            ))}
-          </section>
-
-          <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_340px]">
-            <div className="space-y-6">
-              <div className="card grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-                <div>
-                  <p className="section-label">Coverage</p>
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                      <p
-                        className="text-[3.7rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]"
-                        style={{ fontFamily: "var(--font-display)" }}
-                      >
-                        {solvedPercent}%
-                      </p>
-                      <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
-                        {formatCount(totalSolved)} solved and{" "}
-                        {formatCount(totalUnattempted)} still untouched.
-                      </p>
-                    </div>
-                    <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                        Today&apos;s target
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                        {dailyRemaining > 0
-                          ? "A small finish line keeps the day focused."
-                          : "Today is open for revision and retries."}
-                      </p>
-                      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--bg-muted)]">
-                        <div
-                          className="h-full rounded-full bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--brand)_100%)] transition-all duration-500"
-                          style={{
-                            width: `${Math.max(
-                              dailyProgressPercent,
-                              todayAttempts > 0 ? 6 : 0
-                            )}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 space-y-4">
-                    {solvedCoverage.byDifficulty.map(item => {
-                      const percent =
-                        item.total > 0
-                          ? clampPercent(
-                              Math.round((item.solved / item.total) * 100)
-                            )
-                          : 0;
-
-                      return (
-                        <div
-                          key={item.difficulty}
-                          className="grid gap-3 sm:grid-cols-[70px_minmax(0,1fr)_64px] sm:items-center"
-                        >
-                          <span className="text-sm font-medium text-[var(--text-secondary)]">
-                            {item.difficulty}
-                          </span>
-                          <div className="h-2 overflow-hidden rounded-full bg-[var(--bg-muted)]">
-                            <div
-                              className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent)_0%,var(--brand)_100%)] transition-all duration-500"
-                              style={{
-                                width: `${Math.max(percent, item.solved > 0 ? 7 : 0)}%`,
-                              }}
-                            />
-                          </div>
-                          <span className="text-right text-sm text-[var(--text-faint)]">
-                            {formatCount(item.solved)} /{" "}
-                            {formatCount(item.total)}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
-                  <p className="section-label">Signals</p>
-                  <div className="mt-4 space-y-5">
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">
-                        Strongest topic
-                      </p>
-                      <p className="mt-2 text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
-                        {strongestTopic?.topic || "Still emerging"}
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                        {strongestTopic
-                          ? `${strongestTopic.accuracy}% accuracy across ${strongestTopic.total} attempt${strongestTopic.total === 1 ? "" : "s"}.`
-                          : "Your strongest topic will appear once there is enough answer history."}
-                      </p>
-                    </div>
-
-                    <div className="border-t border-[var(--border)] pt-5">
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">
-                        Retry queue
-                      </p>
-                      <p className="mt-2 text-[2.1rem] tracking-[-0.05em] text-[var(--text-primary)]">
-                        {formatCount(totalRetry)}
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                        Questions worth revisiting before starting fresh sets.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="section-label">Activity</p>
-                    <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-                      Weekly practice pattern
-                    </p>
-                  </div>
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    {weeklyActivity.total > 0
-                      ? `${weeklyActivity.total} attempts in the last 7 days`
-                      : "Your weekly rhythm will appear after your next session"}
-                  </p>
-                </div>
-
-                <div className="mt-6 flex h-[210px] items-end gap-4">
-                  {weeklyActivity.days.map(day => {
-                    const height =
-                      day.count === 0
-                        ? 12
-                        : Math.max(
-                            20,
-                            Math.round(
-                              (day.count / weeklyActivity.maxCount) * 100
-                            )
-                          );
-
-                    return (
-                      <div
-                        key={day.key}
-                        className="flex flex-1 flex-col items-center gap-3"
-                      >
-                        <span className="text-[11px] text-[var(--text-faint)]">
-                          {day.count}
-                        </span>
-                        <div className="relative flex h-[160px] w-full items-end rounded-[18px] bg-[var(--surface-1)] px-2 pb-2">
-                          <div
-                            title={`${day.title}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
-                            className="w-full rounded-[14px] bg-[linear-gradient(180deg,var(--accent)_0%,var(--brand)_100%)] transition duration-300 hover:-translate-y-1"
-                            style={{
-                              height: `${height}%`,
-                              opacity: day.count === 0 ? 0.18 : 0.94,
-                            }}
-                          />
-                        </div>
-                        <span className="text-xs text-[var(--text-secondary)]">
-                          {day.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <aside className="space-y-6">
-              <div className="card">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="section-label">Focus</p>
-                    <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-                      Next best actions
-                    </p>
-                  </div>
-                  <span className="badge-amber">Priority</span>
-                </div>
-
-                <div className="mt-3 space-y-2">
-                  {focusAreas.length > 0 ? (
-                    focusAreas.map((item, index) => (
-                      <DashboardListLink
-                        key={item.title}
-                        href={item.href}
-                        title={item.title}
-                        detail={item.detail}
-                        meta={index === 0 ? "Now" : undefined}
-                      />
-                    ))
-                  ) : (
-                    <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
-                      Your next focus areas will appear after a few more
-                      answers.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="card">
-                <p className="section-label">Weak topics</p>
-                <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-                  Areas to revisit
-                </p>
-
-                <div className="mt-3 space-y-2">
-                  {weakTopics.length > 0 ? (
-                    weakTopics.map(topic => (
-                      <DashboardListLink
-                        key={topic.topic}
-                        href={buildPracticeHref({
-                          topic: topic.topic,
-                          incorrect: true,
-                        })}
-                        title={topic.topic}
-                        detail={`${topic.accuracy}% accuracy across ${topic.total} attempt${topic.total === 1 ? "" : "s"}`}
-                        meta={`${topic.incorrect} miss${topic.incorrect === 1 ? "" : "es"}`}
-                      />
-                    ))
-                  ) : (
-                    <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
-                      Weak topics will show up once you build more history.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="card">
-                <p className="section-label">Recent</p>
-                <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-                  Latest activity
-                </p>
-
-                <div className="mt-4 space-y-3">
-                  {recentSessions.length > 0 ? (
-                    recentSessions.map(session => (
-                      <Link
-                        key={`${session.id}-${session.date}`}
-                        href={buildPracticeHref({
-                          questionId: session.id,
-                          topic: session.topic,
-                          exam:
-                            session.exam !== "General"
-                              ? session.exam
-                              : undefined,
-                        })}
-                      >
-                        <span className="group flex cursor-pointer items-start gap-3 rounded-[18px] border border-transparent px-3 py-3 transition hover:border-[var(--border)] hover:bg-[var(--surface-1)]">
-                          <span
-                            className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${
-                              session.correct
-                                ? "bg-[var(--green)]"
-                                : "bg-[var(--red)]"
-                            }`}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-[var(--text-primary)]">
-                              {session.topic}
-                            </p>
-                            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                              {session.date}
-                            </p>
-                          </div>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
-                              session.correct
-                                ? "bg-[var(--green-bg)] text-[var(--green)]"
-                                : "bg-[var(--red-bg)] text-[var(--red)]"
-                            }`}
-                          >
-                            {session.correct ? "Correct" : "Retry"}
-                          </span>
-                        </span>
-                      </Link>
-                    ))
-                  ) : (
-                    <p className="text-sm leading-6 text-[var(--text-secondary)]">
-                      Recent activity will appear after your next practice
-                      session.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </aside>
-          </section>
+          <button
+            type="button"
+            onClick={() => setShowStreakDetail(true)}
+            className="inline-flex items-center gap-2 rounded-[var(--radius-full)] bg-[rgba(255,140,0,0.12)] px-3 py-2 text-[var(--text-sm)] font-medium text-[var(--color-streak)]"
+          >
+            <Flame className="h-4 w-4" />
+            {streak === 0 ? streakCopy : `${streak}`}
+          </button>
         </div>
       </div>
-    </AppShell>
+
+      <main className="pb-container px-0 py-6">
+        <PrepCard
+          variant="hero"
+          padding="hero"
+          className="pb-stagger overflow-hidden rounded-[var(--radius-xl)]"
+          style={{ ["--stagger-delay" as string]: "0ms" }}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <span className="rounded-[var(--radius-full)] bg-[rgba(255,107,53,0.18)] px-3 py-1 text-[var(--text-sm)] text-[#ffd6c9]">
+              {isHindi ? "आज की प्रैक्टिस" : "Today's Practice"}
+            </span>
+            <StreakBadge streak={streak} />
+          </div>
+          <h2 className="mt-5 text-[clamp(28px,5vw,40px)] text-white">
+            {isHindi ? `डेली क्विज़ - ${dailySubject}` : `Daily Quiz - ${dailySubject}`}
+          </h2>
+          <p className="mt-3 text-[var(--text-base)] text-white/74">
+            10 {isHindi ? "सवाल" : "questions"} · ~8 {isHindi ? "मिनट" : "minutes"} ·{" "}
+            {formatLongDate(new Date())}
+          </p>
+
+          {todaysSession ? (
+            <div className="mt-6 rounded-[20px] bg-white/10 p-4">
+              <p className="text-[var(--text-sm)] text-white/75">
+                {isHindi ? "पूरा हो गया" : "Completed"}
+              </p>
+              <div className="mt-2 flex items-center gap-3 text-[var(--text-md)] font-medium text-[#b7ffce]">
+                <Award className="h-5 w-5" />
+                {isHindi
+                  ? `स्कोर: ${todaysSession.correctCount}/${todaysSession.totalQuestions}`
+                  : `Score: ${todaysSession.correctCount}/${todaysSession.totalQuestions}`}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-6">
+              <div className="flex items-center justify-between text-[var(--text-sm)] text-white/74">
+                <span>{isHindi ? "प्रोग्रेस" : "Progress"}</span>
+                <span>0 / 10</span>
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-white/16">
+                <div className="h-full w-0 rounded-full bg-[var(--color-accent)]" />
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6">
+            <Link href="/practice">
+              <PrepButton
+                asChild
+                fullWidth
+                size="lg"
+                className={todaysSession ? "border border-white/24 bg-transparent hover:bg-white/8" : ""}
+                variant={todaysSession ? "outline" : "primary"}
+              >
+                <span className={todaysSession ? "text-white" : ""}>
+                  {todaysSession
+                    ? isHindi
+                      ? "उत्तर रिव्यू करें"
+                      : "Review Answers"
+                    : isHindi
+                      ? "अभी शुरू करें"
+                      : "Start Now"}{" "}
+                  <ChevronRight className="ml-1 inline h-4 w-4" />
+                </span>
+              </PrepButton>
+            </Link>
+          </div>
+
+          <p className="mt-4 text-[var(--text-sm)] text-white/64">
+            {isHindi ? "847 छात्र आज पूरा कर चुके हैं" : "847 students completed today"}
+          </p>
+        </PrepCard>
+
+        <div
+          className="pb-stagger mt-5 flex gap-3 overflow-x-auto pb-hide-scrollbar"
+          style={{ ["--stagger-delay" as string]: "50ms" }}
+        >
+          {[
+            `${isHindi ? "आज का स्कोर" : "Today's Score"}: ${latestScore}/${latestTotal}`,
+            `${isHindi ? "एक्युरेसी" : "Accuracy"}: ${latestAccuracy}%`,
+            `${isHindi ? "रैंक" : "Rank"}: #${formatRank(latestScore)}`,
+          ].map(item => (
+            <div
+              key={item}
+              className="whitespace-nowrap rounded-[var(--radius-full)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-[var(--text-sm)] text-[var(--color-text-secondary)]"
+            >
+              {item}
+            </div>
+          ))}
+        </div>
+
+        <PrepCard
+          className="pb-stagger mt-5 p-5"
+          style={{ ["--stagger-delay" as string]: "100ms" }}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[var(--text-sm)] text-[var(--color-text-muted)]">
+                {isHindi ? "कंसिस्टेंसी" : "Consistency"}
+              </p>
+              <h2 className="mt-2 text-[32px] text-[var(--color-streak)]">
+                {streak} {isHindi ? "दिन की स्ट्रीक" : "day streak"}
+              </h2>
+              <p className="mt-2 text-[var(--text-base)] text-[var(--color-text-secondary)]">
+                {isHindi
+                  ? "जारी रखें - आप consistency में शीर्ष 8% में हैं।"
+                  : "Keep going - you're in the top 8% for consistency."}
+              </p>
+            </div>
+            <TrendingUp className="h-6 w-6 text-[var(--color-accent)]" />
+          </div>
+
+          <div className="mt-5 flex items-center justify-between gap-2">
+            {activity.map(day => (
+              <div key={day.key} className="flex flex-col items-center gap-2">
+                <span
+                  className={`h-3 w-3 rounded-full border ${
+                    day.completed
+                      ? "border-[var(--color-accent)] bg-[var(--color-accent)]"
+                      : "border-[var(--color-border)] bg-transparent"
+                  } ${day.isToday && !day.completed ? "animate-[pb-dot-pulse_1.1s_ease-in-out_infinite]" : ""}`}
+                />
+                <span className="text-[var(--text-xs)] text-[var(--color-text-muted)]">
+                  {day.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </PrepCard>
+
+        <section
+          className="pb-stagger mt-6"
+          style={{ ["--stagger-delay" as string]: "150ms" }}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-[24px]">
+              {isHindi ? "आपके विषय" : "Your subjects"}
+            </h2>
+            <Link href="/progress">
+              <span className="cursor-pointer text-[var(--text-sm)] font-medium text-[var(--color-accent)]">
+                {isHindi ? "पूरा देखें" : "View all"}
+              </span>
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-hide-scrollbar">
+            {subjectStats.length > 0 ? (
+              subjectStats.map(stat => (
+                <PrepCard key={stat.subject} className="min-w-[220px] p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <SubjectChip subject={stat.subject} />
+                      <p className="mt-4 text-[var(--text-sm)] text-[var(--color-text-muted)]">
+                        {stat.totalQuestions} {isHindi ? "सवाल" : "questions done"}
+                      </p>
+                    </div>
+                    <ProgressRing percentage={stat.accuracy} size={72} />
+                  </div>
+                </PrepCard>
+              ))
+            ) : (
+              <PrepCard className="w-full p-6">
+                <p className="text-[var(--text-base)] text-[var(--color-text-secondary)]">
+                  {isHindi
+                    ? "पहला क्विज़ पूरा करते ही subject progress दिखेगा।"
+                    : "Complete your first quiz to unlock subject progress."}
+                </p>
+              </PrepCard>
+            )}
+          </div>
+        </section>
+
+        <section className="mt-6 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <PrepCard className="p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[24px]">
+                {isHindi ? "आज का लीडरबोर्ड" : "Today's leaderboard"}
+              </h2>
+              <span className="text-[var(--text-sm)] text-[var(--color-accent)]">
+                {isHindi ? "पूरा देखें" : "Full leaderboard"}
+              </span>
+            </div>
+            <div className="space-y-3">
+              {leaderboard.map((entry, index) => (
+                <div
+                  key={`${entry.rank}-${entry.name}`}
+                  className={`flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 ${
+                    index === 0
+                      ? "bg-[rgba(243,156,18,0.14)]"
+                      : index === 1
+                        ? "bg-[rgba(148,163,184,0.16)]"
+                        : index === 2
+                          ? "bg-[rgba(180,83,9,0.14)]"
+                          : "bg-[var(--color-surface)]"
+                  }`}
+                >
+                  <span className="w-8 text-[var(--text-sm)] font-bold text-[var(--color-text-secondary)]">
+                    #{entry.rank}
+                  </span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--text-sm)] font-bold text-white">
+                    {entry.initials}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-[var(--color-text-primary)]">
+                      {entry.name}
+                    </p>
+                    <p className="text-[var(--text-sm)] text-[var(--color-text-muted)]">
+                      {entry.accuracy}% {isHindi ? "accuracy" : "accuracy"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-[var(--color-text-primary)]">
+                      {entry.score}/10
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </PrepCard>
+
+          <PrepCard className="p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[24px]">
+                {isHindi ? "हाल की सेशंस" : "Recent sessions"}
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {latestSessions.length > 0 ? (
+                latestSessions.map(session => (
+                  <div
+                    key={session.id}
+                    className="grid grid-cols-[1.3fr_0.7fr_0.9fr] items-center gap-3 rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-3"
+                  >
+                    <div>
+                      <p className="font-medium text-[var(--color-text-primary)]">
+                        {session.subject}
+                      </p>
+                      <p className="text-[var(--text-sm)] text-[var(--color-text-muted)]">
+                        {formatDateLabel(session.completedAt)}
+                      </p>
+                    </div>
+                    <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)]">
+                      {session.correctCount}/{session.totalQuestions}
+                    </p>
+                    <p className="text-right text-[var(--text-sm)] text-[var(--color-text-secondary)]">
+                      {Math.round(session.durationSec / 60)}m
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[var(--radius-md)] bg-[var(--color-surface)] px-4 py-5 text-[var(--text-base)] text-[var(--color-text-secondary)]">
+                  {isHindi
+                    ? "पहले क्विज़ के बाद आपकी सेशन हिस्ट्री यहां दिखेगी।"
+                    : "Your session history will appear here after your first quiz."}
+                </div>
+              )}
+            </div>
+          </PrepCard>
+        </section>
+      </main>
+
+      {showStreakDetail ? (
+        <div className="fixed inset-0 z-[140] flex items-end justify-center bg-[rgba(15,20,32,0.4)] p-4 md:items-center">
+          <PrepCard className="w-full max-w-md p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[24px]">
+                {isHindi ? "स्ट्रीक डिटेल" : "Streak details"}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowStreakDetail(false)}
+                className="text-[var(--text-sm)] text-[var(--color-accent)]"
+              >
+                {isHindi ? "बंद करें" : "Close"}
+              </button>
+            </div>
+            <p className="mt-4 text-[var(--text-base)] text-[var(--color-text-secondary)]">
+              {isHindi
+                ? "रोज़ एक क्विज़ पूरा करें और आपकी स्ट्रीक अपने आप बढ़ती जाएगी।"
+                : "Complete one quiz a day and your streak keeps growing automatically."}
+            </p>
+            <div className="mt-6">
+              <StreakBadge streak={streak} detailed />
+            </div>
+          </PrepCard>
+        </div>
+      ) : null}
+
+      <PrepBottomNav />
+    </div>
   );
 }

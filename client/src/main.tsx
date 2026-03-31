@@ -1,7 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import "./design-tokens.css";
 
 const analyticsEndpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
 const analyticsWebsiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;
@@ -12,6 +11,12 @@ if (analyticsEndpoint && analyticsWebsiteId) {
   script.src = `${analyticsEndpoint}/umami`;
   script.dataset.websiteId = analyticsWebsiteId;
   document.head.appendChild(script);
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  });
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
