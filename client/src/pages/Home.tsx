@@ -1,348 +1,1112 @@
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import {
   ArrowRight,
-  BookOpenCheck,
-  ChartColumnBig,
-  CheckCircle2,
-  Flame,
-  Globe,
-  Heart,
-  PlayCircle,
+  BookOpen,
+  CircleHelp,
+  Crown,
+  FileText,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
   ShieldCheck,
-  Star,
+  Sparkles,
   Trophy,
-  Youtube,
+  type LucideIcon,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
-import { LiveCounter } from "@/components/prep/LiveCounter";
-import { PrepButton } from "@/components/prep/PrepButton";
-import { PrepCard } from "@/components/prep/PrepCard";
-import { PrepLogo } from "@/components/prep/PrepLogo";
-import { usePrepPreferences } from "@/contexts/PrepPreferencesContext";
-import { HOME_EXAMS, LANDING_METRICS, TESTIMONIALS } from "@/lib/prepbro";
+import AuthModal from "@/components/AuthModal";
+import BrandLogo from "@/components/BrandLogo";
+import Footer from "@/components/Footer";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  POST_AUTH_REDIRECT_STORAGE_KEY,
+  useAuth,
+} from "@/contexts/AuthContext";
+import { trackEvent } from "@/lib/analytics";
+import { getPolicyUrl, siteConfig } from "@/lib/siteConfig";
 
-const STEP_CARDS = [
+const NAV_ITEMS = [
+  { label: "Practice", href: "/practice", type: "route" as const },
+  { label: "Dashboard", href: "/dashboard", type: "route" as const },
+  { label: "Review", href: "#review-system", type: "anchor" as const },
+  { label: "Pricing", href: "/premium", type: "route" as const },
+];
+
+const HERO_PROOF_POINTS = [
+  "Daily MCQs",
+  "Weak topic review",
+  "Phone OTP login",
+];
+
+const PLATFORM_PILLARS = [
   {
-    step: "01",
-    title: "Choose your exam",
-    description: "Pick UPSC, SSC, or state prep once. We keep the next step obvious every day.",
-    icon: BookOpenCheck,
+    eyebrow: "Practice",
+    title: "Quiet question desk",
+    description: "Fresh first. Noise down.",
+    meta: "Daily flow",
   },
   {
-    step: "02",
-    title: "Practice 10 daily Qs",
-    description: "A focused question loop designed for evenings when attention is low and consistency matters.",
-    icon: PlayCircle,
+    eyebrow: "Review",
+    title: "Revision that returns",
+    description: "Misses stay ready to revisit.",
+    meta: "Retry ready",
   },
   {
-    step: "03",
-    title: "Track your progress",
-    description: "See streaks, weak subjects, and score movement without clutter or decision fatigue.",
-    icon: ChartColumnBig,
+    eyebrow: "Progress",
+    title: "Signals, not noise",
+    description: "Accuracy, streak, and pace at a glance.",
+    meta: "Clear progress",
   },
 ];
 
-const SOCIAL_LINKS = [
-  { label: "X", href: "#", icon: Globe },
-  { label: "YouTube", href: "#", icon: Youtube },
-  { label: "Telegram", href: "#", icon: Trophy },
+const STUDY_TRACKS: Array<{
+  title: string;
+  subtitle: string;
+  metric: string;
+  chips: string[];
+  icon: LucideIcon;
+  href: string;
+}> = [
+  {
+    title: "UPSC GS Sprint",
+    subtitle: "Polity, economy, history",
+    metric: "Daily rhythm",
+    chips: ["PYQs", "Mixed sets", "Review-ready"],
+    icon: BookOpen,
+    href: "/explore",
+  },
+  {
+    title: "SSC Fast Lane",
+    subtitle: "Quant, reasoning, English",
+    metric: "Short loops",
+    chips: ["Speed practice", "Topic bursts", "Clear tracking"],
+    icon: Trophy,
+    href: "/explore",
+  },
+  {
+    title: "State PSC Focus",
+    subtitle: "Static GK and current affairs",
+    metric: "Steady coverage",
+    chips: ["State topics", "Retry flow", "Less clutter"],
+    icon: Sparkles,
+    href: "/explore",
+  },
 ];
 
-export default function Home() {
-  const { preferences, updatePreferences } = usePrepPreferences();
-  const isHindi = preferences.language === "hi";
+const PRACTICE_SET_CARDS = [
+  {
+    eyebrow: "Fresh now",
+    title: "Daily mixed set",
+    detail: "15 questions, quick momentum.",
+    chips: ["15 Q", "Swipe next", "New first"],
+    href: "/practice",
+  },
+  {
+    eyebrow: "Retry queue",
+    title: "Weak-topic return",
+    detail: "Come back to what slipped.",
+    chips: ["Review", "Incorrect only", "Low friction"],
+    href: "/practice?incorrect=1",
+  },
+  {
+    eyebrow: "Bookmarks",
+    title: "Saved for later",
+    detail: "Keep good questions close.",
+    chips: ["Saved", "Focused pass", "Quick reopen"],
+    href: "/practice?review=bookmarked",
+  },
+  {
+    eyebrow: "PYQ mode",
+    title: "Exam-style run",
+    detail: "Stay inside real-paper pressure.",
+    chips: ["Timed feel", "Topic mix", "Exam tags"],
+    href: "/practice?types=PYQ",
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    quote: "The swiping and quick sets make daily practice feel easy to return to.",
+    name: "Akhila S.",
+    role: "UPSC aspirant",
+  },
+  {
+    quote: "I can move from solve to review without losing focus or getting buried in menus.",
+    name: "Nitin R.",
+    role: "SSC learner",
+  },
+  {
+    quote: "The dashboard shows just enough. I know what to do next in seconds.",
+    name: "Harini P.",
+    role: "State PSC aspirant",
+  },
+];
+
+const PRICING_PREVIEW = [
+  {
+    name: "Free",
+    price: "₹0",
+    cadence: "",
+    badge: "Start here",
+    description: "Build the habit.",
+    features: ["Practice", "Basic dashboard", "Core resources"],
+  },
+  {
+    name: "Pro Monthly",
+    price: "₹199",
+    cadence: "/ month",
+    badge: "Most flexible",
+    description: "For active prep.",
+    features: ["More access", "Better review signals", "Priority help"],
+  },
+  {
+    name: "Annual",
+    price: "₹999",
+    cadence: "/ year",
+    badge: "Best value",
+    description: "For long prep cycles.",
+    features: ["Everything in Pro", "Lower yearly cost", "Long-run prep"],
+  },
+];
+
+const ESSENTIAL_LINKS: Array<{
+  label: string;
+  href: string;
+  note: string;
+  icon: LucideIcon;
+}> = [
+  {
+    label: "Practice",
+    href: "/practice",
+    note: "Question desk",
+    icon: BookOpen,
+  },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    note: "Progress view",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Resources",
+    href: "/resources",
+    note: "Study material",
+    icon: Sparkles,
+  },
+  {
+    label: "Premium",
+    href: "/premium",
+    note: "Plans",
+    icon: Crown,
+  },
+  {
+    label: "Support",
+    href: "/support",
+    note: "Help",
+    icon: CircleHelp,
+  },
+  {
+    label: "Privacy",
+    href: "/privacy",
+    note: "Policy",
+    icon: ShieldCheck,
+  },
+  {
+    label: "Terms",
+    href: "/terms",
+    note: "Conditions",
+    icon: FileText,
+  },
+  {
+    label: "Status",
+    href: "/status",
+    note: "Platform health",
+    icon: Trophy,
+  },
+];
+
+function GoogleIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="h-[18px] w-[18px] shrink-0"
+      fill="none"
+    >
+      <path
+        d="M21.805 12.23c0-.79-.07-1.545-.202-2.27H12v4.292h5.487a4.698 4.698 0 0 1-2.036 3.084v2.56h3.298c1.93-1.776 3.056-4.395 3.056-7.666Z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 22c2.756 0 5.067-.914 6.755-2.48l-3.298-2.56c-.914.612-2.082.974-3.457.974-2.65 0-4.894-1.788-5.696-4.193H2.894v2.64A9.998 9.998 0 0 0 12 22Z"
+        fill="#34A853"
+      />
+      <path
+        d="M6.304 13.74A5.998 5.998 0 0 1 5.986 12c0-.604.11-1.19.318-1.74V7.62H2.894A9.999 9.999 0 0 0 2 12c0 1.61.386 3.134 1.07 4.38l3.234-2.64Z"
+        fill="#FBBC04"
+      />
+      <path
+        d="M12 6.066c1.5 0 2.848.516 3.91 1.53l2.933-2.934C17.06 2.998 14.75 2 12 2A9.998 9.998 0 0 0 2.894 7.62l3.41 2.64C7.106 7.854 9.35 6.066 12 6.066Z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
+
+interface LandingActionButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: "primary" | "secondary" | "ghost";
+  icon?: React.ReactNode;
+  disabled?: boolean;
+  className?: string;
+  type?: "button" | "submit";
+}
+
+function LandingActionButton({
+  children,
+  onClick,
+  variant = "secondary",
+  icon,
+  disabled = false,
+  className = "",
+  type = "button",
+}: LandingActionButtonProps) {
+  const variantClasses =
+    variant === "primary"
+      ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] hover:brightness-110"
+      : variant === "ghost"
+        ? "border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]"
+        : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]";
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
-      <a href="#main-content" className="skip-link">
-        {isHindi ? "मुख्य सामग्री पर जाएं" : "Skip to content"}
-      </a>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex h-14 w-full items-center justify-center gap-3 rounded-full border px-5 text-[15px] font-semibold tracking-[-0.01em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${variantClasses} ${className}`}
+    >
+      {icon}
+      <span>{children}</span>
+    </button>
+  );
+}
 
-      <header className="bg-[var(--color-primary)] text-white">
-        <div className="pb-container flex items-center justify-between px-0 py-4">
-          <PrepLogo compact />
-          <button
-            type="button"
-            onClick={() =>
-              updatePreferences({
-                language: isHindi ? "en" : "hi",
-              })
-            }
-            className="inline-flex items-center gap-2 rounded-[var(--radius-full)] border border-white/16 px-4 py-2 text-[var(--text-sm)] text-white/82 transition hover:bg-white/10"
+interface LandingAuthPanelProps {
+  user: ReturnType<typeof useAuth>["user"];
+  displayName: string;
+  panelError: string;
+  oauthLoading: boolean;
+  onGoogleAuth: () => Promise<void>;
+  onOpenSignup: () => void;
+  onOpenLogin: () => void;
+  onSignOut: () => Promise<void>;
+}
+
+function LandingAuthPanel({
+  user,
+  displayName,
+  panelError,
+  oauthLoading,
+  onGoogleAuth,
+  onOpenSignup,
+  onOpenLogin,
+  onSignOut,
+}: LandingAuthPanelProps) {
+  if (user) {
+    return (
+      <div className="w-full max-w-[430px] rounded-[34px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
+          Account
+        </p>
+        <h2 className="mt-4 text-[2.15rem] tracking-[-0.05em] text-[var(--text-primary)]">
+          Welcome back.
+        </h2>
+        <p className="mt-3 max-w-sm text-[15px] leading-7 text-[var(--text-secondary)]">
+          {displayName}, your daily practice flow is ready when you are.
+        </p>
+
+        <div className="mt-8 space-y-3">
+          <Link href="/practice">
+            <span className="inline-flex h-14 w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-[var(--brand)] bg-[var(--brand)] px-5 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition duration-200 hover:brightness-110">
+              Go to practice
+              <ArrowRight size={17} />
+            </span>
+          </Link>
+
+          <LandingActionButton
+            variant="ghost"
+            onClick={onSignOut}
+            icon={<LogOut size={16} />}
           >
-            <Globe className="h-4 w-4" />
-            {isHindi ? "EN" : "हिंदी"}
-          </button>
+            Sign out
+          </LandingActionButton>
         </div>
-      </header>
+      </div>
+    );
+  }
 
-      <main id="main-content">
-        <section className="pb-dot-grid relative overflow-hidden bg-[var(--color-primary)] text-white">
-          <div className="pb-container grid min-h-[calc(100vh-76px)] items-center gap-10 py-10 md:grid-cols-[minmax(0,1fr)_460px] md:py-16">
-            <div className="flex flex-col items-center text-center md:items-start md:text-left">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/10">
-                <Flame className="h-7 w-7 animate-[pb-flame-float_1.8s_ease-in-out_infinite] text-[var(--color-accent)]" />
-              </div>
-              <h1 className="pb-display max-w-[11ch] text-white">
-                {isHindi
-                  ? "UPSC और SSC के लिए भारत की सबसे तेज़ डेली प्रैक्टिस"
-                  : "India's fastest daily practice for UPSC & SSC"}
-              </h1>
-              <p className="mt-5 max-w-xl text-[var(--text-md)] text-white/75">
-                {isHindi
-                  ? "हर दिन 10 सवाल। वही आदत बनाइए जो टॉपर्स को लगातार आगे रखती है।"
-                  : "10 questions. Every day. Build the habit that toppers have."}
-              </p>
-              <div className="mt-6">
-                <LiveCounter
-                  initialValue={2847}
-                  label={
-                    isHindi ? "छात्र आज प्रैक्टिस कर चुके हैं" : "students practiced today"
-                  }
-                />
-              </div>
-              <div className="mt-8 w-full max-w-sm">
-                <Link href="/onboarding">
-                  <PrepButton
-                    asChild
-                    size="lg"
-                    fullWidth
-                    className="font-[var(--font-display)]"
+  return (
+    <div className="w-full max-w-[430px] rounded-[34px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
+        PrepBros
+      </p>
+      <h2 className="mt-4 text-[2.3rem] tracking-[-0.055em] text-[var(--text-primary)]">
+        Join today.
+      </h2>
+      <p className="mt-3 max-w-sm text-[15px] leading-7 text-[var(--text-secondary)]">
+        Keep daily practice in one calm, consistent loop.
+      </p>
+
+      <div className="mt-8 space-y-3">
+        <LandingActionButton
+          onClick={() => {
+            void onGoogleAuth();
+          }}
+          disabled={oauthLoading}
+          icon={
+            oauthLoading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <GoogleIcon />
+            )
+          }
+        >
+          Sign up with Google
+        </LandingActionButton>
+
+        <div className="flex items-center gap-4 py-1">
+          <div className="h-px flex-1 bg-[var(--border)]" />
+          <span className="text-xs uppercase tracking-[0.26em] text-[var(--text-faint)]">
+            or
+          </span>
+          <div className="h-px flex-1 bg-[var(--border)]" />
+        </div>
+
+        <LandingActionButton variant="primary" onClick={onOpenSignup}>
+          Create account
+        </LandingActionButton>
+      </div>
+
+      <p className="mt-5 text-[12px] leading-6 text-[var(--text-muted)]">
+        By signing up, you agree to the{" "}
+        <a
+          href={getPolicyUrl("/terms")}
+          target="_blank"
+          rel="noreferrer"
+          className="text-[var(--text-primary)] transition hover:text-[var(--brand)]"
+        >
+          Terms
+        </a>{" "}
+        and{" "}
+        <a
+          href={getPolicyUrl("/privacy")}
+          target="_blank"
+          rel="noreferrer"
+          className="text-[var(--text-primary)] transition hover:text-[var(--brand)]"
+        >
+          Privacy Policy
+        </a>
+        .
+      </p>
+
+      <div className="mt-8 border-t border-[var(--border)] pt-6">
+        <p className="text-[14px] text-[var(--text-secondary)]">
+          Already have an account?
+        </p>
+        <LandingActionButton className="mt-3" onClick={onOpenLogin}>
+          Sign in
+        </LandingActionButton>
+      </div>
+
+      {panelError ? (
+        <p className="mt-5 rounded-[18px] border border-[rgba(220,38,38,0.18)] bg-[rgba(220,38,38,0.08)] px-4 py-3 text-[13px] leading-6 text-[var(--red)]">
+          {panelError}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+type InteractiveSurfaceProps = {
+  children: ReactNode;
+  className?: string;
+};
+
+const interactiveRestStyle = {
+  "--mx": "50%",
+  "--my": "50%",
+  transform: "perspective(1200px) rotateX(0deg) rotateY(0deg)",
+} as CSSProperties;
+
+function InteractiveSurface({
+  children,
+  className = "",
+}: InteractiveSurfaceProps) {
+  const [style, setStyle] = useState<CSSProperties>(interactiveRestStyle);
+
+  return (
+    <div
+      className={`group relative overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1 ${className}`}
+      style={style}
+      onPointerMove={event => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        const rotateY = ((x - 50) / 50) * 4;
+        const rotateX = ((50 - y) / 50) * 4;
+
+        setStyle({
+          "--mx": `${x}%`,
+          "--my": `${y}%`,
+          transform: `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+        } as CSSProperties);
+      }}
+      onPointerLeave={() => setStyle(interactiveRestStyle)}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100"
+        style={
+          {
+            background:
+              "radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.12), transparent 34%)",
+          } as CSSProperties
+        }
+      />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
+
+export default function Home() {
+  const { user, loading, signInWithGoogle, signOut } = useAuth();
+  const [location, setLocation] = useLocation();
+  const [showAuth, setShowAuth] = useState(false);
+  const [authTab, setAuthTab] = useState<"login" | "signup">("signup");
+  const [oauthLoading, setOauthLoading] = useState(false);
+  const [panelError, setPanelError] = useState("");
+
+  const displayName =
+    user?.user_metadata?.full_name?.split(" ")[0] ||
+    user?.email?.split("@")[0] ||
+    "Aspirant";
+
+  useEffect(() => {
+    if (loading || !user || location !== "/" || typeof window === "undefined") {
+      return;
+    }
+
+    const storedRedirect = window.sessionStorage.getItem(
+      POST_AUTH_REDIRECT_STORAGE_KEY
+    );
+    const hash = window.location.hash;
+    const search = window.location.search;
+    const returnedFromAuth =
+      hash === "#" ||
+      hash.includes("access_token") ||
+      hash.includes("refresh_token") ||
+      hash.includes("type=") ||
+      search.includes("code=");
+
+    if (!storedRedirect && !returnedFromAuth) {
+      return;
+    }
+
+    window.sessionStorage.removeItem(POST_AUTH_REDIRECT_STORAGE_KEY);
+    setLocation(storedRedirect || "/practice");
+  }, [loading, location, setLocation, user]);
+
+  const openSignup = () => {
+    setPanelError("");
+    setAuthTab("signup");
+    setShowAuth(true);
+    trackEvent("landing_signup_opened", { source: "hero" });
+  };
+
+  const openLogin = () => {
+    setPanelError("");
+    setAuthTab("login");
+    setShowAuth(true);
+    trackEvent("landing_login_opened", { source: "hero" });
+  };
+
+  const handleHeroStart = () => {
+    if (user) {
+      setLocation("/practice");
+      return;
+    }
+
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      document.getElementById("join-panel")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      return;
+    }
+
+    openSignup();
+  };
+
+  const handleGoogleAuth = async () => {
+    setPanelError("");
+    setOauthLoading(true);
+    trackEvent("landing_google_auth_started");
+
+    const { error } = await signInWithGoogle();
+
+    if (error) {
+      setPanelError(
+        error.message || "Google sign in is not available right now."
+      );
+      setOauthLoading(false);
+      return;
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    trackEvent("landing_sign_out");
+  };
+
+  return (
+    <>
+      <div className="relative min-h-screen overflow-hidden bg-[var(--page-background)] text-[var(--text-primary)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.72),transparent_32%),radial-gradient(circle_at_78%_12%,rgba(148,163,184,0.16),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.22),transparent_38%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.14),transparent_32%),radial-gradient(circle_at_78%_12%,rgba(59,130,246,0.16),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.03),transparent_38%)]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.24] [background-image:linear-gradient(to_right,rgba(148,163,184,0.11)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.09)_1px,transparent_1px)] [background-size:160px_160px] dark:opacity-[0.12]" />
+        <div className="pointer-events-none absolute left-[-12%] top-[14%] h-[320px] w-[320px] rounded-full bg-[#dbeafe]/60 blur-[120px] dark:bg-[#1d4ed8]/20" />
+        <div className="pointer-events-none absolute right-[-8%] top-[8%] h-[360px] w-[360px] rounded-full bg-[#e2e8f0]/70 blur-[140px] dark:bg-[#475569]/22" />
+
+        <div className="relative z-10 mx-auto flex min-h-screen w-[min(1180px,calc(100vw-32px))] flex-col">
+          <nav className="flex items-center justify-between gap-4 py-5 sm:py-6 lg:py-7">
+            <BrandLogo
+              compact
+              className="gap-2.5"
+              textClassName="text-[1.55rem] font-semibold tracking-[-0.055em] text-[var(--text-primary)] md:text-[1.72rem]"
+            />
+
+            <div className="hidden items-center gap-7 lg:flex">
+              {NAV_ITEMS.map(item =>
+                item.type === "anchor" ? (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className="text-[15px] font-medium tracking-[-0.01em] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
                   >
-                    <span>
-                      {isHindi ? "फ्री प्रैक्टिस शुरू करें" : "Start Practicing Free"}{" "}
-                      <ArrowRight className="ml-1 inline h-4 w-4" />
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link key={item.label} href={item.href}>
+                    <span className="cursor-pointer text-[15px] font-medium tracking-[-0.01em] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]">
+                      {item.label}
                     </span>
-                  </PrepButton>
-                </Link>
-                <p className="mt-3 text-[var(--text-sm)] text-white/65">
-                  {isHindi
-                    ? "कोई क्रेडिट कार्ड नहीं। कोई ऐप डाउनलोड नहीं। ब्राउज़र में तुरंत चलेगा।"
-                    : "No credit card. No app download. Works in browser."}
-                </p>
-              </div>
+                  </Link>
+                )
+              )}
             </div>
 
-            <div className="relative mx-auto w-full max-w-[420px]">
-              <div className="absolute inset-x-10 top-4 h-40 rounded-full bg-[rgba(255,107,53,0.28)] blur-3xl" />
-              <PrepCard
-                variant="raised"
-                className="relative overflow-hidden rounded-[28px] border-white/10 bg-white/95 p-5 text-[var(--color-text-primary)]"
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              {user ? (
+                <>
+                  <Link href="/practice">
+                    <span className="inline-flex cursor-pointer items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] sm:px-5">
+                      Practice
+                    </span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleSignOut();
+                    }}
+                    className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] sm:px-5"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={openLogin}
+                    className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] sm:px-5"
+                  >
+                    Log in
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleHeroStart}
+                    className="inline-flex items-center justify-center rounded-full border border-[var(--brand)] bg-[var(--brand)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:brightness-110 sm:px-5"
+                  >
+                    Start free
+                  </button>
+                </>
+              )}
+            </div>
+          </nav>
+
+          <section
+            id="review-system"
+            className="grid flex-1 items-center gap-10 pb-10 pt-8 sm:pb-12 sm:pt-12 lg:grid-cols-[minmax(0,1.06fr)_minmax(390px,430px)] lg:gap-10 lg:pb-14"
+          >
+            <div className="max-w-[760px] pl-3 sm:pl-5 lg:pl-8 pr-0 lg:pr-2">
+              <p className="mb-5 inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
+                Calm prep workspace
+              </p>
+              <h1
+                className="text-[clamp(4.2rem,11vw,8.8rem)] leading-[0.86] tracking-[-0.085em] text-[var(--text-primary)] [text-wrap:balance]"
+                style={{ fontFamily: "var(--font-display)" }}
               >
-                <div className="flex items-center justify-between">
-                  <span className="rounded-[var(--radius-full)] bg-[#fff3ef] px-3 py-1 text-[var(--text-sm)] font-medium text-[var(--color-accent)]">
-                    {isHindi ? "आज की प्रैक्टिस" : "Today's Practice"}
-                  </span>
-                  <span className="font-[var(--font-mono)] text-[var(--text-sm)] text-[var(--color-text-muted)]">
-                    08:12
-                  </span>
-                </div>
-                <h2 className="mt-5 text-[28px] leading-tight">
-                  {isHindi ? "डेली क्विज़, बिना शोर के" : "Daily quiz, without the noise"}
-                </h2>
-                <p className="mt-3 text-[var(--text-base)] text-[var(--color-text-secondary)]">
-                  {isHindi
-                    ? "आज का विषय: पॉलिटी। 10 सवाल, साफ़ explanations, और तुरंत feedback."
-                    : "Today's subject: Polity. 10 questions, clean explanations, instant feedback."}
-                </p>
-                <div className="mt-6 rounded-[20px] bg-[var(--color-surface)] p-4">
-                  <div className="flex items-center justify-between text-[var(--text-sm)] text-[var(--color-text-secondary)]">
-                    <span>{isHindi ? "प्रोग्रेस" : "Progress"}</span>
-                    <span>7 / 10</span>
-                  </div>
-                  <div className="mt-3 h-2 rounded-full bg-white">
-                    <div className="h-full w-[70%] rounded-full bg-[var(--color-accent)]" />
-                  </div>
-                  <div className="mt-4 grid gap-3">
-                    {["Correct answers", "Weak area focus", "Review answers"].map(item => (
-                      <div
-                        key={item}
-                        className="flex items-center gap-3 rounded-[16px] bg-white px-4 py-3"
-                      >
-                        <CheckCircle2 className="h-4 w-4 text-[var(--color-success)]" />
-                        <span className="text-[var(--text-sm)] text-[var(--color-text-primary)]">
-                          {item}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </PrepCard>
-            </div>
-          </div>
-        </section>
+                <span className="block">Daily practice</span>
+                <span className="block">that keeps prep</span>
+                <span className="block">steady and clear.</span>
+              </h1>
 
-        <section className="border-y border-[var(--color-border)] bg-[var(--color-surface-raised)] py-5">
-          <div className="pb-container flex gap-4 overflow-x-auto pb-hide-scrollbar">
-            {LANDING_METRICS.map(metric => (
-              <div
-                key={metric.label}
-                className="min-w-[180px] rounded-[var(--radius-lg)] bg-[var(--color-surface-raised)] px-5 py-4 shadow-[var(--shadow-card)]"
-              >
-                <div className="flex items-center gap-3">
-                  <Star className="h-4 w-4 text-[var(--color-accent)]" />
-                  <strong className="font-[var(--font-display)] text-[24px]">
-                    {metric.value}
-                  </strong>
-                </div>
-                <p className="mt-2 text-[var(--text-sm)] text-[var(--color-text-muted)]">
-                  {metric.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
+              <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-[var(--text-secondary)] sm:text-[19px]">
+                Solve daily questions, review weak areas, and stay consistent in
+                a calmer prep flow that feels easy to return to.
+              </p>
 
-        <section className="pb-container py-16">
-          <div className="text-center">
-            <p className="pb-kicker">{isHindi ? "कैसे काम करता है" : "How it works"}</p>
-            <h2 className="pb-section-title mt-3">
-              {isHindi ? "PrepBros कैसे काम करता है" : "How PrepBros works"}
-            </h2>
-          </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {STEP_CARDS.map(card => {
-              const Icon = card.icon;
-              return (
-                <PrepCard key={card.step} className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff3ef] font-[var(--font-display)] text-[20px] font-bold text-[var(--color-accent)]">
-                      {card.step}
-                    </div>
-                    <Icon className="h-6 w-6 text-[var(--color-primary)]" />
-                  </div>
-                  <h3 className="mt-6 text-[22px]">{card.title}</h3>
-                  <p className="mt-3 text-[var(--text-base)] text-[var(--color-text-secondary)]">
-                    {card.description}
-                  </p>
-                </PrepCard>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="bg-[var(--color-surface)] py-16">
-          <div className="pb-container">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="pb-kicker">{isHindi ? "सोशल प्रूफ" : "Social proof"}</p>
-                <h2 className="pb-section-title mt-3">
-                  {isHindi ? "वे टॉपर्स जिन्होंने यहीं से शुरुआत की" : "Toppers who started here"}
-                </h2>
-              </div>
-            </div>
-            <div className="mt-8 flex gap-4 overflow-x-auto pb-hide-scrollbar">
-              {TESTIMONIALS.map(item => (
-                <PrepCard
-                  key={item.name}
-                  className="min-w-[290px] max-w-[320px] p-5"
+              <div className="mt-9 flex flex-wrap items-center gap-3 pl-1 sm:pl-2">
+                <button
+                  type="button"
+                  onClick={handleHeroStart}
+                  className="inline-flex items-center gap-3 rounded-full border border-[var(--brand)] bg-[var(--brand)] px-8 py-4 text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-lg)] transition duration-200 hover:translate-y-[-1px] hover:brightness-110"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-primary),var(--color-primary-light))] text-[var(--text-base)] font-bold text-white">
-                      {item.initials}
-                    </div>
-                    <div>
-                      <h3 className="text-[18px]">{item.name}</h3>
-                      <p className="text-[var(--text-sm)] text-[var(--color-text-muted)]">
-                        {item.exam}
-                      </p>
-                    </div>
+                  Start free
+                  <ArrowRight size={18} />
+                </button>
+
+                <a
+                  href="#join-panel"
+                  className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-7 py-4 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                >
+                  Explore signup
+                </a>
+              </div>
+
+              <div className="mt-7 flex flex-wrap gap-3 pl-1 sm:pl-2">
+                {HERO_PROOF_POINTS.map(item => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[13px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div
+              id="join-panel"
+              className="w-full lg:justify-self-start lg:border-l lg:border-[var(--border)] lg:pl-8"
+            >
+              <LandingAuthPanel
+                user={user}
+                displayName={displayName}
+                panelError={panelError}
+                oauthLoading={oauthLoading}
+                onGoogleAuth={handleGoogleAuth}
+                onOpenSignup={openSignup}
+                onOpenLogin={openLogin}
+                onSignOut={handleSignOut}
+              />
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div className="relative bg-[var(--page-background)] pb-4">
+        <div className="mx-auto w-[min(1180px,calc(100vw-32px))] space-y-6 pb-8 pt-4 sm:space-y-7 sm:pb-10">
+          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-start">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                  Prep at a glance
+                </p>
+                <h2
+                  className="mt-4 max-w-[10ch] text-[clamp(2.6rem,6vw,4rem)] leading-[0.94] tracking-[-0.07em] text-[var(--text-primary)]"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  One flow for solve, review, and progress.
+                </h2>
+                <p className="mt-5 max-w-[30rem] text-[15px] leading-7 text-[var(--text-secondary)]">
+                  Less reading. More signals. The sections below are built to be
+                  swiped, skimmed, and acted on.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { value: "Swipe", label: "Question flow" },
+                  { value: "Pull", label: "Dashboard refresh" },
+                  { value: "Track", label: "Course lanes" },
+                  { value: "Glow", label: "Cursor motion" },
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
+                      {item.label}
+                    </p>
+                    <p
+                      className="mt-3 text-[2.2rem] leading-none tracking-[-0.06em] text-[var(--text-primary)]"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {item.value}
+                    </p>
                   </div>
-                  <div className="mt-4 flex gap-1 text-[var(--color-accent)]">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Star key={index} className="h-4 w-4 fill-current" />
-                    ))}
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-4 lg:grid-cols-3">
+              {PLATFORM_PILLARS.map(item => (
+                <div
+                  key={item.title}
+                  className="rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
+                      {item.eyebrow}
+                    </p>
+                    <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-secondary)]">
+                      {item.meta}
+                    </span>
                   </div>
-                  <p className="mt-4 text-[var(--text-base)] text-[var(--color-text-secondary)]">
-                    "{item.quote}"
+                  <h3 className="mt-4 text-[1.6rem] tracking-[-0.045em] text-[var(--text-primary)]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                    {item.description}
                   </p>
-                  <p className="mt-4 text-[var(--text-sm)] font-medium text-[var(--color-primary)]">
-                    {item.rank}
-                  </p>
-                </PrepCard>
+                </div>
               ))}
             </div>
-          </div>
-        </section>
+          </InteractiveSurface>
 
-        <section className="pb-container py-16">
-          <div className="text-center">
-            <p className="pb-kicker">{isHindi ? "कवरेज" : "Coverage"}</p>
-            <h2 className="pb-section-title mt-3">
-              {isHindi ? "आप जिस भी परीक्षा की तैयारी करें" : "Prep for the exam you're chasing"}
-            </h2>
-          </div>
-          <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
-            {HOME_EXAMS.map(exam => (
-              <div
-                key={exam}
-                className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 text-center text-[var(--text-base)] font-medium text-[var(--color-text-primary)] transition hover:-translate-y-0.5 hover:bg-[var(--color-surface-raised)] hover:shadow-[var(--shadow-card)]"
-              >
-                {exam}
+          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                  Study lanes
+                </p>
+                <h2 className="mt-4 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+                  Swipe into the next track.
+                </h2>
               </div>
-            ))}
-          </div>
-        </section>
+              <p className="max-w-[28rem] text-sm leading-7 text-[var(--text-secondary)]">
+                Touch on mobile, drag on desktop, or tap the arrows.
+              </p>
+            </div>
 
-        <section className="bg-[var(--color-primary)] py-16 text-white">
-          <div className="pb-container text-center">
-            <h2 className="pb-section-title text-white">
-              {isHindi
-                ? "आपकी 15 मिनट की रोज़ की आदत अभी से शुरू होती है"
-                : "Your 15-minute daily habit starts now"}
-            </h2>
-            <p className="mt-4 text-[var(--text-md)] text-white/72">
-              {isHindi
-                ? "50,000+ अभ्यर्थियों के साथ जुड़ें जो पहले से रोज़ प्रैक्टिस कर रहे हैं।"
-                : "Join 50,000+ aspirants already practicing."}
-            </p>
-            <div className="mx-auto mt-8 max-w-sm">
-              <Link href="/onboarding">
-                <PrepButton asChild size="lg" fullWidth className="font-[var(--font-display)]">
-                  <span>
-                    {isHindi ? "अभी शुरू करें" : "Start Practicing Free"}{" "}
-                    <ArrowRight className="ml-1 inline h-4 w-4" />
-                  </span>
-                </PrepButton>
+            <Carousel className="mt-7" opts={{ align: "start", dragFree: true }}>
+              <CarouselContent>
+                {STUDY_TRACKS.map(track => (
+                  <CarouselItem
+                    key={track.title}
+                    className="md:basis-1/2 xl:basis-1/3"
+                  >
+                    <InteractiveSurface className="h-full rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                      <div className="flex items-start justify-between gap-4">
+                        <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
+                          <track.icon size={18} />
+                        </span>
+                        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-secondary)]">
+                          {track.metric}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-5 text-[1.6rem] tracking-[-0.045em] text-[var(--text-primary)]">
+                        {track.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        {track.subtitle}
+                      </p>
+
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {track.chips.map(chip => (
+                          <span
+                            key={chip}
+                            className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)]"
+                          >
+                            {chip}
+                          </span>
+                        ))}
+                      </div>
+
+                      <Link href={track.href}>
+                        <span className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--text-primary)] transition hover:text-[var(--brand)]">
+                          Open track
+                          <ArrowRight size={15} />
+                        </span>
+                      </Link>
+                    </InteractiveSurface>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-auto right-12 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+              <CarouselNext className="right-0 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+            </Carousel>
+          </InteractiveSurface>
+
+          <section className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                    Practice sets
+                  </p>
+                  <h3 className="mt-4 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+                    Built for quick momentum.
+                  </h3>
+                </div>
+                <p className="max-w-[22rem] text-sm leading-7 text-[var(--text-secondary)]">
+                  Swipe across sets, then jump straight into solving.
+                </p>
+              </div>
+
+              <Carousel className="mt-7" opts={{ align: "start", dragFree: true }}>
+                <CarouselContent>
+                  {PRACTICE_SET_CARDS.map(setCard => (
+                    <CarouselItem key={setCard.title} className="md:basis-1/2">
+                      <InteractiveSurface className="h-full rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
+                          {setCard.eyebrow}
+                        </p>
+                        <h4 className="mt-4 text-[1.45rem] tracking-[-0.04em] text-[var(--text-primary)]">
+                          {setCard.title}
+                        </h4>
+                        <p className="mt-2 text-sm leading-7 text-[var(--text-secondary)]">
+                          {setCard.detail}
+                        </p>
+
+                        <div className="mt-5 flex flex-wrap gap-2">
+                          {setCard.chips.map(chip => (
+                            <span
+                              key={chip}
+                              className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)]"
+                            >
+                              {chip}
+                            </span>
+                          ))}
+                        </div>
+
+                        <Link href={setCard.href}>
+                          <span className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--text-primary)] transition hover:text-[var(--brand)]">
+                            Start set
+                            <ArrowRight size={15} />
+                          </span>
+                        </Link>
+                      </InteractiveSurface>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-auto right-12 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+                <CarouselNext className="right-0 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+              </Carousel>
+            </InteractiveSurface>
+
+            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                Testimonials
+              </p>
+              <h3 className="mt-4 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+                What students feel.
+              </h3>
+
+              <Carousel className="mt-7" opts={{ align: "start", loop: true }}>
+                <CarouselContent>
+                  {TESTIMONIALS.map(item => (
+                    <CarouselItem key={item.name}>
+                      <InteractiveSurface className="h-full rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                        <p className="text-[1.05rem] leading-8 tracking-[-0.02em] text-[var(--text-primary)]">
+                          “{item.quote}”
+                        </p>
+                        <div className="mt-6">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">
+                            {item.name}
+                          </p>
+                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                            {item.role}
+                          </p>
+                        </div>
+                      </InteractiveSurface>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-auto right-12 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+                <CarouselNext className="right-0 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
+              </Carousel>
+
+              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                  Gestures
+                </p>
+                <div className="mt-3 grid gap-2 text-sm text-[var(--text-secondary)]">
+                  <p>Mobile: swipe questions, pull to refresh, slide menus away.</p>
+                  <p>Desktop: drag carousels, click arrows, use the same fallbacks.</p>
+                </div>
+              </div>
+            </InteractiveSurface>
+          </section>
+
+          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                  Pricing
+                </p>
+                <h2
+                  className="mt-4 text-[clamp(2.4rem,5vw,3.8rem)] leading-[0.96] tracking-[-0.07em] text-[var(--text-primary)]"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  Start free. Upgrade when it helps.
+                </h2>
+                <p className="mt-4 max-w-[30rem] text-[15px] leading-7 text-[var(--text-secondary)]">
+                  Clear plans for short bursts or long prep cycles.
+                </p>
+              </div>
+
+              <Link href="/premium">
+                <span className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[var(--brand)] bg-[var(--brand)] px-6 py-3 text-sm font-semibold text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:brightness-110">
+                  View full pricing
+                  <ArrowRight size={16} />
+                </span>
               </Link>
             </div>
-          </div>
-        </section>
-      </main>
 
-      <footer className="border-t border-[var(--color-border)] bg-[var(--color-surface-raised)] py-8">
-        <div className="pb-container flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <PrepLogo />
-            <p className="mt-3 flex items-center gap-2 text-[var(--text-sm)] text-[var(--color-text-muted)]">
-              <Heart className="h-4 w-4 text-[var(--color-accent)]" />
-              Made with care for India's aspirants
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-4 text-[var(--text-sm)] text-[var(--color-text-secondary)]">
-            {["About", "Blog", "Contact", "Privacy", "Terms"].map(link => (
-              <a key={link} href="#" className="transition hover:text-[var(--color-primary)]">
-                {link}
-              </a>
-            ))}
-          </div>
-          <div className="flex gap-3">
-            {SOCIAL_LINKS.map(link => {
-              const Icon = link.icon;
-              return (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  aria-label={link.label}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] transition hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+            <div className="mt-8 grid gap-4 lg:grid-cols-3">
+              {PRICING_PREVIEW.map(plan => (
+                <div
+                  key={plan.name}
+                  className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
                 >
-                  <Icon className="h-4 w-4" />
-                </a>
-              );
-            })}
-          </div>
+                  <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
+                    {plan.badge}
+                  </span>
+                  <h3 className="mt-5 text-[2rem] tracking-[-0.04em] text-[var(--text-primary)]">
+                    {plan.name}
+                  </h3>
+                  <div className="mt-4 flex items-end gap-2">
+                    <span
+                      className="text-[3.6rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {plan.price}
+                    </span>
+                    {plan.cadence ? (
+                      <span className="pb-2 text-sm text-[var(--text-secondary)]">
+                        {plan.cadence}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
+                    {plan.description}
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {plan.features.map(feature => (
+                      <span
+                        key={feature}
+                        className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)]"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </InteractiveSurface>
+
+          <section className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                    Essentials
+                  </p>
+                  <h3 className="mt-3 text-[2rem] tracking-[-0.05em] text-[var(--text-primary)]">
+                    Keep the important things close.
+                  </h3>
+                </div>
+                <p className="max-w-[25rem] text-sm leading-7 text-[var(--text-secondary)]">
+                  Product links, help, privacy, terms, and platform status stay easy to find.
+                </p>
+              </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {ESSENTIAL_LINKS.map(item => (
+                  <Link key={item.href} href={item.href}>
+                    <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
+                      <span className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
+                          <item.icon size={16} />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-medium text-[var(--text-primary)]">
+                            {item.label}
+                          </span>
+                          <span className="block text-xs text-[var(--text-faint)]">
+                            {item.note}
+                          </span>
+                        </span>
+                      </span>
+                      <ArrowRight size={15} className="text-[var(--text-faint)]" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </InteractiveSurface>
+
+            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                Trust and legal
+              </p>
+              <div className="mt-5 grid gap-3">
+                {[
+                  { label: "Privacy Policy", href: "/privacy" },
+                  { label: "Terms & Conditions", href: "/terms" },
+                  { label: "Support and Billing", href: "/support" },
+                  { label: "Platform Status", href: "/status" },
+                ].map(item => (
+                  <Link key={item.href} href={item.href}>
+                    <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
+                      {item.label}
+                      <ArrowRight size={15} className="text-[var(--text-faint)]" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                  Contact
+                </p>
+                <div className="mt-3 space-y-1 text-sm leading-7 text-[var(--text-secondary)]">
+                  <p>{siteConfig.supportEmail}</p>
+                  <p>{siteConfig.billingEmail}</p>
+                  <p>{siteConfig.companyAddress}</p>
+                </div>
+              </div>
+            </InteractiveSurface>
+          </section>
         </div>
-      </footer>
-    </div>
+
+        <Footer />
+      </div>
+
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        defaultTab={authTab}
+      />
+    </>
   );
 }
