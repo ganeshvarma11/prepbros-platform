@@ -3,17 +3,24 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
   DEFAULT_PREFERENCES,
   getStoredPreferences,
+  setStoredProfile,
   setStoredPreferences,
   type PrepPreferences,
 } from "@/lib/prepbro";
+import {
+  loadRemotePrepPreferences,
+  saveRemotePrepPreferences,
+} from "@/lib/prepbroRemote";
 
 type PrepPreferencesContextValue = {
   preferences: PrepPreferences;
@@ -32,17 +39,44 @@ export function PrepPreferencesProvider({
   const [preferences, setPreferences] = useState<PrepPreferences>(() =>
     getStoredPreferences()
   );
+  const { user } = useAuth();
   const { setTheme, resolvedTheme } = useTheme();
+  const remoteHydratedRef = useRef(false);
 
   useEffect(() => {
     setStoredPreferences(preferences);
   }, [preferences]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    if (!user) {
+      remoteHydratedRef.current = true;
+      return;
+    }
+
+    void loadRemotePrepPreferences(user).then(remote => {
+      if (cancelled) return;
+      setPreferences(current => ({ ...current, ...remote.preferences }));
+      setStoredProfile(remote.profile);
+      remoteHydratedRef.current = true;
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
     const root = document.documentElement;
     root.dataset.language = preferences.language;
     root.lang = preferences.language;
   }, [preferences.language]);
+
+  useEffect(() => {
+    if (!user || !remoteHydratedRef.current) return;
+    void saveRemotePrepPreferences(user, preferences);
+  }, [preferences, user]);
 
   useEffect(() => {
     setTheme(preferences.adaptiveDarkMode ? "system" : "light");

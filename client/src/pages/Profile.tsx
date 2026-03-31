@@ -5,13 +5,14 @@ import {
   PencilLine,
   Trophy,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { PrepBottomNav } from "@/components/prep/PrepBottomNav";
 import { PrepButton } from "@/components/prep/PrepButton";
 import { PrepCard } from "@/components/prep/PrepCard";
 import { usePrepPreferences } from "@/contexts/PrepPreferencesContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePracticeSessions } from "@/hooks/usePracticeSessions";
 import {
   ACHIEVEMENTS,
   PREP_EXAMS,
@@ -19,9 +20,9 @@ import {
   getProfileExam,
   getProgressSummary,
   getStoredProfile,
-  getStoredSessions,
   setStoredProfile,
 } from "@/lib/prepbro";
+import { saveRemoteProfile } from "@/lib/prepbroRemote";
 
 function getInitials(value: string) {
   return value
@@ -37,7 +38,7 @@ export default function Profile() {
   const { preferences, updatePreferences } = usePrepPreferences();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState(getStoredProfile());
-  const sessions = getStoredSessions();
+  const { sessions } = usePracticeSessions(user);
   const summary = getProgressSummary(sessions);
   const name = getDisplayName(user) || profile.displayName;
   const exam = getProfileExam(user) || profile.exam;
@@ -53,6 +54,17 @@ export default function Profile() {
     }),
     [sessions.length, summary.accuracy, summary.streak, summary.totalQuestions, summary.totalTimeSec]
   );
+
+  useEffect(() => {
+    const syncProfile = () => setProfile(getStoredProfile());
+    window.addEventListener("prepbro:profile-updated", syncProfile as EventListener);
+    return () => {
+      window.removeEventListener(
+        "prepbro:profile-updated",
+        syncProfile as EventListener
+      );
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] pb-28">
@@ -282,8 +294,12 @@ export default function Profile() {
               </PrepButton>
               <PrepButton
                 fullWidth
-                onClick={() => {
+                onClick={async () => {
                   setStoredProfile(profile);
+                  updatePreferences({ exam: profile.exam });
+                  if (user) {
+                    await saveRemoteProfile(user, profile);
+                  }
                   setIsEditing(false);
                 }}
               >
