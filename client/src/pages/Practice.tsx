@@ -37,7 +37,6 @@ import {
   type DifficultyMode,
   type PracticeSessionRecord,
 } from "@/lib/prepbro";
-import { saveRemotePracticeSession } from "@/lib/prepbroRemote";
 import { saveAnswer } from "@/lib/userProgress";
 
 type QuizStage = "setup" | "quiz" | "results";
@@ -284,9 +283,6 @@ export default function Practice() {
     };
 
     appendStoredSession(session);
-    if (user) {
-      void saveRemotePracticeSession(user, session);
-    }
     setSessionRecord(session);
     setStage("results");
   }

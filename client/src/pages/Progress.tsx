@@ -1,5 +1,5 @@
 import { Flame, Timer, TrendingDown, TrendingUp } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -17,14 +17,13 @@ import {
 import { PrepBottomNav } from "@/components/prep/PrepBottomNav";
 import { PrepCard } from "@/components/prep/PrepCard";
 import { usePrepPreferences } from "@/contexts/PrepPreferencesContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { useQuestionBank } from "@/hooks/useQuestionBank";
-import { usePracticeSessions } from "@/hooks/usePracticeSessions";
 import {
   formatDuration,
   getDailyAccuracySeries,
   getNinetyDayGrid,
   getProgressSummary,
+  getStoredSessions,
   getSubjectStats,
   getWeakTopics,
 } from "@/lib/prepbro";
@@ -38,12 +37,21 @@ const RANGE_MAP: Record<RangeKey, 7 | 30 | 90> = {
 };
 
 export default function Progress() {
-  const { user } = useAuth();
   const { preferences } = usePrepPreferences();
   const { questions } = useQuestionBank();
   const [range, setRange] = useState<RangeKey>("week");
-  const { sessions } = usePracticeSessions(user);
+  const [sessions, setSessions] = useState(getStoredSessions());
   const isHindi = preferences.language === "hi";
+
+  useEffect(() => {
+    const refresh = () => setSessions(getStoredSessions());
+    window.addEventListener("focus", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
 
   const summary = getProgressSummary(sessions);
   const chartData = getDailyAccuracySeries(sessions, RANGE_MAP[range]);

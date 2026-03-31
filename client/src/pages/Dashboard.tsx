@@ -1,5 +1,5 @@
 import { Award, ChevronRight, Flame, TrendingUp } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 
 import { PrepBottomNav } from "@/components/prep/PrepBottomNav";
@@ -11,15 +11,16 @@ import { StreakBadge } from "@/components/prep/StreakBadge";
 import { SubjectChip } from "@/components/prep/SubjectChip";
 import { usePrepPreferences } from "@/contexts/PrepPreferencesContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePracticeSessions } from "@/hooks/usePracticeSessions";
 import {
   LEADERBOARD_SEED,
   formatDateLabel,
   formatLongDate,
   getCurrentStreak,
   getDailySubject,
+  getDailySubject as getSubjectOfDay,
   getDisplayName,
   getSevenDayActivity,
+  getStoredSessions,
   getSubjectStats,
   getTodaysSession,
 } from "@/lib/prepbro";
@@ -31,8 +32,18 @@ function formatRank(score: number) {
 export default function Dashboard() {
   const { user } = useAuth();
   const { preferences } = usePrepPreferences();
-  const { sessions } = usePracticeSessions(user);
+  const [sessions, setSessions] = useState(getStoredSessions());
   const [showStreakDetail, setShowStreakDetail] = useState(false);
+
+  useEffect(() => {
+    const refresh = () => setSessions(getStoredSessions());
+    window.addEventListener("focus", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
 
   const isHindi = preferences.language === "hi";
   const displayName = getDisplayName(user);
