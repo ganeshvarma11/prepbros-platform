@@ -28,7 +28,7 @@ export function PageLoading({
       role="status"
       aria-live="polite"
     >
-      <div className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-5 py-3 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
+      <div className="inline-flex items-center gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] px-5 py-3 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
         <Loader2
           size={16}
           className="animate-spin text-[var(--brand)] motion-reduce:animate-none"
@@ -102,7 +102,7 @@ export function PageEmpty({
       {actionHref && actionLabel ? (
         <EmptyContent>
           <Link href={actionHref}>
-            <span className="btn-primary inline-flex cursor-pointer rounded-full px-5 py-2.5 text-sm">
+            <span className="btn-primary inline-flex cursor-pointer rounded-[14px] px-5 py-2.5 text-sm">
               {actionLabel}
             </span>
           </Link>
@@ -134,7 +134,7 @@ export function PageError({
       )}
       role="alert"
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--red)]/30 bg-[var(--bg-card)] text-[var(--red)]">
+      <div className="flex h-12 w-12 items-center justify-center rounded-[16px] border border-[var(--red)]/30 bg-[var(--bg-card)] text-[var(--red)]">
         <AlertCircle size={22} strokeWidth={2} />
       </div>
       <div>
@@ -142,7 +142,7 @@ export function PageError({
         <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">{message}</p>
       </div>
       {onRetry ? (
-        <button type="button" onClick={onRetry} className="btn-secondary rounded-full px-5 py-2 text-sm">
+        <button type="button" onClick={onRetry} className="btn-secondary rounded-[14px] px-5 py-2 text-sm">
           {retryLabel}
         </button>
       ) : null}

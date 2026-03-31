@@ -80,18 +80,18 @@ export default function OnboardingModal({
         onClick={handleSkip}
       />
 
-      <div className="relative max-h-[92svh] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-white/10 bg-[var(--bg-card-strong)] shadow-[0_40px_120px_-32px_rgba(15,23,42,0.55)] md:max-h-[90vh] md:rounded-[32px]">
+      <div className="relative max-h-[92svh] w-full max-w-2xl overflow-y-auto rounded-[24px] border border-[var(--border)] bg-[var(--bg-card-strong)] shadow-[var(--shadow-xl)] md:max-h-[90vh] md:rounded-[24px]">
         <button
           type="button"
           onClick={handleSkip}
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
         >
           <X size={16} />
         </button>
 
         <div className="grid md:grid-cols-[0.95fr_1.05fr]">
-          <div className="bg-[linear-gradient(160deg,#0f172a_0%,#1d4ed8_40%,#16a34a_120%)] px-6 py-8 text-white md:px-8 md:py-10">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+          <div className="bg-[linear-gradient(160deg,#101722_0%,#151d2a_58%,#101722_100%)] px-6 py-8 text-white md:px-8 md:py-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/60">
               First-session onboarding
             </p>
             <h2 className="mt-4 text-4xl font-semibold tracking-[-0.06em] text-white">
@@ -110,9 +110,9 @@ export default function OnboardingModal({
               ].map((item) => (
                 <div
                   key={item}
-                  className="flex items-start gap-3 rounded-3xl border border-white/12 bg-white/8 p-4"
+                  className="flex items-start gap-3 rounded-[18px] border border-white/10 bg-white/6 p-4"
                 >
-                  <CheckCircle2 size={18} className="mt-0.5 text-emerald-300" />
+                  <CheckCircle2 size={18} className="mt-0.5 text-[var(--brand-light)]" />
                   <p className="text-sm text-white/82">{item}</p>
                 </div>
               ))}
@@ -146,9 +146,9 @@ export default function OnboardingModal({
                       key={option}
                       type="button"
                       onClick={() => setDailyGoal(option)}
-                      className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                      className={`rounded-[14px] border px-4 py-3 text-left text-sm transition ${
                         dailyGoal === option
-                          ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand-dark)]"
+                          ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--text-primary)]"
                           : "border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text-secondary)]"
                       }`}
                     >
@@ -158,7 +158,7 @@ export default function OnboardingModal({
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+              <div className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
                 <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
                   <Target size={16} className="text-[var(--brand)]" />
                   Launch-ready onboarding note
@@ -173,7 +173,7 @@ export default function OnboardingModal({
                   type="button"
                   onClick={handleComplete}
                   disabled={saving}
-                  className="btn-primary rounded-full px-6 py-3"
+                  className="btn-primary rounded-[14px] px-6 py-3"
                 >
                   {saving ? "Saving..." : "Start with my plan"}
                   {!saving ? <ArrowRight size={16} /> : null}

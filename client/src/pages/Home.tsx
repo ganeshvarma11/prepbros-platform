@@ -281,17 +281,17 @@ function LandingActionButton({
 }: LandingActionButtonProps) {
   const variantClasses =
     variant === "primary"
-      ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] hover:brightness-110"
+      ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] hover:bg-[var(--brand-light)]"
       : variant === "ghost"
         ? "border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]"
-        : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]";
+        : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]";
 
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex h-14 w-full items-center justify-center gap-3 rounded-full border px-5 text-[15px] font-semibold tracking-[-0.01em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${variantClasses} ${className}`}
+      className={`inline-flex h-12 w-full items-center justify-center gap-3 rounded-[14px] border px-5 text-[15px] font-semibold tracking-[-0.01em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-70 ${variantClasses} ${className}`}
     >
       {icon}
       <span>{children}</span>
@@ -322,7 +322,7 @@ function LandingAuthPanel({
 }: LandingAuthPanelProps) {
   if (user) {
     return (
-      <div className="w-full max-w-[430px] rounded-[34px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+      <div className="w-full max-w-[430px] rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-7">
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
           Account
         </p>
@@ -335,7 +335,7 @@ function LandingAuthPanel({
 
         <div className="mt-8 space-y-3">
           <Link href="/practice">
-            <span className="inline-flex h-14 w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-[var(--brand)] bg-[var(--brand)] px-5 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition duration-200 hover:brightness-110">
+            <span className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-[14px] border border-[var(--brand)] bg-[var(--brand)] px-5 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] transition duration-200 hover:bg-[var(--brand-light)]">
               Go to practice
               <ArrowRight size={17} />
             </span>
@@ -354,7 +354,7 @@ function LandingAuthPanel({
   }
 
   return (
-    <div className="w-full max-w-[430px] rounded-[34px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+    <div className="w-full max-w-[430px] rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-7">
       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
         PrepBros
       </p>
@@ -427,7 +427,7 @@ function LandingAuthPanel({
       </div>
 
       {panelError ? (
-        <p className="mt-5 rounded-[18px] border border-[rgba(220,38,38,0.18)] bg-[rgba(220,38,38,0.08)] px-4 py-3 text-[13px] leading-6 text-[var(--red)]">
+        <p className="mt-5 rounded-[14px] border border-[rgba(212,106,106,0.24)] bg-[rgba(212,106,106,0.1)] px-4 py-3 text-[13px] leading-6 text-[var(--red)]">
           {panelError}
         </p>
       ) : null}
@@ -454,7 +454,7 @@ function InteractiveSurface({
 
   return (
     <div
-      className={`group relative overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1 ${className}`}
+      className={`group relative overflow-hidden transition duration-300 will-change-transform hover:-translate-y-0.5 ${className}`}
       style={style}
       onPointerMove={event => {
         const rect = event.currentTarget.getBoundingClientRect();
@@ -466,7 +466,7 @@ function InteractiveSurface({
         setStyle({
           "--mx": `${x}%`,
           "--my": `${y}%`,
-          transform: `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+          transform: `perspective(1200px) rotateX(${rotateX * 0.45}deg) rotateY(${rotateY * 0.45}deg)`,
         } as CSSProperties);
       }}
       onPointerLeave={() => setStyle(interactiveRestStyle)}
@@ -578,10 +578,10 @@ export default function Home() {
   return (
     <>
       <div className="relative min-h-screen overflow-hidden bg-[var(--page-background)] text-[var(--text-primary)]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.72),transparent_32%),radial-gradient(circle_at_78%_12%,rgba(148,163,184,0.16),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.22),transparent_38%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.14),transparent_32%),radial-gradient(circle_at_78%_12%,rgba(59,130,246,0.16),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.03),transparent_38%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.24] [background-image:linear-gradient(to_right,rgba(148,163,184,0.11)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.09)_1px,transparent_1px)] [background-size:160px_160px] dark:opacity-[0.12]" />
-        <div className="pointer-events-none absolute left-[-12%] top-[14%] h-[320px] w-[320px] rounded-full bg-[#dbeafe]/60 blur-[120px] dark:bg-[#1d4ed8]/20" />
-        <div className="pointer-events-none absolute right-[-8%] top-[8%] h-[360px] w-[360px] rounded-full bg-[#e2e8f0]/70 blur-[140px] dark:bg-[#475569]/22" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(110,151,255,0.08),transparent_28%),radial-gradient(circle_at_82%_12%,rgba(255,140,50,0.08),transparent_24%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.03),transparent_36%)]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:160px_160px]" />
+        <div className="pointer-events-none absolute left-[-12%] top-[14%] h-[320px] w-[320px] rounded-full bg-[rgba(110,151,255,0.08)] blur-[120px]" />
+        <div className="pointer-events-none absolute right-[-8%] top-[8%] h-[360px] w-[360px] rounded-full bg-[rgba(255,140,50,0.08)] blur-[140px]" />
 
         <div className="relative z-10 mx-auto flex min-h-screen w-[min(1180px,calc(100vw-32px))] flex-col">
           <nav className="flex items-center justify-between gap-4 py-5 sm:py-6 lg:py-7">
@@ -615,7 +615,7 @@ export default function Home() {
               {user ? (
                 <>
                   <Link href="/practice">
-                    <span className="inline-flex cursor-pointer items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] sm:px-5">
+                    <span className="inline-flex cursor-pointer items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] sm:px-5">
                       Practice
                     </span>
                   </Link>
@@ -624,7 +624,7 @@ export default function Home() {
                     onClick={() => {
                       void handleSignOut();
                     }}
-                    className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] sm:px-5"
+                    className="inline-flex items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] sm:px-5"
                   >
                     Sign out
                   </button>
@@ -634,14 +634,14 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={openLogin}
-                    className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] sm:px-5"
+                    className="inline-flex items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] sm:px-5"
                   >
                     Log in
                   </button>
                   <button
                     type="button"
                     onClick={handleHeroStart}
-                    className="inline-flex items-center justify-center rounded-full border border-[var(--brand)] bg-[var(--brand)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:brightness-110 sm:px-5"
+                    className="inline-flex items-center justify-center rounded-[14px] border border-[var(--brand)] bg-[var(--brand)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] transition hover:bg-[var(--brand-light)] sm:px-5"
                   >
                     Start free
                   </button>
@@ -655,12 +655,11 @@ export default function Home() {
             className="grid flex-1 items-center gap-10 pb-10 pt-8 sm:pb-12 sm:pt-12 lg:grid-cols-[minmax(0,1.06fr)_minmax(390px,430px)] lg:gap-10 lg:pb-14"
           >
             <div className="max-w-[760px] pl-3 sm:pl-5 lg:pl-8 pr-0 lg:pr-2">
-              <p className="mb-5 inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
+              <p className="mb-5 inline-flex rounded-[999px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-secondary)]">
                 Calm prep workspace
               </p>
               <h1
-                className="text-[clamp(4.2rem,11vw,8.8rem)] leading-[0.86] tracking-[-0.085em] text-[var(--text-primary)] [text-wrap:balance]"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="text-[clamp(3.5rem,9vw,4.25rem)] leading-[0.96] tracking-[-0.065em] text-[var(--text-primary)] [text-wrap:balance]"
               >
                 <span className="block">Daily practice</span>
                 <span className="block">that keeps prep</span>
@@ -676,7 +675,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleHeroStart}
-                  className="inline-flex items-center gap-3 rounded-full border border-[var(--brand)] bg-[var(--brand)] px-8 py-4 text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-lg)] transition duration-200 hover:translate-y-[-1px] hover:brightness-110"
+                  className="inline-flex items-center gap-3 rounded-[16px] border border-[var(--brand)] bg-[var(--brand)] px-7 py-3.5 text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] transition duration-200 hover:bg-[var(--brand-light)]"
                 >
                   Start free
                   <ArrowRight size={18} />
@@ -684,7 +683,7 @@ export default function Home() {
 
                 <a
                   href="#join-panel"
-                  className="inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-7 py-4 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                  className="inline-flex items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] px-6 py-3.5 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
                 >
                   Explore signup
                 </a>
@@ -694,7 +693,7 @@ export default function Home() {
                 {HERO_PROOF_POINTS.map(item => (
                   <span
                     key={item}
-                    className="rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[13px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]"
+                    className="rounded-[999px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[13px] font-semibold tracking-[-0.01em] text-[var(--text-secondary)]"
                   >
                     {item}
                   </span>
@@ -723,16 +722,13 @@ export default function Home() {
 
       <div className="relative bg-[var(--page-background)] pb-4">
         <div className="mx-auto w-[min(1180px,calc(100vw-32px))] space-y-6 pb-8 pt-4 sm:space-y-7 sm:pb-10">
-          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
+          <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-start">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                   Prep at a glance
                 </p>
-                <h2
-                  className="mt-4 max-w-[10ch] text-[clamp(2.6rem,6vw,4rem)] leading-[0.94] tracking-[-0.07em] text-[var(--text-primary)]"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
+                <h2 className="mt-4 max-w-[10ch] text-[clamp(2.6rem,6vw,4rem)] leading-[0.94] tracking-[-0.07em] text-[var(--text-primary)]">
                   One flow for solve, review, and progress.
                 </h2>
                 <p className="mt-5 max-w-[30rem] text-[15px] leading-7 text-[var(--text-secondary)]">
@@ -750,15 +746,12 @@ export default function Home() {
                 ].map(item => (
                   <div
                     key={item.label}
-                    className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
+                  className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
                       {item.label}
                     </p>
-                    <p
-                      className="mt-3 text-[2.2rem] leading-none tracking-[-0.06em] text-[var(--text-primary)]"
-                      style={{ fontFamily: "var(--font-display)" }}
-                    >
+                    <p className="mt-3 text-[2.2rem] leading-none tracking-[-0.06em] text-[var(--text-primary)]">
                       {item.value}
                     </p>
                   </div>
@@ -770,7 +763,7 @@ export default function Home() {
               {PLATFORM_PILLARS.map(item => (
                 <div
                   key={item.title}
-                  className="rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
+                  className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
@@ -791,7 +784,7 @@ export default function Home() {
             </div>
           </InteractiveSurface>
 
-          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+          <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
@@ -813,9 +806,9 @@ export default function Home() {
                     key={track.title}
                     className="md:basis-1/2 xl:basis-1/3"
                   >
-                    <InteractiveSurface className="h-full rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                    <InteractiveSurface className="h-full rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
                       <div className="flex items-start justify-between gap-4">
-                        <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
+                        <span className="inline-flex h-12 w-12 items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
                           <track.icon size={18} />
                         </span>
                         <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-secondary)]">
@@ -857,7 +850,7 @@ export default function Home() {
           </InteractiveSurface>
 
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
@@ -876,7 +869,7 @@ export default function Home() {
                 <CarouselContent>
                   {PRACTICE_SET_CARDS.map(setCard => (
                     <CarouselItem key={setCard.title} className="md:basis-1/2">
-                      <InteractiveSurface className="h-full rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                      <InteractiveSurface className="h-full rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
                           {setCard.eyebrow}
                         </p>
@@ -913,7 +906,7 @@ export default function Home() {
               </Carousel>
             </InteractiveSurface>
 
-            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                 Testimonials
               </p>
@@ -925,7 +918,7 @@ export default function Home() {
                 <CarouselContent>
                   {TESTIMONIALS.map(item => (
                     <CarouselItem key={item.name}>
-                      <InteractiveSurface className="h-full rounded-[26px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                      <InteractiveSurface className="h-full rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
                         <p className="text-[1.05rem] leading-8 tracking-[-0.02em] text-[var(--text-primary)]">
                           “{item.quote}”
                         </p>
@@ -945,7 +938,7 @@ export default function Home() {
                 <CarouselNext className="right-0 top-[-58px] border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]" />
               </Carousel>
 
-              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5">
+              <div className="mt-6 rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                   Gestures
                 </p>
@@ -957,16 +950,13 @@ export default function Home() {
             </InteractiveSurface>
           </section>
 
-          <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
+          <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                   Pricing
                 </p>
-                <h2
-                  className="mt-4 text-[clamp(2.4rem,5vw,3.8rem)] leading-[0.96] tracking-[-0.07em] text-[var(--text-primary)]"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
+                <h2 className="mt-4 text-[clamp(2.4rem,5vw,3.8rem)] leading-[0.96] tracking-[-0.07em] text-[var(--text-primary)]">
                   Start free. Upgrade when it helps.
                 </h2>
                 <p className="mt-4 max-w-[30rem] text-[15px] leading-7 text-[var(--text-secondary)]">
@@ -975,7 +965,7 @@ export default function Home() {
               </div>
 
               <Link href="/premium">
-                <span className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[var(--brand)] bg-[var(--brand)] px-6 py-3 text-sm font-semibold text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:brightness-110">
+                <span className="inline-flex cursor-pointer items-center gap-3 rounded-[14px] border border-[var(--brand)] bg-[var(--brand)] px-6 py-3 text-sm font-semibold text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] transition hover:bg-[var(--brand-light)]">
                   View full pricing
                   <ArrowRight size={16} />
                 </span>
@@ -986,7 +976,7 @@ export default function Home() {
               {PRICING_PREVIEW.map(plan => (
                 <div
                   key={plan.name}
-                  className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
+                  className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-2)]"
                 >
                   <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
                     {plan.badge}
@@ -995,10 +985,7 @@ export default function Home() {
                     {plan.name}
                   </h3>
                   <div className="mt-4 flex items-end gap-2">
-                    <span
-                      className="text-[3.6rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]"
-                      style={{ fontFamily: "var(--font-display)" }}
-                    >
+                    <span className="text-[3.6rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]">
                       {plan.price}
                     </span>
                     {plan.cadence ? (
@@ -1026,7 +1013,7 @@ export default function Home() {
           </InteractiveSurface>
 
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
@@ -1044,9 +1031,9 @@ export default function Home() {
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {ESSENTIAL_LINKS.map(item => (
                   <Link key={item.href} href={item.href}>
-                    <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
+                    <span className="flex cursor-pointer items-center justify-between rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
                       <span className="flex items-center gap-3">
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)]">
                           <item.icon size={16} />
                         </span>
                         <span>
@@ -1065,7 +1052,7 @@ export default function Home() {
               </div>
             </InteractiveSurface>
 
-            <InteractiveSurface className="rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                 Trust and legal
               </p>
@@ -1077,7 +1064,7 @@ export default function Home() {
                   { label: "Platform Status", href: "/status" },
                 ].map(item => (
                   <Link key={item.href} href={item.href}>
-                    <span className="flex cursor-pointer items-center justify-between rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
+                    <span className="flex cursor-pointer items-center justify-between rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-4 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]">
                       {item.label}
                       <ArrowRight size={15} className="text-[var(--text-faint)]" />
                     </span>
@@ -1085,7 +1072,7 @@ export default function Home() {
                 ))}
               </div>
 
-              <div className="mt-6 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5">
+              <div className="mt-6 rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                   Contact
                 </p>

@@ -1669,8 +1669,8 @@ function Admin() {
 
   if (authLoading || booting) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#fff7ed_0%,#f8fafc_55%,#eef2ff_100%)] dark:bg-[linear-gradient(180deg,#020617_0%,#0f172a_55%,#111827_100%)]">
-        <div className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--page-background)]">
+        <div className="inline-flex items-center gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-5 py-3 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
           <Loader2 size={16} className="animate-spin" />
           Preparing admin workspace...
         </div>
@@ -1681,7 +1681,7 @@ function Admin() {
   if (!user || user.email !== ADMIN_EMAIL) return null;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#fff7ed_0%,#f8fafc_48%,#eef2ff_100%)] text-slate-900 dark:bg-[linear-gradient(180deg,#020617_0%,#0f172a_48%,#111827_100%)] dark:text-white">
+    <div className="min-h-screen bg-[var(--page-background)] text-[var(--text-primary)]">
       {toast ? (
         <div
           className={cn(
@@ -1744,23 +1744,23 @@ function Admin() {
         </DialogContent>
       </Dialog>
 
-      <nav className="sticky top-0 z-40 border-b border-white/50 bg-white/70 backdrop-blur-xl dark:border-white/5 dark:bg-slate-950/75">
+      <nav className="sticky top-0 z-40 border-b border-[var(--border-soft)] bg-[var(--navbar-bg)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Link href="/" className="inline-flex items-center gap-3">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-500 text-sm font-bold text-white shadow-[0_12px_30px_rgba(249,115,22,0.35)]">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-[14px] bg-[var(--brand)] text-sm font-bold text-[var(--text-on-brand)] shadow-[var(--shadow-sm)]">
                 P
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-950 dark:text-white">PrepBros Admin</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Operations, imports, and content control</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">PrepBros Admin</p>
+                <p className="text-xs text-[var(--text-faint)]">Operations, imports, and content control</p>
               </div>
             </Link>
             <Pill tone="orange">Admin access</Pill>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden text-xs text-slate-500 dark:text-slate-400 md:inline">{user.email}</span>
+            <span className="hidden text-xs text-[var(--text-faint)] md:inline">{user.email}</span>
             <SmallButton
               icon={RefreshCcw}
               onClick={() => void loadAll()}
@@ -1776,17 +1776,17 @@ function Admin() {
       </nav>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
-        <section className="relative overflow-hidden rounded-[32px] border border-white/50 bg-[linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.92)_45%,rgba(249,115,22,0.95)_100%)] px-6 py-7 text-white shadow-[0_30px_90px_rgba(15,23,42,0.18)] md:px-8 md:py-8">
-          <div className="absolute inset-y-0 right-0 hidden w-[42%] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_58%)] lg:block" />
+        <section className="relative overflow-hidden rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(16,23,34,0.98),rgba(13,18,24,0.98)_62%,rgba(21,29,42,0.96)_100%)] px-6 py-7 text-[var(--text-primary)] shadow-[var(--shadow-lg)] md:px-8 md:py-8">
+          <div className="absolute inset-y-0 right-0 hidden w-[42%] bg-[radial-gradient(circle_at_top_right,rgba(255,140,50,0.12),transparent_58%)] lg:block" />
           <div className="relative grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-100/80">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                 Control Center
               </p>
               <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.06em] md:text-5xl">
-                Redesigning admin work around bulk operations instead of one-off edits.
+                Admin work in the same calm operating system.
               </h1>
-              <p className="mt-4 max-w-3xl text-sm leading-7 text-white/75 md:text-base">
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--text-secondary)] md:text-base">
                 Import question banks from copy-paste, CSV, TSV, or JSON. Filter aggressively, bulk
                 remove or deactivate bad rows, export clean slices, and keep resources, contests,
                 and support in one operational panel.
@@ -1794,13 +1794,13 @@ function Admin() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/practice"
-                  className="inline-flex items-center rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/16"
+                  className="inline-flex items-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
                 >
                   Review practice surface
                 </Link>
                 <Link
                   href="/resources"
-                  className="inline-flex items-center rounded-2xl border border-white/12 bg-black/10 px-4 py-2.5 text-sm font-medium text-white/90 transition hover:bg-black/20"
+                  className="inline-flex items-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]"
                 >
                   Review resources
                 </Link>
@@ -1808,17 +1808,17 @@ function Admin() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <div className="rounded-[24px] border border-white/12 bg-white/10 p-4 backdrop-blur">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Question bank</p>
-                <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">{questionStats.total}</p>
-                <p className="mt-2 text-sm text-white/70">
+              <div className="rounded-[18px] border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-4 backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">Question bank</p>
+                <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">{questionStats.total}</p>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">
                   {questionStats.active} active, {questionStats.inactive} inactive, {questionStats.pyq} PYQs
                 </p>
               </div>
-              <div className="rounded-[24px] border border-white/12 bg-white/10 p-4 backdrop-blur">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Resources</p>
-                <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">{resourceStats.total}</p>
-                <p className="mt-2 text-sm text-white/70">
+              <div className="rounded-[18px] border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-4 backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">Resources</p>
+                <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">{resourceStats.total}</p>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">
                   {resourceStats.active} active, {dbContests.length} contests, {supportRequests.length} support items
                 </p>
               </div>
@@ -1833,7 +1833,7 @@ function Admin() {
           <MetricCard label="Support" value={supportRequests.length} hint="User issues waiting for triage" icon={AlertCircle} tone="rose" />
         </section>
 
-        <section className="mt-6 flex flex-wrap gap-2 rounded-[24px] border border-white/60 bg-white/80 p-2 backdrop-blur dark:border-white/5 dark:bg-slate-950/70">
+        <section className="mt-6 flex flex-wrap gap-2 rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-2 backdrop-blur">
           {ADMIN_TABS.map(tab => {
             const label =
               tab === "questions"
@@ -1852,10 +1852,10 @@ function Admin() {
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 className={cn(
-                  "rounded-2xl px-4 py-2.5 text-sm font-medium transition",
+                  "rounded-[14px] px-4 py-2.5 text-sm font-medium transition",
                   active
-                    ? "bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950"
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900"
+                    ? "bg-[var(--surface-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
                 )}
               >
                 {label}

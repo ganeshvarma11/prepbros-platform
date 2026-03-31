@@ -170,7 +170,7 @@ export default function Contests() {
         <PageHeader
           eyebrow="Workspace"
           title="Contests"
-          description="Compete weekly, track outcomes, and bring real exam pressure into your practice loop."
+          description="Compete weekly, track results, and bring a cleaner sense of exam pressure into the practice loop."
           crumbs={[
             { label: "Dashboard", href: "/dashboard" },
             { label: "Contests" },
@@ -191,7 +191,7 @@ export default function Contests() {
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-6 shadow-[var(--shadow-sm)]">
+            <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-1)] p-6 shadow-[var(--shadow-sm)]">
               <p className="section-label">Next up</p>
               <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
                 Weekly Contest #14
@@ -209,12 +209,9 @@ export default function Contests() {
                 ].map(item => (
                   <div
                     key={item.label}
-                    className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-2)] p-3 text-center"
+                    className="rounded-[16px] border border-[var(--border)] bg-[var(--surface-2)] p-3 text-center"
                   >
-                    <p
-                      className="text-2xl tracking-[-0.04em] text-[var(--text-primary)]"
-                      style={{ fontFamily: "var(--font-display)" }}
-                    >
+                    <p className="text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
                       {String(item.value).padStart(2, "0")}
                     </p>
                     <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">
@@ -242,7 +239,7 @@ export default function Contests() {
               ].map(item => (
                 <div
                   key={item}
-                  className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-1)] p-4 text-sm text-[var(--text-secondary)]"
+                  className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-4 text-sm text-[var(--text-secondary)]"
                 >
                   {item}
                 </div>
@@ -251,7 +248,7 @@ export default function Contests() {
           </div>
 
           <div className="card p-6 md:p-8">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-subtle)] text-[var(--brand)]">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-[16px] bg-[var(--brand-subtle)] text-[var(--brand)]">
               <Sparkles size={18} />
             </div>
             <p className="mt-5 text-2xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">
@@ -267,7 +264,7 @@ export default function Contests() {
 
         <div className="card p-6 md:p-8">
           {loading ? (
-            <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
+            <div className="mb-6 inline-flex items-center gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
               <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
               Loading contest data...
             </div>
@@ -278,8 +275,8 @@ export default function Contests() {
               onClick={() => setActiveTab("upcoming")}
               className={
                 activeTab === "upcoming"
-                  ? "btn-primary rounded-full px-5 py-2"
-                  : "btn-secondary rounded-full px-5 py-2"
+                  ? "btn-primary rounded-[14px] px-5 py-2"
+                  : "btn-secondary rounded-[14px] px-5 py-2"
               }
             >
               Upcoming
@@ -289,8 +286,8 @@ export default function Contests() {
               onClick={() => setActiveTab("past")}
               className={
                 activeTab === "past"
-                  ? "btn-primary rounded-full px-5 py-2"
-                  : "btn-secondary rounded-full px-5 py-2"
+                  ? "btn-primary rounded-[14px] px-5 py-2"
+                  : "btn-secondary rounded-[14px] px-5 py-2"
               }
             >
               Past contests
@@ -302,7 +299,7 @@ export default function Contests() {
               contest => (
                 <div
                   key={contest.id}
-                  className="card rounded-[28px] p-5 md:p-6"
+                  className="card rounded-[20px] p-5 md:p-6"
                 >
                   <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                     <div>

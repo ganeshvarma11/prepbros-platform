@@ -11,7 +11,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="light"
+      defaultTheme="dark"
       enableSystem={false}
       storageKey={UI_THEME_STORAGE_KEY}
       disableTransitionOnChange

@@ -22,9 +22,9 @@ export default function Leaderboard() {
     <AppShell contentClassName="max-w-[960px]">
       <div className="flex min-h-[calc(100vh-7rem)] flex-col gap-10">
         <PageHeader
-          eyebrow="Progress"
+          eyebrow="Leaderboard"
           title="Leaderboard"
-          description="We are building a simpler, more meaningful way to track progress. For now, the best way to climb is to keep practicing."
+          description="A cleaner ranking system is on the way. For now, the best climb still comes from consistent daily practice."
           crumbs={[
             { label: "Dashboard", href: "/dashboard" },
             { label: "Leaderboard" },
@@ -32,7 +32,7 @@ export default function Leaderboard() {
         />
 
         <div className="flex flex-1 flex-col items-center justify-center px-4 py-6 text-center sm:px-6">
-          <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--amber)]">
+          <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] text-[var(--brand)]">
             <Trophy size={18} />
           </div>
 

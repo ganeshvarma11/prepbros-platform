@@ -124,25 +124,25 @@ const TABLE_COLUMNS = [
 ];
 
 const panelClassName =
-  "overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-lg)] backdrop-blur-xl";
+  "overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-lg)] backdrop-blur-xl";
 const softPanelClassName =
-  "rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] shadow-[var(--shadow-md)] backdrop-blur-xl";
+  "rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] shadow-[var(--shadow-md)] backdrop-blur-xl";
 const fieldClassName =
-  "w-full rounded-[18px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--border-focus)] focus:bg-[var(--surface-2)] focus:ring-4 focus:ring-[color:var(--brand-glow)]";
+  "w-full rounded-[14px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--border-focus)] focus:bg-[var(--surface-3)] focus:ring-4 focus:ring-[color:var(--brand-subtle)]";
 const accentChipClassName =
   "rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand)]";
 const ghostButtonClassName =
-  "inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]";
+  "inline-flex items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]";
 const primaryButtonClassName =
-  "inline-flex items-center justify-center rounded-full bg-[linear-gradient(180deg,var(--brand-light)_0%,var(--brand)_100%)] text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:translate-y-[-1px] hover:brightness-105";
+  "inline-flex items-center justify-center rounded-[14px] bg-[var(--brand)] text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] transition hover:translate-y-[-1px] hover:bg-[var(--brand-light)]";
 const insetCardClassName =
-  "rounded-[20px] border border-[var(--border)] bg-[var(--surface-2)]";
+  "rounded-[16px] border border-[var(--border)] bg-[var(--surface-2)]";
 const sectionLabelClassName =
   "text-[0.78rem] font-semibold uppercase tracking-[0.24em] text-[var(--text-secondary)]";
 const neutralMetaPillClassName =
   "inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-3 py-1.5 text-[0.72rem] font-semibold tracking-[0.03em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]";
 const navigationButtonClassName =
-  "inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]";
+  "inline-flex items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]";
 
 function createEmptyFilters(): PracticeFilters {
   return {
@@ -1438,14 +1438,12 @@ export default function Practice() {
                           <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                             Practice workspace
                           </p>
-                          <h1 className="text-[2.35rem] font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-[3rem]">
-                            Question Library
+                          <h1 className="text-[2.2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.8rem]">
+                            Practice desk
                           </h1>
                           <p className="mt-2 max-w-2xl text-[15px] leading-7 text-[var(--text-secondary)]">
-                            A focused practice desk built to surface fresh
-                            questions first, keep filters tucked away until you
-                            need them, and make everyday solving feel less
-                            noisy.
+                            Fresh questions first, review close at hand, and a
+                            quieter workspace for steady daily solving.
                           </p>
                         </div>
                         <p className="text-sm text-[var(--text-faint)]">
@@ -1485,10 +1483,7 @@ export default function Practice() {
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                           {item.label}
                         </p>
-                        <p
-                          className="mt-3 text-[1.9rem] tracking-[-0.06em] text-[var(--text-primary)]"
-                          style={{ fontFamily: "var(--font-display)" }}
-                        >
+                        <p className="mt-3 text-[1.9rem] tracking-[-0.06em] text-[var(--text-primary)]">
                           {item.value}
                         </p>
                         <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -1890,7 +1885,7 @@ export default function Practice() {
                 >
                   <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--brand)_60%,transparent_100%)]" />
                   <p className={sectionLabelClassName}>Question</p>
-                  <div className="mt-4 max-w-[46rem] whitespace-pre-line text-[1.14rem] font-semibold leading-[1.58] tracking-[-0.03em] text-[var(--text-primary)] md:text-[1.42rem]">
+                  <div className="mt-4 max-w-[46rem] whitespace-pre-line text-[1.08rem] font-semibold leading-[1.65] tracking-[-0.025em] text-[var(--text-primary)] md:text-[1.32rem]">
                     {formattedActiveQuestion}
                   </div>
                 </div>
@@ -1960,7 +1955,7 @@ export default function Practice() {
                   })}
                 </div>
 
-                <div className="flex flex-col gap-3 rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] px-5 py-4 shadow-[var(--shadow-sm)] md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-3 rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] px-5 py-4 shadow-[var(--shadow-sm)] md:flex-row md:items-center md:justify-between">
                   <p className="text-sm leading-6 text-[var(--text-secondary)] md:max-w-[38rem]">
                     {submittedOption === null
                       ? selectedOption === null

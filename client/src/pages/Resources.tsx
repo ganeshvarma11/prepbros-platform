@@ -180,9 +180,9 @@ export default function Resources() {
     <AppShell contentClassName="max-w-[1120px]">
       <div className="space-y-8">
         <PageHeader
-          eyebrow="Progress"
+          eyebrow="Resources"
           title="Resources"
-          description="Useful study materials, books, PDFs, and channels in one focused place."
+          description="Study material organized for quick scanning instead of card noise."
           crumbs={[
             { label: "Dashboard", href: "/dashboard" },
             { label: "Resources" },
@@ -223,10 +223,7 @@ export default function Resources() {
                     key={tab}
                     type="button"
                     onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      active ? "btn-primary" : "btn-ghost",
-                      "min-w-[80px]"
-                    )}
+                    className={cn(active ? "btn-primary" : "btn-ghost", "min-w-[80px]")}
                   >
                     {tab}
                   </button>
@@ -277,7 +274,7 @@ export default function Resources() {
                           ) : null}
                         </div>
 
-                        <h2 className="mt-4 text-xl font-medium tracking-[-0.03em] text-[var(--text-1)]">
+                        <h2 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[var(--text-1)]">
                           {resource.title}
                         </h2>
                         <p className="mt-2 text-sm font-medium text-[var(--text-2)]">

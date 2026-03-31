@@ -529,7 +529,7 @@ export default function Dashboard() {
       />
 
       <div className="relative">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.78),transparent_32%),radial-gradient(circle_at_82%_12%,rgba(191,219,254,0.34),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.14),transparent_32%),radial-gradient(circle_at_82%_12%,rgba(59,130,246,0.14),transparent_24%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(110,151,255,0.08),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(255,140,50,0.08),transparent_22%)]" />
         <div
           {...dashboardRefresh.bind}
           className="relative z-10 mx-auto w-full max-w-[1120px] space-y-6 pb-6 transition-transform duration-200"
@@ -565,8 +565,8 @@ export default function Dashboard() {
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <PageHeader
                 eyebrow="Dashboard"
-                title="Study with a calmer, clearer rhythm."
-                description={`${displayName}, you're preparing for ${targetExam}. ${formatLongDate(new Date())} and you ${dailyRemaining > 0 ? `have ${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} left today.` : "have already completed today's goal."}`}
+                title="Your practice command center."
+                description={`${displayName}, you’re working toward ${targetExam}. ${formatLongDate(new Date())}. ${dailyRemaining > 0 ? `${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} still close today’s target.` : "Today’s target is complete, so this is a good moment for review."}`}
                 className="mb-0 flex-1"
                 actions={
                   <div className="flex flex-wrap gap-3">
@@ -629,10 +629,7 @@ export default function Dashboard() {
                   <p className="section-label">Coverage</p>
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <p
-                        className="text-[3.7rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]"
-                        style={{ fontFamily: "var(--font-display)" }}
-                      >
+                      <p className="text-[3.7rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]">
                         {solvedPercent}%
                       </p>
                       <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
@@ -640,7 +637,7 @@ export default function Dashboard() {
                         {formatCount(totalUnattempted)} still untouched.
                       </p>
                     </div>
-                    <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3">
+                    <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                         Today&apos;s target
                       </p>
@@ -698,7 +695,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
                   <p className="section-label">Signals</p>
                   <div className="mt-4 space-y-5">
                     <div>
@@ -765,10 +762,10 @@ export default function Dashboard() {
                         <span className="text-[11px] text-[var(--text-faint)]">
                           {day.count}
                         </span>
-                        <div className="relative flex h-[160px] w-full items-end rounded-[18px] bg-[var(--surface-1)] px-2 pb-2">
+                        <div className="relative flex h-[160px] w-full items-end rounded-[14px] bg-[var(--surface-1)] px-2 pb-2">
                           <div
                             title={`${day.title}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
-                            className="w-full rounded-[14px] bg-[linear-gradient(180deg,var(--accent)_0%,var(--brand)_100%)] transition duration-300 hover:-translate-y-1"
+                            className="w-full rounded-[10px] bg-[linear-gradient(180deg,var(--accent)_0%,var(--brand)_100%)] transition duration-300 hover:-translate-y-0.5"
                             style={{
                               height: `${height}%`,
                               opacity: day.count === 0 ? 0.18 : 0.94,

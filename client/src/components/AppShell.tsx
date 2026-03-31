@@ -115,17 +115,17 @@ function NavLink({
       <span
         onClick={onNavigate}
         className={cn(
-          "group relative flex cursor-pointer items-center rounded-[18px] border text-[14px] transition-all",
-          collapsed ? "justify-center px-0 py-3" : "gap-3 px-4 py-3",
+          "group relative flex cursor-pointer items-center rounded-[14px] border text-[14px] transition-all",
+          collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3.5 py-2.5",
           active
-            ? "border-[var(--border-2)] bg-[var(--surface-2)] font-semibold text-[var(--text-1)] shadow-[var(--shadow-sm)]"
-            : "border-transparent text-[var(--text-1)] hover:border-[var(--border-1)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
+            ? "border-[var(--border)] bg-[var(--surface-elevated)] font-semibold text-[var(--text-1)] shadow-[var(--shadow-sm)]"
+            : "border-transparent text-[var(--text-2)] hover:border-[var(--border-soft)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
         )}
         title={collapsed ? item.label : undefined}
       >
         <span
           className={cn(
-            "absolute left-[10px] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full transition",
+            "absolute left-0 top-[8px] bottom-[8px] w-[2px] rounded-full transition",
             active ? "bg-[var(--brand)]" : "bg-transparent"
           )}
         />
@@ -168,7 +168,7 @@ function SidebarBody({
   const initials = getInitials(displayName);
 
   return (
-    <div className="relative flex h-full flex-col border-r border-[var(--border-2)] bg-[var(--bg-card)] px-3 py-4 shadow-[var(--shadow-md)] backdrop-blur-xl">
+    <div className="relative flex h-full flex-col border-r border-[var(--border-soft)] bg-[var(--sidebar-bg)] px-3 py-4 backdrop-blur-xl">
       <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
         {collapsed ? (
           <Link href="/">
@@ -191,7 +191,7 @@ function SidebarBody({
           type="button"
           onClick={onToggle}
           className={cn(
-            "mt-4 inline-flex h-10 w-full items-center justify-center rounded-full border border-transparent bg-[var(--surface-2)] text-[var(--text-2)] shadow-[var(--shadow-sm)] transition hover:bg-[var(--surface-1)] hover:text-[var(--text-1)]",
+            "mt-4 inline-flex h-10 w-full items-center justify-center rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-2)] text-[var(--text-2)] transition hover:border-[var(--border)] hover:bg-[var(--surface-1)] hover:text-[var(--text-1)]",
             collapsed ? "px-0" : "gap-2 px-3"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -208,7 +208,7 @@ function SidebarBody({
           {NAV_GROUPS.map(group => (
             <div key={group.label}>
               {!collapsed ? (
-                <p className="section-label px-3 text-[var(--text-2)]">
+                <p className="section-label px-3 text-[var(--text-3)]">
                   {group.label}
                 </p>
               ) : null}
@@ -227,7 +227,7 @@ function SidebarBody({
         ))}
       </div>
 
-      <div className="space-y-3 border-t border-[var(--border-1)] pt-4">
+      <div className="space-y-3 border-t border-[var(--border-soft)] pt-4">
         <NavLink
           item={SUPPORT_ITEM}
           location={location}
@@ -237,7 +237,7 @@ function SidebarBody({
 
         <div
           className={cn(
-            "flex items-center rounded-[18px] border border-[var(--border-1)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
+            "flex items-center rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-1)]",
             collapsed
               ? "justify-center px-0 py-2.5"
               : "justify-between px-3 py-2.5"
@@ -250,7 +250,7 @@ function SidebarBody({
         {user ? (
           <div
             className={cn(
-              "flex items-center rounded-[18px] border border-transparent transition hover:border-[var(--border-1)] hover:bg-[var(--surface-1)]",
+              "flex items-center rounded-[14px] border border-transparent transition hover:border-[var(--border-soft)] hover:bg-[var(--surface-1)]",
               collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"
             )}
           >
@@ -292,7 +292,7 @@ function SidebarBody({
                     onNavigate?.();
                     signOut();
                   }}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-3)] transition hover:bg-[var(--surface-3)] hover:text-[var(--text-1)]"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] text-[var(--text-3)] transition hover:bg-[var(--surface-3)] hover:text-[var(--text-1)]"
                   aria-label="Sign out"
                   title="Sign out"
                 >
@@ -477,14 +477,14 @@ export default function AppShell({
         </aside>
 
         <div className="relative min-w-0 flex-1">
-          <header className="sticky top-0 z-30 border-b border-[var(--border-1)] bg-[color:rgba(247,250,252,0.72)] backdrop-blur-xl dark:bg-[color:rgba(8,15,29,0.72)] lg:hidden">
+          <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-[var(--navbar-bg)] backdrop-blur-xl lg:hidden">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
                 <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                   <button
                     type="button"
                     onClick={() => setMobileOpen(true)}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--text-1)] shadow-[var(--shadow-sm)]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-1)]"
                     aria-label="Open navigation"
                   >
                     <Menu size={18} />
@@ -530,7 +530,7 @@ export default function AppShell({
               <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <Link href={user ? "/profile" : "/"}>
-                  <span className="flex cursor-pointer items-center rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] p-1.5 shadow-[var(--shadow-sm)]">
+                  <span className="flex cursor-pointer items-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] p-1.5">
                     <Avatar className="h-8 w-8 rounded-full">
                       <AvatarImage
                         src={avatarUrl}

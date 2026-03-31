@@ -73,8 +73,8 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
     "Aspirant";
 
   const navSurfaceClassName = isLanding
-    ? "border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] backdrop-blur-xl"
-    : "border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] backdrop-blur-xl";
+    ? "border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] backdrop-blur-xl"
+    : "border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-primary)] backdrop-blur-xl";
 
   return (
     <>
@@ -128,7 +128,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                 <>
                   <Link href="/profile">
                     <span
-                      className={`inline-flex cursor-pointer items-center gap-3 rounded-[16px] px-4 py-3 text-sm font-medium transition hover:border-[var(--border-strong)] ${navSurfaceClassName}`}
+                      className={`inline-flex cursor-pointer items-center gap-3 rounded-[14px] px-4 py-3 text-sm font-medium transition hover:border-[var(--border-strong)] ${navSurfaceClassName}`}
                     >
                       <span className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-[var(--surface-3)] text-sm font-semibold text-[var(--text-primary)]">
                         {displayName.charAt(0).toUpperCase()}
@@ -139,25 +139,25 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                   <button
                     type="button"
                     onClick={() => signOut()}
-                    className={`inline-flex h-12 w-12 items-center justify-center rounded-[16px] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] ${navSurfaceClassName}`}
+                    className={`inline-flex h-12 w-12 items-center justify-center rounded-[14px] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] ${navSurfaceClassName}`}
                     aria-label="Sign out"
                   >
                     <LogOut size={18} />
                   </button>
                 </>
               ) : (
-                <div className="overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]">
+                <div className="overflow-hidden rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)]">
                   <button
                     type="button"
                     onClick={openLogin}
-                    className="px-7 py-3.5 text-lg font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
+                    className="px-6 py-3 text-base font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
                   >
                     Login
                   </button>
                   <button
                     type="button"
                     onClick={openSignup}
-                    className="border-l border-[var(--border)] bg-[var(--surface-2)] px-7 py-3.5 text-lg font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-3)]"
+                    className="border-l border-[var(--border)] bg-[var(--surface-2)] px-6 py-3 text-base font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-3)]"
                   >
                     Start
                   </button>
@@ -193,14 +193,14 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                   <button
                     type="button"
                     onClick={openLogin}
-                    className={`inline-flex items-center justify-center rounded-[14px] px-7 py-3 text-lg font-medium transition hover:border-[var(--border-strong)] ${navSurfaceClassName}`}
+                    className={`inline-flex items-center justify-center rounded-[14px] px-6 py-3 text-base font-medium transition hover:border-[var(--border-strong)] ${navSurfaceClassName}`}
                   >
                     Login
                   </button>
                   <button
                     type="button"
                     onClick={openSignup}
-                    className="inline-flex items-center justify-center rounded-[14px] bg-[linear-gradient(180deg,var(--brand-light)_0%,var(--brand)_100%)] px-8 py-3 text-lg font-medium text-[var(--text-on-brand)] shadow-[var(--shadow-md)] transition hover:brightness-105"
+                    className="inline-flex items-center justify-center rounded-[14px] bg-[var(--brand)] px-6 py-3 text-base font-semibold text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] transition hover:bg-[var(--brand-light)]"
                   >
                     Start Free
                   </button>
@@ -214,7 +214,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
             <button
               type="button"
               onClick={() => setIsOpen(value => !value)}
-              className={`flex h-11 w-11 items-center justify-center rounded-[14px] ${navSurfaceClassName}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-[12px] ${navSurfaceClassName}`}
               aria-label="Open menu"
             >
               {isOpen ? <X size={18} /> : <Menu size={18} />}
@@ -310,7 +310,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                         "inline-flex items-center justify-center gap-2 rounded-[12px] px-4 py-3 text-sm font-medium text-white",
                         isLanding
                           ? "bg-[var(--surface-2)] text-[var(--text-primary)]"
-                          : "bg-[linear-gradient(180deg,var(--brand-light)_0%,var(--brand)_100%)] text-[var(--text-on-brand)]"
+                          : "bg-[var(--brand)] text-[var(--text-on-brand)]"
                       )}
                     >
                       <ArrowRight size={14} />

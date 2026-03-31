@@ -30,7 +30,7 @@ export default function Footer() {
 
           <div className="flex flex-wrap gap-3">
             <Link href="/practice">
-              <span className="inline-flex cursor-pointer items-center gap-2 rounded-[14px] bg-[linear-gradient(180deg,var(--brand-light)_0%,var(--brand)_100%)] px-5 py-3 text-sm font-medium text-[var(--text-on-brand)] shadow-[var(--shadow-md)]">
+              <span className="inline-flex cursor-pointer items-center gap-2 rounded-[14px] bg-[var(--brand)] px-5 py-3 text-sm font-medium text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] transition hover:bg-[var(--brand-light)]">
                 Start Practicing
                 <ArrowRight size={15} />
               </span>

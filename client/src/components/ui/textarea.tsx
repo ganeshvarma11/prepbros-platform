@@ -53,7 +53,7 @@ function Textarea({
     <textarea
       data-slot="textarea"
       className={cn(
-        "flex field-sizing-content min-h-16 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex field-sizing-content disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       onCompositionStart={handleCompositionStart}

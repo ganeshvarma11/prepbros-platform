@@ -101,9 +101,9 @@ export default function Premium() {
     <AppShell contentClassName="max-w-[1120px]">
       <div className="space-y-8 py-4 md:py-8">
         <PageHeader
-          eyebrow="Progress"
+          eyebrow="Premium"
           title="Premium"
-          description="Choose a plan that fits your preparation cycle."
+          description="Clear plans for learners who want more review depth, more access, and a steadier long-term prep setup."
           crumbs={[
             { label: "Dashboard", href: "/dashboard" },
             { label: "Premium" },
@@ -124,7 +124,7 @@ export default function Premium() {
                   plan.planKey === "free"
                     ? "border-[var(--border-strong)]"
                     : plan.highlighted
-                      ? "border-[var(--brand-muted)] shadow-[var(--shadow-lg)]"
+                      ? "border-[var(--brand-muted)] bg-[var(--surface-elevated)] shadow-[var(--shadow-lg)]"
                       : ""
                 }`}
               >
@@ -135,12 +135,12 @@ export default function Premium() {
                 ) : null}
 
                 <div className="flex h-full flex-col">
-                  <h2 className="text-3xl font-medium tracking-[-0.05em] text-[var(--text-1)]">
+                  <h2 className="text-[2rem] font-semibold tracking-[-0.05em] text-[var(--text-1)]">
                     {plan.name}
                   </h2>
 
                   <div className="mt-5 flex items-end gap-2">
-                    <span className="font-serif text-6xl font-normal tracking-[-0.04em] text-[var(--text-1)]">
+                    <span className="text-6xl font-semibold tracking-[-0.06em] text-[var(--text-1)]">
                       {plan.price}
                     </span>
                     {plan.period ? (
@@ -191,7 +191,7 @@ export default function Premium() {
             {faqs.map(item => (
               <div key={item.question} className="card py-5">
                 <div className="flex items-center justify-between gap-4">
-                  <p className="text-lg font-medium tracking-[-0.03em] text-[var(--text-1)]">
+                  <p className="text-lg font-semibold tracking-[-0.03em] text-[var(--text-1)]">
                     {item.question}
                   </p>
                   <ArrowRight

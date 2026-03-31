@@ -861,8 +861,8 @@ export default function Profile() {
   return (
     <AppShell contentClassName="max-w-none">
       <div className="relative overflow-x-clip">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.76),transparent_34%),radial-gradient(circle_at_80%_18%,rgba(191,219,254,0.24),transparent_25%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.1),transparent_34%),radial-gradient(circle_at_80%_18%,rgba(59,130,246,0.12),transparent_25%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:linear-gradient(to_right,rgba(148,163,184,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:150px_150px] dark:opacity-[0.08]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(110,151,255,0.08),transparent_32%),radial-gradient(circle_at_80%_18%,rgba(255,140,50,0.08),transparent_24%)]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:150px_150px]" />
 
         <div className="relative z-10 mx-auto w-full max-w-[1120px] pb-10">
           <input
@@ -1049,7 +1049,7 @@ export default function Profile() {
             </DialogContent>
           </Dialog>
 
-          <div className="sticky top-0 z-20 mb-6 rounded-[24px] border border-[var(--border-2)] bg-[var(--bg-card)] px-3 py-2 shadow-[var(--shadow-sm)] backdrop-blur-xl md:px-4">
+          <div className="sticky top-0 z-20 mb-6 rounded-[18px] border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 shadow-[var(--shadow-sm)] backdrop-blur-xl md:px-4">
             <div className="flex items-center gap-2 overflow-x-auto">
               {[
                 { key: "profile", label: "Profile" },
@@ -1060,7 +1060,7 @@ export default function Profile() {
                   key={item.key}
                   type="button"
                   onClick={() => setActiveTab(item.key as ActiveTab)}
-                  className={`inline-flex items-center rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+                  className={`inline-flex items-center rounded-[14px] border px-4 py-2.5 text-sm font-semibold transition ${
                     activeTab === item.key
                       ? "border-[var(--border-2)] bg-[var(--surface-2)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
                       : "border-transparent bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]"
@@ -1074,7 +1074,7 @@ export default function Profile() {
 
           {activeTab === "profile" ? (
             <section className="overflow-hidden">
-              <div className="relative h-[190px] overflow-hidden rounded-[28px] border border-[var(--border)] bg-[linear-gradient(135deg,#eef4fb_0%,#dfeaf6_38%,#eef4fb_100%)] dark:bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_38%,#0f172a_100%)]">
+              <div className="relative h-[190px] overflow-hidden rounded-[22px] border border-[var(--border)] bg-[linear-gradient(135deg,#101722_0%,#151d2a_48%,#101722_100%)]">
                 {bannerUrl ? (
                   <img
                     src={bannerUrl}
@@ -1082,14 +1082,14 @@ export default function Profile() {
                     className="absolute inset-0 h-full w-full object-cover"
                   />
                 ) : null}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(15,23,42,0.08),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(37,99,235,0.08),transparent_45%)] dark:bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.08),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(147,197,253,0.08),transparent_45%)]" />
-                <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(to_right,rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.14)_1px,transparent_1px)] [background-size:180px_180px]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(110,151,255,0.1),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(255,140,50,0.08),transparent_40%)]" />
+                <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(to_right,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:180px_180px]" />
                 <div className="absolute right-4 top-4 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => bannerInputRef.current?.click()}
                     disabled={uploadingMedia.banner}
-                    className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[color:rgba(255,255,255,0.68)] px-3 py-2 text-xs text-[var(--text-primary)] backdrop-blur-sm transition hover:bg-[color:rgba(255,255,255,0.86)] disabled:opacity-70 dark:bg-[color:rgba(2,6,23,0.48)] dark:hover:bg-[color:rgba(2,6,23,0.68)]"
+                    className="inline-flex items-center gap-2 rounded-[12px] border border-[var(--border)] bg-[color:rgba(255,255,255,0.68)] px-3 py-2 text-xs text-[var(--text-primary)] backdrop-blur-sm transition hover:bg-[color:rgba(255,255,255,0.86)] disabled:opacity-70 dark:bg-[color:rgba(2,6,23,0.48)] dark:hover:bg-[color:rgba(2,6,23,0.68)]"
                   >
                     {uploadingMedia.banner ? (
                       <Loader2 size={13} className="animate-spin" />
@@ -1105,7 +1105,7 @@ export default function Profile() {
                         void removeMedia("banner");
                       }}
                       disabled={uploadingMedia.banner}
-                      className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[color:rgba(255,255,255,0.68)] px-3 py-2 text-xs text-[var(--text-primary)] backdrop-blur-sm transition hover:bg-[color:rgba(255,255,255,0.86)] disabled:opacity-70 dark:bg-[color:rgba(2,6,23,0.48)] dark:hover:bg-[color:rgba(2,6,23,0.68)]"
+                      className="inline-flex items-center gap-2 rounded-[12px] border border-[var(--border)] bg-[color:rgba(255,255,255,0.68)] px-3 py-2 text-xs text-[var(--text-primary)] backdrop-blur-sm transition hover:bg-[color:rgba(255,255,255,0.86)] disabled:opacity-70 dark:bg-[color:rgba(2,6,23,0.48)] dark:hover:bg-[color:rgba(2,6,23,0.68)]"
                     >
                       Remove
                     </button>
@@ -1126,7 +1126,7 @@ export default function Profile() {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <span style={{ fontFamily: "var(--font-display)" }}>
+                            <span>
                               {getInitials(displayName)}
                             </span>
                           )}
@@ -1148,7 +1148,6 @@ export default function Profile() {
                         <div className="mt-4">
                           <h1
                             className="text-[2rem] leading-none tracking-[-0.04em] text-[var(--text-primary)] sm:text-[2.2rem]"
-                            style={{ fontFamily: "var(--font-display)" }}
                           >
                             {displayName}
                           </h1>
@@ -1192,7 +1191,7 @@ export default function Profile() {
                         <button
                           type="button"
                           onClick={() => setActiveTab("settings")}
-                          className="inline-flex items-center gap-2 rounded-[10px] bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)]"
+                        className="inline-flex items-center gap-2 rounded-[14px] bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)]"
                         >
                           <PencilLine size={14} />
                           Edit details
@@ -1202,13 +1201,13 @@ export default function Profile() {
                           onClick={() => {
                             void copyHandle();
                           }}
-                          className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                          className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
                         >
                           <Copy size={14} />
                           Copy handle
                         </button>
                         <Link href="/practice">
-                          <span className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]">
+                          <span className="inline-flex cursor-pointer items-center gap-2 rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]">
                             Continue practice
                             <ArrowRight size={14} />
                           </span>
@@ -1220,7 +1219,7 @@ export default function Profile() {
                               void removeMedia("avatar");
                             }}
                             disabled={uploadingMedia.avatar}
-                            className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] disabled:opacity-70"
+                            className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] disabled:opacity-70"
                           >
                             Remove photo
                           </button>
@@ -1257,7 +1256,6 @@ export default function Profile() {
                             ? "text-[var(--brand)]"
                             : "text-[var(--text-primary)]"
                         }`}
-                        style={{ fontFamily: "var(--font-display)" }}
                       >
                         {item.value}
                       </p>
@@ -1319,7 +1317,7 @@ export default function Profile() {
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className="rounded-[10px] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-secondary)]">
+                          <span className="rounded-[12px] border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-secondary)]">
                           @{settings.username}
                         </span>
                         <button
@@ -1327,7 +1325,7 @@ export default function Profile() {
                           onClick={() => {
                             void copyHandle();
                           }}
-                          className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border)] px-3.5 py-2 text-sm text-[var(--text-primary)] transition hover:bg-[var(--surface-1)]"
+                          className="inline-flex items-center gap-2 rounded-[12px] border border-[var(--border)] px-3.5 py-2 text-sm text-[var(--text-primary)] transition hover:bg-[var(--surface-1)]"
                         >
                           <Copy size={14} />
                           Copy handle

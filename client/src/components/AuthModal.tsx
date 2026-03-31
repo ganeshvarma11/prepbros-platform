@@ -170,7 +170,7 @@ export default function AuthModal({
         aria-label="Close authentication modal"
       />
 
-      <div className="relative max-h-[92svh] w-full max-w-4xl overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--bg-card-strong)] shadow-[var(--shadow-xl)] md:max-h-[90vh] md:rounded-[28px]">
+      <div className="relative max-h-[92svh] w-full max-w-4xl overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--bg-card-strong)] shadow-[var(--shadow-xl)] md:max-h-[90vh] md:rounded-[24px]">
         <button
           type="button"
           onClick={onClose}
@@ -180,13 +180,13 @@ export default function AuthModal({
         </button>
 
         <div className="grid md:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative hidden overflow-hidden border-r border-[var(--border)] bg-[linear-gradient(180deg,#eef4fb_0%,#dfeaf6_100%)] px-6 py-8 text-[var(--text-primary)] md:block md:px-8 md:py-10 dark:bg-[linear-gradient(180deg,#0f172a_0%,#101828_100%)] dark:text-white">
-            <div className="absolute inset-0 hero-grid opacity-30 dark:opacity-10" />
+          <div className="relative hidden overflow-hidden border-r border-[var(--border)] bg-[linear-gradient(180deg,#101722_0%,#0d1218_100%)] px-6 py-8 text-[var(--text-primary)] md:block md:px-8 md:py-10">
+            <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:120px_120px]" />
             <div className="absolute -right-16 top-16 h-40 w-40 rounded-full bg-[var(--brand-glow)] blur-3xl" />
             <div className="relative">
               <BrandLogo
-                textClassName="text-[var(--text-primary)] dark:text-white"
-                className="[&_p:last-child]:text-[var(--text-secondary)] dark:[&_p:last-child]:text-white/70"
+                textClassName="text-[var(--text-primary)]"
+                className="[&_p:last-child]:text-[var(--text-secondary)]"
               />
 
               <div className="mt-10 space-y-4">
@@ -194,10 +194,10 @@ export default function AuthModal({
                   <Sparkles size={14} />
                   Built for serious aspirants
                 </p>
-                <h2 className="max-w-md text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)] dark:text-white">
+                <h2 className="max-w-md text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
                   Practice with the kind of interface users actually trust.
                 </h2>
-                <p className="max-w-md text-sm text-[var(--text-secondary)] md:text-base dark:text-white/78">
+                <p className="max-w-md text-sm text-[var(--text-secondary)] md:text-base">
                   Your account keeps solved questions, streaks, bookmarks, and
                   weak-topic review in one place so progress feels tangible
                   after every session.
@@ -212,13 +212,13 @@ export default function AuthModal({
                 ].map(item => (
                   <div
                     key={item}
-                    className="flex items-start gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] p-4 shadow-[var(--shadow-sm)] dark:bg-[var(--bg-elevated)]"
+                    className="flex items-start gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] p-4 shadow-[var(--shadow-sm)]"
                   >
                     <ShieldCheck
                       size={18}
                       className="mt-0.5 text-[var(--brand)]"
                     />
-                    <p className="text-sm text-[var(--text-secondary)] dark:text-white/82">
+                    <p className="text-sm text-[var(--text-secondary)]">
                       {item}
                     </p>
                   </div>

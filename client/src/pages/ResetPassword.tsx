@@ -132,7 +132,7 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen bg-[var(--page-background)] text-[var(--text-primary)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.78),transparent_32%),radial-gradient(circle_at_82%_10%,rgba(191,219,254,0.24),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.14),transparent_32%),radial-gradient(circle_at_82%_10%,rgba(59,130,246,0.14),transparent_24%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(110,151,255,0.08),transparent_30%),radial-gradient(circle_at_82%_10%,rgba(255,140,50,0.08),transparent_22%)]" />
 
       <main className="relative z-[1] flex min-h-screen items-center px-4 py-20 md:px-6">
         <div className="container-shell grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,460px)] lg:items-center">
@@ -173,8 +173,8 @@ export default function ResetPassword() {
             </div>
           </section>
 
-          <section className="card overflow-hidden rounded-[28px] p-0">
-            <div className="h-1 w-full bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--accent)_100%)]" />
+          <section className="card overflow-hidden rounded-[22px] p-0">
+            <div className="h-1 w-full bg-[linear-gradient(90deg,var(--brand)_0%,var(--brand-light)_100%)]" />
 
             {passwordUpdated ? (
               <div className="px-6 py-8 text-center md:px-8">
