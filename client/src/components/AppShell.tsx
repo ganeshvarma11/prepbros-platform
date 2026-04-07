@@ -51,8 +51,9 @@ type NavGroup = {
 
 const SIDEBAR_STORAGE_KEY = "sb-width";
 const SIDEBAR_DEFAULT_WIDTH = 240;
-const SIDEBAR_MIN_WIDTH = 60;
+const SIDEBAR_MIN_WIDTH = 88;
 const SIDEBAR_MAX_WIDTH = 320;
+const SIDEBAR_COLLAPSE_THRESHOLD = 180;
 const DESKTOP_BREAKPOINT = 1024;
 
 const NAV_GROUPS: NavGroup[] = [
@@ -91,6 +92,11 @@ const isActiveRoute = (location: string, href: string) =>
 
 const clampSidebarWidth = (value: number) =>
   Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, Math.round(value)));
+
+const normalizeSidebarWidth = (value: number) =>
+  value <= SIDEBAR_COLLAPSE_THRESHOLD
+    ? SIDEBAR_MIN_WIDTH
+    : clampSidebarWidth(value);
 
 const getInitials = (value: string) =>
   value
@@ -171,7 +177,12 @@ function SidebarBody({
   const initials = getInitials(displayName);
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[var(--sidebar-bg)] px-3 py-4 backdrop-blur-xl">
+    <div
+      className={cn(
+        "relative flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[var(--sidebar-bg)] py-4 backdrop-blur-xl",
+        collapsed ? "px-2" : "px-3"
+      )}
+    >
       <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
         {collapsed ? (
           <Link href="/">
@@ -377,9 +388,9 @@ export default function AppShell({
     const parsed = Number.parseInt(storedValue, 10);
     if (!Number.isFinite(parsed)) return;
 
-    const nextWidth = clampSidebarWidth(parsed);
+    const nextWidth = normalizeSidebarWidth(parsed);
     setSidebarWidth(nextWidth);
-    if (nextWidth > SIDEBAR_MIN_WIDTH) {
+    if (nextWidth > SIDEBAR_COLLAPSE_THRESHOLD) {
       lastExpandedWidthRef.current = nextWidth;
     }
   }, []);
@@ -401,16 +412,16 @@ export default function AppShell({
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarWidth));
-    if (sidebarWidth > SIDEBAR_MIN_WIDTH) {
+    if (sidebarWidth > SIDEBAR_COLLAPSE_THRESHOLD) {
       lastExpandedWidthRef.current = sidebarWidth;
     }
   }, [sidebarWidth]);
 
-  const collapsed = sidebarWidth <= SIDEBAR_MIN_WIDTH;
+  const collapsed = sidebarWidth <= SIDEBAR_COLLAPSE_THRESHOLD;
 
   const toggleSidebar = () => {
     setSidebarWidth(current =>
-      current <= SIDEBAR_MIN_WIDTH
+      current <= SIDEBAR_COLLAPSE_THRESHOLD
         ? clampSidebarWidth(
             lastExpandedWidthRef.current || SIDEBAR_DEFAULT_WIDTH
           )
@@ -434,6 +445,7 @@ export default function AppShell({
     };
 
     const handlePointerUp = () => {
+      setSidebarWidth(current => normalizeSidebarWidth(current));
       setIsResizing(false);
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
