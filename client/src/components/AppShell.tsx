@@ -53,6 +53,7 @@ const SIDEBAR_STORAGE_KEY = "sb-width";
 const SIDEBAR_DEFAULT_WIDTH = 240;
 const SIDEBAR_MIN_WIDTH = 60;
 const SIDEBAR_MAX_WIDTH = 320;
+const DESKTOP_BREAKPOINT = 1024;
 
 const NAV_GROUPS: NavGroup[] = [
   {
@@ -359,6 +360,7 @@ export default function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(false);
   const lastExpandedWidthRef = useRef(SIDEBAR_DEFAULT_WIDTH);
   const { user } = useAuth();
 
@@ -380,6 +382,20 @@ export default function AppShell({
     if (nextWidth > SIDEBAR_MIN_WIDTH) {
       lastExpandedWidthRef.current = nextWidth;
     }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia(
+      `(min-width: ${DESKTOP_BREAKPOINT}px)`
+    );
+    const updateViewport = () => setIsDesktopViewport(mediaQuery.matches);
+
+    updateViewport();
+    mediaQuery.addEventListener("change", updateViewport);
+
+    return () => mediaQuery.removeEventListener("change", updateViewport);
   }, []);
 
   useEffect(() => {
@@ -461,7 +477,7 @@ export default function AppShell({
     <div className={cn("min-h-screen bg-[var(--bg)]", shellClassName)}>
       <div className="layout">
         <aside
-          className="group relative hidden h-screen shrink-0 self-start lg:sticky lg:top-0 lg:flex"
+          className="group fixed inset-y-0 left-0 z-40 hidden lg:flex"
           style={{
             width: `${sidebarWidth}px`,
             transition: isResizing
@@ -478,7 +494,15 @@ export default function AppShell({
           />
         </aside>
 
-        <div className="relative min-w-0 flex-1">
+        <div
+          className="relative min-w-0 flex-1"
+          style={{
+            paddingLeft: isDesktopViewport ? `${sidebarWidth}px` : undefined,
+            transition: isResizing
+              ? "none"
+              : "padding-left 0.22s cubic-bezier(0.4,0,0.2,1)",
+          }}
+        >
           <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-[var(--navbar-bg)] backdrop-blur-xl lg:hidden">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
