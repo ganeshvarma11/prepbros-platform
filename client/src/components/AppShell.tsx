@@ -168,7 +168,7 @@ function SidebarBody({
   const initials = getInitials(displayName);
 
   return (
-    <div className="relative flex h-full flex-col border-r border-[var(--border-soft)] bg-[var(--sidebar-bg)] px-3 py-4 backdrop-blur-xl">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[var(--sidebar-bg)] px-3 py-4 backdrop-blur-xl">
       <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
         {collapsed ? (
           <Link href="/">
@@ -204,7 +204,7 @@ function SidebarBody({
         </button>
       </div>
 
-        <div className="flex-1 space-y-6 overflow-y-auto py-5 pr-1">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto py-5 pr-1">
           {NAV_GROUPS.map(group => (
             <div key={group.label}>
               {!collapsed ? (
@@ -459,7 +459,7 @@ export default function AppShell({
     <div className={cn("min-h-screen bg-[var(--bg)]", shellClassName)}>
       <div className="layout">
         <aside
-          className="group relative hidden shrink-0 lg:flex"
+          className="group relative hidden h-screen shrink-0 self-start lg:sticky lg:top-0 lg:flex"
           style={{
             width: `${sidebarWidth}px`,
             transition: isResizing
