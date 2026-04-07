@@ -18,6 +18,7 @@ import { Link, useLocation } from "wouter";
 import AuthModal from "@/components/AuthModal";
 import BrandLogo from "@/components/BrandLogo";
 import Footer from "@/components/Footer";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Carousel,
   CarouselContent,
@@ -612,6 +613,7 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3">
+              <ThemeToggle className="shrink-0" />
               {user ? (
                 <>
                   <Link href="/practice">
