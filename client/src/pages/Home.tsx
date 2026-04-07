@@ -596,8 +596,8 @@ export default function Home() {
           <nav className="flex items-center justify-between gap-4 py-5 sm:py-6 lg:py-7">
             <BrandLogo
               compact
-              className="gap-2.5"
-              textClassName="text-[1.55rem] font-semibold tracking-[-0.055em] text-[var(--text-primary)] md:text-[1.72rem]"
+              className="gap-3"
+              textClassName="text-[1.72rem] font-semibold tracking-[-0.055em] text-[var(--text-primary)] md:text-[1.9rem]"
             />
 
             <div className="hidden items-center gap-7 lg:flex">
@@ -665,23 +665,23 @@ export default function Home() {
             className="grid flex-1 items-center gap-10 pb-10 pt-8 sm:pb-12 sm:pt-12 lg:grid-cols-[minmax(0,1.06fr)_minmax(390px,430px)] lg:gap-10 lg:pb-14"
           >
             <div className="max-w-[760px] pl-3 sm:pl-5 lg:pl-8 pr-0 lg:pr-2">
-              <p className="mb-5 inline-flex rounded-[999px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-secondary)]">
+              <p className="mb-7 inline-flex rounded-[999px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-secondary)]">
                 Calm prep workspace
               </p>
               <h1
-                className="text-[clamp(3.5rem,9vw,4.25rem)] leading-[0.96] tracking-[-0.065em] text-[var(--text-primary)] [text-wrap:balance]"
+                className="text-[clamp(3.75rem,9.2vw,4.55rem)] leading-[0.94] tracking-[-0.068em] text-[var(--text-primary)] [text-wrap:balance]"
               >
                 <span className="block">Daily practice</span>
                 <span className="block">that keeps prep</span>
                 <span className="block">steady and clear.</span>
               </h1>
 
-              <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-[var(--text-secondary)] sm:text-[19px]">
+              <p className="mt-7 max-w-[36rem] text-[19px] leading-[1.8] text-[var(--text-secondary)] sm:text-[20px]">
                 Solve daily questions, review weak areas, and stay consistent in
                 a calmer prep flow that feels easy to return to.
               </p>
 
-              <div className="mt-9 flex flex-wrap items-center gap-3 pl-1 sm:pl-2">
+              <div className="mt-8 flex flex-wrap items-center gap-3 pl-1 sm:pl-2">
                 <button
                   type="button"
                   onClick={handleHeroStart}
