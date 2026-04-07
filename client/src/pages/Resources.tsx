@@ -269,7 +269,7 @@ export default function Resources() {
                   return (
                     <article
                       key={resource.id || `${resource.title}-${resource.url}`}
-                      className="flex min-h-[212px] flex-col rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]"
+                      className="flex min-h-[198px] flex-col rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] px-4 py-4 shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
@@ -283,17 +283,17 @@ export default function Resources() {
                           ) : null}
                         </div>
 
-                        <h2 className="mt-3 line-clamp-2 text-[1.02rem] font-semibold leading-[1.28] tracking-[-0.025em] text-[var(--text-1)] sm:text-[1.08rem]">
+                        <h2 className="mt-3 line-clamp-2 text-[0.92rem] font-semibold leading-[1.38] tracking-[-0.015em] text-[var(--text-1)] sm:text-[0.98rem]">
                           {resource.title}
                         </h2>
-                        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--text-3)]">
+                        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-[var(--text-3)]">
                           <span className="font-medium text-[var(--text-2)]">
                             {subject}
                           </span>
                           {meta ? <span>{meta}</span> : null}
                         </div>
                         {resource.description ? (
-                          <p className="mt-2 line-clamp-3 text-[12.5px] leading-5 text-[var(--text-3)]">
+                          <p className="mt-2 line-clamp-3 max-w-[34ch] text-[11.5px] leading-[1.55] text-[var(--text-3)]">
                             {resource.description}
                           </p>
                         ) : null}
@@ -303,7 +303,7 @@ export default function Resources() {
                         href={resource.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-flex h-9 w-full shrink-0 items-center justify-center gap-2 rounded-[12px] border border-[var(--brand)] bg-[var(--brand)] px-3 text-sm font-semibold text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)]"
+                        className="mt-4 inline-flex h-8 w-full shrink-0 items-center justify-center gap-2 rounded-[11px] border border-[var(--brand)] bg-[var(--brand)] px-3 text-[13px] font-semibold text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)]"
                       >
                         Open
                         <ArrowUpRight size={14} />
