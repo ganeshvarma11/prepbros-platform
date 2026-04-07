@@ -253,7 +253,7 @@ export default function Resources() {
                 </p>
               </div>
 
-              <div className="overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)]">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {filteredResources.map(resource => {
                   const type = normalizeType(resource.type);
                   const subject = getSubject(resource);
@@ -269,9 +269,9 @@ export default function Resources() {
                   return (
                     <article
                       key={resource.id || `${resource.title}-${resource.url}`}
-                      className="grid gap-4 border-b border-[var(--border-1)] px-5 py-4 transition last:border-b-0 hover:bg-[var(--surface-1)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6 md:px-6"
+                      className="flex min-h-[212px] flex-col rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)]"
                     >
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-3)]">
                             {type}
@@ -283,17 +283,17 @@ export default function Resources() {
                           ) : null}
                         </div>
 
-                        <h2 className="mt-3 text-[1.12rem] font-semibold leading-snug tracking-[-0.03em] text-[var(--text-1)] sm:text-[1.2rem]">
+                        <h2 className="mt-3 line-clamp-2 text-[1.02rem] font-semibold leading-[1.28] tracking-[-0.025em] text-[var(--text-1)] sm:text-[1.08rem]">
                           {resource.title}
                         </h2>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--text-3)]">
+                        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--text-3)]">
                           <span className="font-medium text-[var(--text-2)]">
                             {subject}
                           </span>
                           {meta ? <span>{meta}</span> : null}
                         </div>
                         {resource.description ? (
-                          <p className="mt-2 max-w-[72ch] text-[13px] leading-6 text-[var(--text-3)]">
+                          <p className="mt-2 line-clamp-3 text-[12.5px] leading-5 text-[var(--text-3)]">
                             {resource.description}
                           </p>
                         ) : null}
@@ -303,7 +303,7 @@ export default function Resources() {
                         href={resource.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[12px] border border-[var(--brand)] bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)] md:px-4"
+                        className="mt-4 inline-flex h-9 w-full shrink-0 items-center justify-center gap-2 rounded-[12px] border border-[var(--brand)] bg-[var(--brand)] px-3 text-sm font-semibold text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)]"
                       >
                         Open
                         <ArrowUpRight size={14} />
