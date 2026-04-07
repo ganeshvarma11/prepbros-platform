@@ -550,7 +550,7 @@ export default function AppShell({
           </header>
 
           <main className="main">
-            <div className={cn("page-shell lg:ml-0 lg:mr-auto", contentClassName)}>
+            <div className={cn("min-w-0 w-full max-w-[1240px]", contentClassName)}>
               {children}
             </div>
           </main>
