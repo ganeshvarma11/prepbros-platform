@@ -283,7 +283,7 @@ export default function Resources() {
                           ) : null}
                         </div>
 
-                        <h2 className="mt-3 line-clamp-2 text-[0.92rem] font-semibold leading-[1.38] tracking-[-0.015em] text-[var(--text-1)] sm:text-[0.98rem]">
+                        <h2 className="mt-3 line-clamp-2 text-[0.82rem] font-medium leading-[1.32] tracking-[-0.012em] text-[var(--text-1)] sm:text-[0.88rem]">
                           {resource.title}
                         </h2>
                         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-[var(--text-3)]">
