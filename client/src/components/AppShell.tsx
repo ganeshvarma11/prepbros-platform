@@ -53,7 +53,6 @@ const SIDEBAR_STORAGE_KEY = "sb-width";
 const SIDEBAR_DEFAULT_WIDTH = 240;
 const SIDEBAR_MIN_WIDTH = 60;
 const SIDEBAR_MAX_WIDTH = 320;
-const DESKTOP_BREAKPOINT = 1024;
 
 const NAV_GROUPS: NavGroup[] = [
   {
@@ -360,9 +359,7 @@ export default function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
-  const [isDesktopViewport, setIsDesktopViewport] = useState(false);
   const lastExpandedWidthRef = useRef(SIDEBAR_DEFAULT_WIDTH);
-  const resizeAnchorWidthRef = useRef(SIDEBAR_DEFAULT_WIDTH);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -383,20 +380,6 @@ export default function AppShell({
     if (nextWidth > SIDEBAR_MIN_WIDTH) {
       lastExpandedWidthRef.current = nextWidth;
     }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const mediaQuery = window.matchMedia(
-      `(min-width: ${DESKTOP_BREAKPOINT}px)`
-    );
-    const updateViewport = () => setIsDesktopViewport(mediaQuery.matches);
-
-    updateViewport();
-    mediaQuery.addEventListener("change", updateViewport);
-
-    return () => mediaQuery.removeEventListener("change", updateViewport);
   }, []);
 
   useEffect(() => {
@@ -425,7 +408,6 @@ export default function AppShell({
     event.preventDefault();
     const startX = event.clientX;
     const initialWidth = sidebarWidth;
-    resizeAnchorWidthRef.current = sidebarWidth;
     setIsResizing(true);
     document.body.style.userSelect = "none";
     document.body.style.cursor = "col-resize";
@@ -466,11 +448,6 @@ export default function AppShell({
     user?.user_metadata?.picture ||
     user?.user_metadata?.avatar ||
     "";
-  const desktopContentOffset = !isDesktopViewport
-    ? 0
-    : isResizing
-      ? resizeAnchorWidthRef.current - sidebarWidth
-      : Math.min(0, SIDEBAR_DEFAULT_WIDTH - sidebarWidth);
   const mobileNavSwipe = useSwipeable({
     axis: "x",
     enabled: mobileOpen,
@@ -573,14 +550,7 @@ export default function AppShell({
           </header>
 
           <main className="main">
-            <div
-              className={cn("page-shell", contentClassName)}
-              style={{
-                marginLeft: desktopContentOffset
-                  ? `${desktopContentOffset}px`
-                  : undefined,
-              }}
-            >
+            <div className={cn("page-shell lg:ml-0 lg:mr-auto", contentClassName)}>
               {children}
             </div>
           </main>
