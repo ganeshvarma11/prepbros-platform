@@ -488,6 +488,47 @@ function FilterDisclosure({
   );
 }
 
+function FilterCheckboxRow({
+  label,
+  checked,
+  onChange,
+  meta,
+  truncateLabel = false,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+  meta?: React.ReactNode;
+  truncateLabel?: boolean;
+}) {
+  return (
+    <label className="group flex cursor-pointer items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] has-[:focus-visible]:border-[var(--border-focus)] has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-[color:var(--brand-subtle)]">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="sr-only"
+      />
+      <span
+        className={cn(
+          "flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border bg-[var(--surface-2)] transition-all",
+          checked
+            ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)]"
+            : "border-[var(--border-strong)] text-transparent group-hover:border-[var(--brand-muted)]"
+        )}
+      >
+        <Check size={13} strokeWidth={3} />
+      </span>
+      <span className={cn("min-w-0 flex-1", truncateLabel && "line-clamp-1")}>
+        {label}
+      </span>
+      {meta ? (
+        <span className="text-xs text-[var(--text-faint)]">{meta}</span>
+      ) : null}
+    </label>
+  );
+}
+
 export default function Practice() {
   const [, navigate] = useLocation();
   const { user, loading: authLoading } = useAuth();
@@ -1202,26 +1243,18 @@ export default function Practice() {
         >
           <div className="space-y-2">
             {EXAM_FILTERS.map(exam => (
-              <label
+              <FilterCheckboxRow
                 key={exam}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)]"
-              >
-                <input
-                  type="checkbox"
-                  checked={draftFilters.exams.includes(exam)}
-                  onChange={() =>
-                    setDraftFilters(current => ({
-                      ...current,
-                      exams: toggleItem(current.exams, exam),
-                    }))
-                  }
-                  className="h-4 w-4 rounded border-[var(--border-strong)] bg-transparent"
-                />
-                <span>{exam}</span>
-                <span className="ml-auto text-xs text-[var(--text-faint)]">
-                  {examCounts[exam]}
-                </span>
-              </label>
+                label={exam}
+                checked={draftFilters.exams.includes(exam)}
+                onChange={() =>
+                  setDraftFilters(current => ({
+                    ...current,
+                    exams: toggleItem(current.exams, exam),
+                  }))
+                }
+                meta={examCounts[exam]}
+              />
             ))}
           </div>
         </FilterDisclosure>
@@ -1277,23 +1310,17 @@ export default function Practice() {
         >
           <div className="space-y-2">
             {TYPES.map(type => (
-              <label
+              <FilterCheckboxRow
                 key={type}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)]"
-              >
-                <input
-                  type="checkbox"
-                  checked={draftFilters.types.includes(type)}
-                  onChange={() =>
-                    setDraftFilters(current => ({
-                      ...current,
-                      types: toggleItem(current.types, type),
-                    }))
-                  }
-                  className="h-4 w-4 rounded border-[var(--border-strong)] bg-transparent"
-                />
-                <span>{TYPE_LABELS[type] || type}</span>
-              </label>
+                label={TYPE_LABELS[type] || type}
+                checked={draftFilters.types.includes(type)}
+                onChange={() =>
+                  setDraftFilters(current => ({
+                    ...current,
+                    types: toggleItem(current.types, type),
+                  }))
+                }
+              />
             ))}
           </div>
         </FilterDisclosure>
@@ -1311,26 +1338,19 @@ export default function Practice() {
         >
           <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
             {allTopics.map(topic => (
-              <label
+              <FilterCheckboxRow
                 key={topic}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)]"
-              >
-                <input
-                  type="checkbox"
-                  checked={draftFilters.topics.includes(topic)}
-                  onChange={() =>
-                    setDraftFilters(current => ({
-                      ...current,
-                      topics: toggleItem(current.topics, topic),
-                    }))
-                  }
-                  className="h-4 w-4 rounded border-[var(--border-strong)] bg-transparent"
-                />
-                <span className="line-clamp-1">{topic}</span>
-                <span className="ml-auto text-xs text-[var(--text-faint)]">
-                  {topicCounts[topic] || 0}
-                </span>
-              </label>
+                label={topic}
+                checked={draftFilters.topics.includes(topic)}
+                onChange={() =>
+                  setDraftFilters(current => ({
+                    ...current,
+                    topics: toggleItem(current.topics, topic),
+                  }))
+                }
+                meta={topicCounts[topic] || 0}
+                truncateLabel
+              />
             ))}
           </div>
         </FilterDisclosure>
@@ -1348,23 +1368,17 @@ export default function Practice() {
         >
           <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
             {allYears.map(year => (
-              <label
+              <FilterCheckboxRow
                 key={year}
-                className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3 py-3 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-strong)]"
-              >
-                <input
-                  type="checkbox"
-                  checked={draftFilters.years.includes(year)}
-                  onChange={() =>
-                    setDraftFilters(current => ({
-                      ...current,
-                      years: toggleItem(current.years, year),
-                    }))
-                  }
-                  className="h-4 w-4 rounded border-[var(--border-strong)] bg-transparent"
-                />
-                <span>{year}</span>
-              </label>
+                label={String(year)}
+                checked={draftFilters.years.includes(year)}
+                onChange={() =>
+                  setDraftFilters(current => ({
+                    ...current,
+                    years: toggleItem(current.years, year),
+                  }))
+                }
+              />
             ))}
           </div>
         </FilterDisclosure>
