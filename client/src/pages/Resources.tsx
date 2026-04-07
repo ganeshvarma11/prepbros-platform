@@ -178,7 +178,7 @@ export default function Resources() {
 
   return (
     <AppShell contentClassName="max-w-[1120px]">
-      <div className="space-y-8">
+      <div className="space-y-6">
         <PageHeader
           eyebrow="Resources"
           title="Resources"
@@ -189,7 +189,7 @@ export default function Resources() {
           ]}
         />
 
-        <section className="card space-y-5">
+        <section className="card space-y-4 px-5 py-5 sm:px-6 sm:py-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-1">
               <p className="section-label">Search and filter</p>
@@ -208,12 +208,12 @@ export default function Resources() {
                 value={query}
                 onChange={event => setQuery(event.target.value)}
                 placeholder="Search resources"
-                className="w-full pl-12"
+                className="h-12 w-full pl-12"
               />
             </label>
           </div>
 
-          <div className="border-t border-[var(--border-1)] pt-4">
+          <div className="border-t border-[var(--border-1)] pt-3">
             <div className="flex flex-wrap gap-2">
               {FILTER_TABS.map(tab => {
                 const active = tab === activeTab;
@@ -223,7 +223,12 @@ export default function Resources() {
                     key={tab}
                     type="button"
                     onClick={() => setActiveTab(tab)}
-                    className={cn(active ? "btn-primary" : "btn-ghost", "min-w-[80px]")}
+                    className={cn(
+                      "inline-flex h-10 min-w-[72px] items-center justify-center rounded-[12px] border px-4 text-sm font-semibold transition",
+                      active
+                        ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)] shadow-[0_14px_30px_-24px_var(--brand-glow)]"
+                        : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-2)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
+                    )}
                   >
                     {tab}
                   </button>
@@ -240,7 +245,7 @@ export default function Resources() {
               Loading resources...
             </div>
           ) : filteredResources.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <p className="section-label">
                   {filteredResources.length} resource
@@ -248,7 +253,7 @@ export default function Resources() {
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className="overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)]">
                 {filteredResources.map(resource => {
                   const type = normalizeType(resource.type);
                   const subject = getSubject(resource);
@@ -264,35 +269,44 @@ export default function Resources() {
                   return (
                     <article
                       key={resource.id || `${resource.title}-${resource.url}`}
-                      className="card grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-8"
+                      className="grid gap-4 border-b border-[var(--border-1)] px-5 py-4 transition last:border-b-0 hover:bg-[var(--surface-1)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6 md:px-6"
                     >
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="badge">{type}</span>
+                          <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-3)]">
+                            {type}
+                          </span>
                           {resource.exam && resource.exam !== "All" ? (
-                            <span className="badge-amber">{resource.exam}</span>
+                            <span className="inline-flex items-center rounded-full border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-2.5 py-1 text-[11px] font-semibold text-[var(--brand-light)]">
+                              {resource.exam}
+                            </span>
                           ) : null}
                         </div>
 
-                        <h2 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[var(--text-1)]">
+                        <h2 className="mt-3 text-[1.12rem] font-semibold leading-snug tracking-[-0.03em] text-[var(--text-1)] sm:text-[1.2rem]">
                           {resource.title}
                         </h2>
-                        <p className="mt-2 text-sm font-medium text-[var(--text-2)]">
-                          {subject}
-                        </p>
-                        <p className="mt-1 text-xs text-[var(--text-3)]">
-                          {meta}
-                        </p>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--text-3)]">
+                          <span className="font-medium text-[var(--text-2)]">
+                            {subject}
+                          </span>
+                          {meta ? <span>{meta}</span> : null}
+                        </div>
+                        {resource.description ? (
+                          <p className="mt-2 max-w-[72ch] text-[13px] leading-6 text-[var(--text-3)]">
+                            {resource.description}
+                          </p>
+                        ) : null}
                       </div>
 
                       <a
                         href={resource.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-primary"
+                        className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[12px] border border-[var(--brand)] bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)] md:px-4"
                       >
-                        Open resource
-                        <ArrowUpRight size={15} />
+                        Open
+                        <ArrowUpRight size={14} />
                       </a>
                     </article>
                   );
