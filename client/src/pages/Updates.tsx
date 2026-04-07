@@ -22,7 +22,14 @@ import {
 } from "@/components/ui/table";
 
 type UpdateStatus = "Open" | "Closing Soon" | "Upcoming" | "Closed";
-type TimelineFilter = "all" | "this_month" | "upcoming" | "closing_soon";
+type TimelineFilter = "all" | "upcoming" | "closing_soon";
+type ScopeFilter = "all" | "central" | "state";
+type RelativeMonthFilter =
+  | "all"
+  | "previous_month"
+  | "this_month"
+  | "next_month"
+  | "this_year";
 
 type UpdateRecord = {
   id?: string;
@@ -45,7 +52,6 @@ type UpdateRecord = {
 
 const TIMELINE_FILTERS: Array<{ id: TimelineFilter; label: string }> = [
   { id: "all", label: "All" },
-  { id: "this_month", label: "This month" },
   { id: "upcoming", label: "Upcoming" },
   { id: "closing_soon", label: "Closing soon" },
 ];
@@ -56,12 +62,6 @@ const formatDate = (value: string) =>
     month: "short",
     year: "numeric",
   }).format(new Date(`${value}T00:00:00`));
-
-const formatMonthLabel = (value: string) =>
-  new Intl.DateTimeFormat("en-IN", {
-    month: "long",
-    year: "numeric",
-  }).format(new Date(`${value}-01T00:00:00`));
 
 const startOfDay = (value: string | Date) => {
   const date =
@@ -107,13 +107,55 @@ const getStatusNote = (update: ExamUpdate, today: Date) => {
   return `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`;
 };
 
-const getMonthKey = (value: string) => value.slice(0, 7);
+const getScope = (update: ExamUpdate) =>
+  update.state === "All India" ? "central" : "state";
 
-const isThisMonth = (value: string, today: Date) => {
+const getMonthFilterLabel = (value: RelativeMonthFilter) => {
+  switch (value) {
+    case "previous_month":
+      return "Previous month";
+    case "this_month":
+      return "This month";
+    case "next_month":
+      return "Next month";
+    case "this_year":
+      return "This year";
+    default:
+      return "All months";
+  }
+};
+
+const matchesRelativeMonth = (
+  value: string,
+  filter: RelativeMonthFilter,
+  today: Date
+) => {
+  if (filter === "all") return true;
+
   const date = startOfDay(value);
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  if (filter === "this_year") {
+    return date.getFullYear() === year;
+  }
+
+  if (filter === "this_month") {
+    return date.getFullYear() === year && date.getMonth() === month;
+  }
+
+  if (filter === "previous_month") {
+    const previous = new Date(year, month - 1, 1);
+    return (
+      date.getFullYear() === previous.getFullYear() &&
+      date.getMonth() === previous.getMonth()
+    );
+  }
+
+  const next = new Date(year, month + 1, 1);
   return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth()
+    date.getFullYear() === next.getFullYear() &&
+    date.getMonth() === next.getMonth()
   );
 };
 
@@ -170,12 +212,47 @@ const statusTone: Record<Exclude<UpdateStatus, "Closed">, string> = {
     "border-[rgba(110,151,255,0.24)] bg-[var(--blue-bg)] text-[var(--blue)]",
 };
 
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
+}) {
+  return (
+    <label className="space-y-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        className="h-9 min-w-[150px] rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 text-sm text-[var(--text-2)] outline-none transition focus:border-[var(--brand)]"
+      >
+        {options.map(option => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export default function Updates() {
   const [liveUpdates, setLiveUpdates] = useState<ExamUpdate[]>([]);
   const [loading, setLoading] = useState(true);
   const [timelineFilter, setTimelineFilter] =
     useState<TimelineFilter>("all");
-  const [monthFilter, setMonthFilter] = useState("all");
+  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
+  const [qualificationFilter, setQualificationFilter] =
+    useState<"all" | QualificationTier>("all");
+  const [monthFilter, setMonthFilter] =
+    useState<RelativeMonthFilter>("all");
   const today = useMemo(() => new Date(), []);
 
   useEffect(() => {
@@ -209,23 +286,11 @@ export default function Updates() {
 
   const updates = liveUpdates.length > 0 ? liveUpdates : examUpdates;
 
-  const monthOptions = useMemo(() => {
-    const values = Array.from(
-      new Set(updates.map(update => getMonthKey(update.lastDate)))
-    ).sort();
-
-    return ["all", ...values];
-  }, [updates]);
-
   const filteredUpdates = useMemo(() => {
     return updates
       .filter(update => getUpdateStatus(update, today) !== "Closed")
       .filter(update => {
         const status = getUpdateStatus(update, today);
-
-        if (timelineFilter === "this_month" && !isThisMonth(update.lastDate, today)) {
-          return false;
-        }
 
         if (timelineFilter === "upcoming" && status !== "Upcoming") {
           return false;
@@ -235,7 +300,18 @@ export default function Updates() {
           return false;
         }
 
-        if (monthFilter !== "all" && getMonthKey(update.lastDate) !== monthFilter) {
+        if (scopeFilter !== "all" && getScope(update) !== scopeFilter) {
+          return false;
+        }
+
+        if (
+          qualificationFilter !== "all" &&
+          update.qualification !== qualificationFilter
+        ) {
+          return false;
+        }
+
+        if (!matchesRelativeMonth(update.lastDate, monthFilter, today)) {
           return false;
         }
 
@@ -243,12 +319,13 @@ export default function Updates() {
       })
       .sort(
         (left, right) =>
-          startOfDay(left.lastDate).getTime() - startOfDay(right.lastDate).getTime()
+          startOfDay(left.lastDate).getTime() -
+          startOfDay(right.lastDate).getTime()
       );
-  }, [monthFilter, timelineFilter, today, updates]);
+  }, [monthFilter, qualificationFilter, scopeFilter, timelineFilter, today, updates]);
 
   return (
-    <AppShell contentClassName="max-w-[1100px]">
+    <AppShell contentClassName="max-w-[1120px]">
       <div className="space-y-5">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-[var(--text-3)]">
@@ -268,48 +345,84 @@ export default function Updates() {
           </h1>
         </div>
 
-        <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {TIMELINE_FILTERS.map(filter => {
-              const active = timelineFilter === filter.id;
+        <section className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-4">
+          <div className="grid gap-3 lg:grid-cols-[auto_auto_auto_1fr] lg:items-end">
+            <FilterSelect
+              label="Scope"
+              value={scopeFilter}
+              onChange={value => setScopeFilter(value as ScopeFilter)}
+              options={[
+                { value: "all", label: "All" },
+                { value: "central", label: "Central" },
+                { value: "state", label: "State" },
+              ]}
+            />
 
-              return (
-                <button
-                  key={filter.id}
-                  type="button"
-                  onClick={() => setTimelineFilter(filter.id)}
-                  className={cn(
-                    "inline-flex h-9 items-center justify-center rounded-full border px-4 text-sm font-medium transition",
-                    active
-                      ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)]"
-                      : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-2)] hover:border-[var(--border-strong)] hover:text-[var(--text-1)]"
-                  )}
-                >
-                  {filter.label}
-                </button>
-              );
-            })}
+            <FilterSelect
+              label="Eligibility"
+              value={qualificationFilter}
+              onChange={value =>
+                setQualificationFilter(value as "all" | QualificationTier)
+              }
+              options={[
+                { value: "all", label: "All" },
+                ...QUALIFICATION_TIERS.map(option => ({
+                  value: option,
+                  label: option,
+                })),
+              ]}
+            />
+
+            <FilterSelect
+              label="Month"
+              value={monthFilter}
+              onChange={value => setMonthFilter(value as RelativeMonthFilter)}
+              options={[
+                { value: "all", label: "All months" },
+                { value: "previous_month", label: "Previous month" },
+                { value: "this_month", label: "This month" },
+                { value: "next_month", label: "Next month" },
+                { value: "this_year", label: "This year" },
+              ]}
+            />
+
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
+                Timeline
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {TIMELINE_FILTERS.map(filter => {
+                  const active = timelineFilter === filter.id;
+
+                  return (
+                    <button
+                      key={filter.id}
+                      type="button"
+                      onClick={() => setTimelineFilter(filter.id)}
+                      className={cn(
+                        "inline-flex h-9 items-center justify-center rounded-full border px-4 text-sm font-medium transition",
+                        active
+                          ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)]"
+                          : "border-[var(--border)] bg-[var(--bg)] text-[var(--text-2)] hover:border-[var(--border-strong)] hover:text-[var(--text-1)]"
+                      )}
+                    >
+                      {filter.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-
-          <select
-            value={monthFilter}
-            onChange={event => setMonthFilter(event.target.value)}
-            className="h-9 rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-4 text-sm text-[var(--text-2)] outline-none transition focus:border-[var(--brand)]"
-          >
-            <option value="all">All months</option>
-            {monthOptions
-              .filter(option => option !== "all")
-              .map(option => (
-                <option key={option} value={option}>
-                  {formatMonthLabel(option)}
-                </option>
-              ))}
-          </select>
         </section>
 
         <div className="text-sm text-[var(--text-3)]">
           {filteredUpdates.length} update
           {filteredUpdates.length === 1 ? "" : "s"}
+          <span className="ml-2">• {scopeFilter === "all" ? "all scopes" : scopeFilter}</span>
+          <span className="ml-2">
+            • {qualificationFilter === "all" ? "all eligibility" : qualificationFilter}
+          </span>
+          <span className="ml-2">• {getMonthFilterLabel(monthFilter)}</span>
         </div>
 
         {filteredUpdates.length === 0 ? (
@@ -347,9 +460,9 @@ export default function Updates() {
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--text-3)]">
-                      <span>{update.examType}</span>
+                      <span>{getScope(update) === "central" ? "Central" : "State"}</span>
                       <span>•</span>
-                      <span>{update.state}</span>
+                      <span>{update.qualification}</span>
                       <span>•</span>
                       <span>Last date {formatDate(update.lastDate)}</span>
                       <span>•</span>
@@ -389,10 +502,10 @@ export default function Updates() {
                       Exam
                     </TableHead>
                     <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
-                      Type
+                      Scope
                     </TableHead>
                     <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
-                      State
+                      Eligibility
                     </TableHead>
                     <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
                       Last date
@@ -422,10 +535,10 @@ export default function Updates() {
                           </div>
                         </TableCell>
                         <TableCell className="px-4 py-4 text-sm text-[var(--text-2)]">
-                          {update.examType}
+                          {getScope(update) === "central" ? "Central" : "State"}
                         </TableCell>
                         <TableCell className="px-4 py-4 text-sm text-[var(--text-2)]">
-                          {update.state}
+                          {update.qualification}
                         </TableCell>
                         <TableCell className="px-4 py-4 text-sm text-[var(--text-2)]">
                           {formatDate(update.lastDate)}
