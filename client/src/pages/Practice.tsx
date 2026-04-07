@@ -1432,7 +1432,7 @@ export default function Practice() {
     <AppShell
       allowDesktopSidebarToggle
       shellClassName="practice-shell"
-      contentClassName="max-w-[1240px]"
+      contentClassName="max-w-none"
     >
       <div className="space-y-6">
         {!activeQ ? (
