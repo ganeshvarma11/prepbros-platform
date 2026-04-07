@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  Bell,
   BookOpen,
   ChevronLeft,
   ChevronRight,
@@ -59,6 +60,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/practice", label: "Practice", icon: BookOpen },
+      { href: "/updates", label: "Updates", icon: Bell },
       { href: "/explore", label: "Explore", icon: Compass },
     ],
   },

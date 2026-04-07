@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 const DEFAULT_NAV_LINKS = [
   { href: "/practice", label: "Practice" },
+  { href: "/updates", label: "Updates" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/#review-system", label: "Review", anchor: true },
   { href: "/support", label: "Support" },
@@ -25,6 +26,7 @@ const DEFAULT_NAV_LINKS = [
 
 const LANDING_NAV_LINKS = [
   { href: "/practice", label: "Practice" },
+  { href: "/updates", label: "Updates" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/#review-system", label: "Review", anchor: true },
 ];

@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   AlertCircle,
+  Bell,
   BookOpen,
+  CalendarDays,
   CheckCircle2,
   Database,
   Download,
@@ -26,6 +28,12 @@ import {
 } from "lucide-react";
 
 import type { Difficulty, Exam, QuestionType } from "@/data/questions";
+import {
+  EXAM_TYPES,
+  QUALIFICATION_TIERS,
+  type ExamType as UpdateExamType,
+  type QualificationTier,
+} from "@/data/updates";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { chunkQuestions, parseBulkQuestionInput, type ImportedQuestionPayload } from "@/lib/questionImport";
@@ -71,13 +79,17 @@ const RESOURCE_CATEGORIES = [
 const RESOURCE_EXAMS = ["All", ...QUESTION_EXAMS] as const;
 const CONTEST_STATUSES = ["upcoming", "past"] as const;
 const STATUS_FILTERS = ["All", "Active", "Inactive"] as const;
-const ADMIN_TABS = ["questions", "resources", "contests", "support"] as const;
+const UPDATE_TIMELINE_FILTERS = ["All", "Open", "Upcoming", "Closing Soon"] as const;
+const ADMIN_TABS = ["questions", "resources", "updates", "contests", "support"] as const;
 
 const BULK_IMPORT_TEMPLATE = `question,option_a,option_b,option_c,option_d,correct_option,explanation,exam,topic,subtopic,difficulty,type,year,tags
 Which Article of the Indian Constitution deals with the Right to Education?,Article 19,Article 21A,Article 24,Article 32,B,Article 21A makes free and compulsory education a fundamental right for children aged 6-14.,UPSC,Polity,Fundamental Rights,Easy,PYQ,2019,constitution|education|article-21a`;
 
 const BULK_RESOURCE_TEMPLATE = `title,description,type,url,exam,category,is_active
 UPSC Previous Year Papers,Official UPSC previous question papers,PDF,https://upsc.gov.in/examinations/previous-question-papers,UPSC,Previous Papers,true`;
+
+const BULK_UPDATE_TEMPLATE = `title,organization,exam_type,state,qualification,eligibility,application_start,last_date,exam_window,updated_at,summary,tags,apply_url,notice_url,is_active
+SSC CGL 2026,Staff Selection Commission,SSC,All India,Graduate,Any graduate candidate,2026-04-01,2026-05-08,Tier I expected in July 2026,2026-04-05,Large central recruitment cycle,graduate jobs|central govt|tier i,https://ssc.gov.in/,https://ssc.gov.in/,true`;
 
 type AdminTab = (typeof ADMIN_TABS)[number];
 type FilterExam = (typeof FILTER_EXAMS)[number];
@@ -86,6 +98,7 @@ type ResourceExam = (typeof RESOURCE_EXAMS)[number];
 type ResourceType = (typeof RESOURCE_TYPES)[number];
 type ResourceCategory = (typeof RESOURCE_CATEGORIES)[number];
 type ContestStatus = (typeof CONTEST_STATUSES)[number];
+type UpdateTimelineFilter = (typeof UPDATE_TIMELINE_FILTERS)[number];
 type Tone = "orange" | "blue" | "green" | "rose" | "slate";
 type RawRecord = Record<string, unknown>;
 
@@ -141,6 +154,62 @@ type ImportedResourcePayload = {
   url: string;
   exam: string;
   category: string;
+  is_active: boolean;
+};
+
+type UpdateRecord = {
+  id: string | number;
+  title: string;
+  organization: string;
+  exam_type: UpdateExamType;
+  state: string;
+  qualification: QualificationTier;
+  eligibility: string;
+  application_start: string;
+  last_date: string;
+  exam_window: string;
+  updated_at: string;
+  summary: string;
+  tags: string[] | null;
+  apply_url: string;
+  notice_url: string;
+  is_active?: boolean | null;
+  created_at?: string | null;
+};
+
+type UpdateForm = {
+  title: string;
+  organization: string;
+  exam_type: UpdateExamType;
+  state: string;
+  qualification: QualificationTier;
+  eligibility: string;
+  application_start: string;
+  last_date: string;
+  exam_window: string;
+  updated_at: string;
+  summary: string;
+  tags: string;
+  apply_url: string;
+  notice_url: string;
+  is_active: boolean;
+};
+
+type ImportedUpdatePayload = {
+  title: string;
+  organization: string;
+  exam_type: UpdateExamType;
+  state: string;
+  qualification: QualificationTier;
+  eligibility: string;
+  application_start: string;
+  last_date: string;
+  exam_window: string;
+  updated_at: string;
+  summary: string;
+  tags: string[];
+  apply_url: string;
+  notice_url: string;
   is_active: boolean;
 };
 
@@ -226,6 +295,24 @@ const EMPTY_C: ContestForm = {
   status: "upcoming",
   winner: "",
   your_rank: "",
+};
+
+const EMPTY_U: UpdateForm = {
+  title: "",
+  organization: "",
+  exam_type: "SSC",
+  state: "All India",
+  qualification: "Graduate",
+  eligibility: "",
+  application_start: "",
+  last_date: "",
+  exam_window: "",
+  updated_at: new Date().toISOString().slice(0, 10),
+  summary: "",
+  tags: "",
+  apply_url: "",
+  notice_url: "",
+  is_active: true,
 };
 
 function toId(value: string | number | null | undefined) {
@@ -383,6 +470,66 @@ function parseBulkResourceInput(input: string): ImportedResourcePayload[] {
   });
 }
 
+function parseBulkUpdateInput(input: string): ImportedUpdatePayload[] {
+  const records = parseFlexibleInput(input, "updates");
+
+  if (records.length === 0) {
+    throw new Error("No updates found.");
+  }
+
+  return records.map((record, index) => {
+    const title = asText(record.title);
+    const organization = asText(record.organization);
+    const examType = asText(record.exam_type) as UpdateExamType;
+    const qualification = asText(record.qualification) as QualificationTier;
+    const applicationStart = asText(record.application_start);
+    const lastDate = asText(record.last_date);
+
+    if (!title) {
+      throw new Error(`Row ${index + 1}: title is required.`);
+    }
+
+    if (!organization) {
+      throw new Error(`Row ${index + 1}: organization is required.`);
+    }
+
+    if (!EXAM_TYPES.includes(examType)) {
+      throw new Error(`Row ${index + 1}: exam_type must be one of ${EXAM_TYPES.join(", ")}.`);
+    }
+
+    if (!QUALIFICATION_TIERS.includes(qualification)) {
+      throw new Error(
+        `Row ${index + 1}: qualification must be one of ${QUALIFICATION_TIERS.join(", ")}.`
+      );
+    }
+
+    if (!applicationStart || !lastDate) {
+      throw new Error(`Row ${index + 1}: application_start and last_date are required.`);
+    }
+
+    return {
+      title,
+      organization,
+      exam_type: examType,
+      state: asText(record.state) || "All India",
+      qualification,
+      eligibility: asText(record.eligibility) || "Check the official notice for full eligibility details.",
+      application_start: applicationStart,
+      last_date: lastDate,
+      exam_window: asText(record.exam_window) || "See official notification",
+      updated_at: asText(record.updated_at) || new Date().toISOString().slice(0, 10),
+      summary: asText(record.summary) || title,
+      tags: asText(record.tags)
+        .split(/[|,]/)
+        .map(tag => tag.trim())
+        .filter(Boolean),
+      apply_url: asText(record.apply_url),
+      notice_url: asText(record.notice_url) || asText(record.apply_url),
+      is_active: parseBoolean(record.is_active, true),
+    };
+  });
+}
+
 function chunkItems<T>(items: T[], size = 200) {
   const chunks: T[][] = [];
 
@@ -433,6 +580,23 @@ function formatDate(value?: string | null) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function adminUpdateTimeline(update: {
+  application_start: string;
+  last_date: string;
+}) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(`${update.application_start}T00:00:00`);
+  const end = new Date(`${update.last_date}T00:00:00`);
+
+  if (today < start) return "Upcoming";
+  if (today > end) return "Closed";
+
+  const daysLeft = Math.round((end.getTime() - today.getTime()) / 86400000);
+  return daysLeft <= 7 ? "Closing Soon" : "Open";
 }
 
 function buildSupportReplyLink(request: SupportRequest) {
@@ -676,6 +840,21 @@ function Admin() {
   const [resourceCategoryFilter, setResourceCategoryFilter] = useState<string>("All");
   const [resourceStatusFilter, setResourceStatusFilter] = useState<StatusFilter>("All");
 
+  const [dbUpdates, setDbUpdates] = useState<UpdateRecord[]>([]);
+  const [updateForm, setUpdateForm] = useState<UpdateForm>({ ...EMPTY_U });
+  const [editingUpdateId, setEditingUpdateId] = useState<string | null>(null);
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [showUpdateImport, setShowUpdateImport] = useState(false);
+  const [updateImportInput, setUpdateImportInput] = useState("");
+  const [updateImportSource, setUpdateImportSource] = useState("");
+  const [selectedUpdateIds, setSelectedUpdateIds] = useState<string[]>([]);
+  const [updateSearch, setUpdateSearch] = useState("");
+  const [updateStateFilter, setUpdateStateFilter] = useState("All");
+  const [updateExamTypeFilter, setUpdateExamTypeFilter] = useState<"All" | UpdateExamType>("All");
+  const [updateQualificationFilter, setUpdateQualificationFilter] = useState<"All" | QualificationTier>("All");
+  const [updateStatusFilter, setUpdateStatusFilter] = useState<StatusFilter>("All");
+  const [updateTimelineFilter, setUpdateTimelineFilter] = useState<UpdateTimelineFilter>("All");
+
   const [dbContests, setDbContests] = useState<ContestRecord[]>([]);
   const [contestForm, setContestForm] = useState<ContestForm>({ ...EMPTY_C });
   const [editingContestId, setEditingContestId] = useState<string | null>(null);
@@ -691,6 +870,7 @@ function Admin() {
 
   const questionFileInputRef = useRef<HTMLInputElement | null>(null);
   const resourceFileInputRef = useRef<HTMLInputElement | null>(null);
+  const updateFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -719,6 +899,16 @@ function Admin() {
 
     if (error) throw error;
     setDbResources((data || []) as ResourceRecord[]);
+  };
+
+  const loadUpdates = async () => {
+    const { data, error } = await supabase
+      .from("updates")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    setDbUpdates((data || []) as UpdateRecord[]);
   };
 
   const loadContests = async () => {
@@ -758,6 +948,7 @@ function Admin() {
       await Promise.all([
         loadQuestions(),
         loadResources(),
+        loadUpdates(),
         loadContests(),
         loadSupportRequests(),
         loadSupportReplies(),
@@ -793,6 +984,7 @@ function Admin() {
         await Promise.all([
           loadQuestions(),
           loadResources(),
+          loadUpdates(),
           loadContests(),
           loadSupportRequests(),
           loadSupportReplies(),
@@ -832,6 +1024,14 @@ function Admin() {
     return ["All", ...Array.from(categories).sort((a, b) => a.localeCompare(b))];
   }, [dbResources]);
 
+  const availableUpdateStates = useMemo(() => {
+    const states = new Set<string>(["All"]);
+    dbUpdates.forEach(update => {
+      if (update.state) states.add(update.state);
+    });
+    return Array.from(states).sort((a, b) => a.localeCompare(b));
+  }, [dbUpdates]);
+
   const questionImportPreview: { rows: ImportedQuestionPayload[]; error: string | null } = useMemo(() => {
     if (!questionImportInput.trim()) {
       return { rows: [] as ImportedQuestionPayload[], error: null as string | null };
@@ -861,6 +1061,21 @@ function Admin() {
       };
     }
   }, [resourceImportInput]);
+
+  const updateImportPreview: { rows: ImportedUpdatePayload[]; error: string | null } = useMemo(() => {
+    if (!updateImportInput.trim()) {
+      return { rows: [] as ImportedUpdatePayload[], error: null as string | null };
+    }
+
+    try {
+      return { rows: parseBulkUpdateInput(updateImportInput), error: null };
+    } catch (error) {
+      return {
+        rows: [] as ImportedUpdatePayload[],
+        error: error instanceof Error ? error.message : "Could not parse import.",
+      };
+    }
+  }, [updateImportInput]);
 
   const filteredQuestions = useMemo(() => {
     const query = questionSearch.trim().toLowerCase();
@@ -939,6 +1154,49 @@ function Admin() {
     resourceTypeFilter,
   ]);
 
+  const filteredUpdates = useMemo(() => {
+    const query = updateSearch.trim().toLowerCase();
+
+    return dbUpdates.filter(update => {
+      const active = update.is_active !== false;
+      const timeline = adminUpdateTimeline(update);
+
+      if (updateStateFilter !== "All" && update.state !== updateStateFilter) return false;
+      if (updateExamTypeFilter !== "All" && update.exam_type !== updateExamTypeFilter) return false;
+      if (updateQualificationFilter !== "All" && update.qualification !== updateQualificationFilter) return false;
+      if (updateStatusFilter === "Active" && !active) return false;
+      if (updateStatusFilter === "Inactive" && active) return false;
+      if (updateTimelineFilter !== "All" && timeline !== updateTimelineFilter) return false;
+
+      if (!query) return true;
+
+      return [
+        update.title,
+        update.organization,
+        update.state,
+        update.exam_type,
+        update.qualification,
+        update.eligibility,
+        update.summary,
+        update.apply_url,
+        update.notice_url,
+        tagText(update.tags),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    });
+  }, [
+    dbUpdates,
+    updateExamTypeFilter,
+    updateQualificationFilter,
+    updateSearch,
+    updateStateFilter,
+    updateStatusFilter,
+    updateTimelineFilter,
+  ]);
+
   const filteredSupportRequests = useMemo(() => {
     const query = supportSearch.trim().toLowerCase();
     if (!query) return supportRequests;
@@ -990,14 +1248,34 @@ function Admin() {
     };
   }, [dbResources]);
 
+  const updateStats = useMemo(() => {
+    const active = dbUpdates.filter(update => update.is_active !== false);
+    const open = active.filter(update => adminUpdateTimeline(update) === "Open").length;
+    const upcoming = active.filter(update => adminUpdateTimeline(update) === "Upcoming").length;
+    const closingSoon = active.filter(update => adminUpdateTimeline(update) === "Closing Soon").length;
+
+    return {
+      total: dbUpdates.length,
+      active: active.length,
+      inactive: dbUpdates.length - active.length,
+      open,
+      upcoming,
+      closingSoon,
+    };
+  }, [dbUpdates]);
+
   const visibleQuestionIds = filteredQuestions.map(question => toId(question.id));
   const visibleResourceIds = filteredResources.map(resource => toId(resource.id));
+  const visibleUpdateIds = filteredUpdates.map(update => toId(update.id));
   const allVisibleQuestionsSelected =
     visibleQuestionIds.length > 0 &&
     visibleQuestionIds.every(id => selectedQuestionIds.includes(id));
   const allVisibleResourcesSelected =
     visibleResourceIds.length > 0 &&
     visibleResourceIds.every(id => selectedResourceIds.includes(id));
+  const allVisibleUpdatesSelected =
+    visibleUpdateIds.length > 0 &&
+    visibleUpdateIds.every(id => selectedUpdateIds.includes(id));
 
   const resetQuestionForm = () => {
     setQuestionForm({ ...EMPTY_Q });
@@ -1009,6 +1287,12 @@ function Admin() {
     setResourceForm({ ...EMPTY_R });
     setEditingResourceId(null);
     setShowResourceForm(false);
+  };
+
+  const resetUpdateForm = () => {
+    setUpdateForm({ ...EMPTY_U });
+    setEditingUpdateId(null);
+    setShowUpdateForm(false);
   };
 
   const resetContestForm = () => {
@@ -1068,6 +1352,37 @@ function Admin() {
     setEditingResourceId(toId(resource.id));
     setShowResourceForm(true);
     setShowResourceImport(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openNewUpdateForm = () => {
+    setUpdateForm({ ...EMPTY_U });
+    setEditingUpdateId(null);
+    setShowUpdateForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const startEditUpdate = (update: UpdateRecord) => {
+    setUpdateForm({
+      title: update.title,
+      organization: update.organization,
+      exam_type: update.exam_type,
+      state: update.state,
+      qualification: update.qualification,
+      eligibility: update.eligibility,
+      application_start: update.application_start,
+      last_date: update.last_date,
+      exam_window: update.exam_window,
+      updated_at: update.updated_at,
+      summary: update.summary,
+      tags: tagText(update.tags),
+      apply_url: update.apply_url,
+      notice_url: update.notice_url,
+      is_active: update.is_active !== false,
+    });
+    setEditingUpdateId(toId(update.id));
+    setShowUpdateForm(true);
+    setShowUpdateImport(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -1173,6 +1488,65 @@ function Admin() {
       showToast(editingResourceId ? "Resource updated." : "Resource saved.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not save resource.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const saveUpdate = async () => {
+    if (
+      !updateForm.title ||
+      !updateForm.organization ||
+      !updateForm.state ||
+      !updateForm.eligibility ||
+      !updateForm.application_start ||
+      !updateForm.last_date ||
+      !updateForm.exam_window ||
+      !updateForm.summary ||
+      !updateForm.apply_url ||
+      !updateForm.notice_url
+    ) {
+      showToast("Fill all required update fields.", false);
+      return;
+    }
+
+    setBusy("save-update");
+
+    try {
+      const payload: ImportedUpdatePayload = {
+        title: updateForm.title.trim(),
+        organization: updateForm.organization.trim(),
+        exam_type: updateForm.exam_type,
+        state: updateForm.state.trim(),
+        qualification: updateForm.qualification,
+        eligibility: updateForm.eligibility.trim(),
+        application_start: updateForm.application_start,
+        last_date: updateForm.last_date,
+        exam_window: updateForm.exam_window.trim(),
+        updated_at: updateForm.updated_at,
+        summary: updateForm.summary.trim(),
+        tags: updateForm.tags
+          .split(/[|,]/)
+          .map(tag => tag.trim())
+          .filter(Boolean),
+        apply_url: updateForm.apply_url.trim(),
+        notice_url: updateForm.notice_url.trim(),
+        is_active: updateForm.is_active,
+      };
+
+      const query = editingUpdateId
+        ? supabase.from("updates").update(payload).eq("id", editingUpdateId)
+        : supabase.from("updates").insert(payload);
+
+      const { error } = await query;
+      if (error) throw error;
+
+      await loadUpdates();
+      resetUpdateForm();
+      showToast(editingUpdateId ? "Update entry saved." : "Update entry created.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save update entry.";
       showToast(message, false);
     } finally {
       setBusy(null);
@@ -1330,6 +1704,38 @@ function Admin() {
     }
   };
 
+  const importUpdates = async () => {
+    if (updateImportPreview.error) {
+      showToast(updateImportPreview.error, false);
+      return;
+    }
+
+    if (updateImportPreview.rows.length === 0) {
+      showToast("Paste or upload updates first.", false);
+      return;
+    }
+
+    setBusy("import-updates");
+
+    try {
+      for (const batch of chunkItems(updateImportPreview.rows, 200)) {
+        const { error } = await supabase.from("updates").insert(batch);
+        if (error) throw error;
+      }
+
+      await loadUpdates();
+      setUpdateImportInput("");
+      setUpdateImportSource("");
+      setSelectedUpdateIds([]);
+      showToast(`${updateImportPreview.rows.length} updates imported.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not import updates.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const updateQuestionsActiveState = async (ids: string[], isActive: boolean) => {
     if (ids.length === 0) {
       showToast("Select questions first.", false);
@@ -1438,6 +1844,60 @@ function Admin() {
     }
   };
 
+  const updateUpdatesActiveState = async (ids: string[], isActive: boolean) => {
+    if (ids.length === 0) {
+      showToast("Select updates first.", false);
+      return;
+    }
+
+    setBusy(isActive ? "activate-updates" : "deactivate-updates");
+
+    try {
+      for (const batch of chunkItems(ids, 200)) {
+        const { error } = await supabase.from("updates").update({ is_active: isActive }).in("id", batch);
+        if (error) throw error;
+      }
+
+      await loadUpdates();
+      setSelectedUpdateIds(current => current.filter(id => !ids.includes(id)));
+      showToast(isActive ? "Selected updates activated." : "Selected updates deactivated.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not update selected updates.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const deleteUpdates = async (ids: string[]) => {
+    if (ids.length === 0) {
+      showToast("Select updates first.", false);
+      return;
+    }
+
+    if (!window.confirm(`Delete ${ids.length} update row${ids.length === 1 ? "" : "s"} permanently?`)) {
+      return;
+    }
+
+    setBusy("delete-updates");
+
+    try {
+      for (const batch of chunkItems(ids, 200)) {
+        const { error } = await supabase.from("updates").delete().in("id", batch);
+        if (error) throw error;
+      }
+
+      await loadUpdates();
+      setSelectedUpdateIds(current => current.filter(id => !ids.includes(id)));
+      showToast(`${ids.length} update row${ids.length === 1 ? "" : "s"} deleted.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not delete selected updates.";
+      showToast(message, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const deleteContest = async (id: string) => {
     if (!window.confirm("Delete this contest?")) return;
 
@@ -1469,6 +1929,12 @@ function Admin() {
     );
   };
 
+  const toggleUpdateSelection = (id: string) => {
+    setSelectedUpdateIds(current =>
+      current.includes(id) ? current.filter(item => item !== id) : [...current, id]
+    );
+  };
+
   const toggleSelectVisibleQuestions = () => {
     setSelectedQuestionIds(current => {
       if (allVisibleQuestionsSelected) {
@@ -1486,6 +1952,16 @@ function Admin() {
       }
 
       return Array.from(new Set([...current, ...visibleResourceIds]));
+    });
+  };
+
+  const toggleSelectVisibleUpdates = () => {
+    setSelectedUpdateIds(current => {
+      if (allVisibleUpdatesSelected) {
+        return current.filter(id => !visibleUpdateIds.includes(id));
+      }
+
+      return Array.from(new Set([...current, ...visibleUpdateIds]));
     });
   };
 
@@ -1547,6 +2023,47 @@ function Admin() {
     showToast(`${filteredResources.length} resources exported.`);
   };
 
+  const exportFilteredUpdates = () => {
+    downloadCsv(
+      "prepbros-updates-export.csv",
+      [
+        "title",
+        "organization",
+        "exam_type",
+        "state",
+        "qualification",
+        "eligibility",
+        "application_start",
+        "last_date",
+        "exam_window",
+        "updated_at",
+        "summary",
+        "tags",
+        "apply_url",
+        "notice_url",
+        "is_active",
+      ],
+      filteredUpdates.map(update => ({
+        title: update.title,
+        organization: update.organization,
+        exam_type: update.exam_type,
+        state: update.state,
+        qualification: update.qualification,
+        eligibility: update.eligibility,
+        application_start: update.application_start,
+        last_date: update.last_date,
+        exam_window: update.exam_window,
+        updated_at: update.updated_at,
+        summary: update.summary,
+        tags: update.tags || [],
+        apply_url: update.apply_url,
+        notice_url: update.notice_url,
+        is_active: update.is_active !== false,
+      }))
+    );
+    showToast(`${filteredUpdates.length} updates exported.`);
+  };
+
   const handleQuestionFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -1573,6 +2090,23 @@ function Admin() {
       setResourceImportInput(text);
       setResourceImportSource(file.name);
       setShowResourceImport(true);
+      showToast(`Loaded ${file.name}`);
+    } catch {
+      showToast("Could not read the selected file.", false);
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const handleUpdateFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      setUpdateImportInput(text);
+      setUpdateImportSource(file.name);
+      setShowUpdateImport(true);
       showToast(`Loaded ${file.name}`);
     } catch {
       showToast("Could not read the selected file.", false);
@@ -1804,6 +2338,12 @@ function Admin() {
                 >
                   Review resources
                 </Link>
+                <Link
+                  href="/updates"
+                  className="inline-flex items-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]"
+                >
+                  Review updates
+                </Link>
               </div>
             </div>
 
@@ -1816,10 +2356,10 @@ function Admin() {
                 </p>
               </div>
               <div className="rounded-[18px] border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-4 backdrop-blur">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">Resources</p>
-                <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">{resourceStats.total}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">Resources and updates</p>
+                <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--text-primary)]">{resourceStats.total + updateStats.total}</p>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                  {resourceStats.active} active, {dbContests.length} contests, {supportRequests.length} support items
+                  {resourceStats.active} resources, {updateStats.active} updates, {supportRequests.length} support items
                 </p>
               </div>
             </div>
@@ -1830,7 +2370,7 @@ function Admin() {
           <MetricCard label="Questions" value={questionStats.total} hint="Live rows available to manage" icon={Database} tone="orange" />
           <MetricCard label="UPSC Rows" value={questionStats.upsc} hint="Useful when replacing PYQ banks" icon={ShieldCheck} tone="blue" />
           <MetricCard label="Resources" value={resourceStats.total} hint="Study links, PDFs, books, and videos" icon={Layers3} tone="green" />
-          <MetricCard label="Support" value={supportRequests.length} hint="User issues waiting for triage" icon={AlertCircle} tone="rose" />
+          <MetricCard label="Updates" value={updateStats.active} hint="Active opportunities on the public desk" icon={Bell} tone="blue" />
         </section>
 
         <section className="mt-6 flex flex-wrap gap-2 rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-2 backdrop-blur">
@@ -1840,9 +2380,11 @@ function Admin() {
                 ? `Questions (${dbQuestions.length})`
                 : tab === "resources"
                   ? `Resources (${dbResources.length})`
-                  : tab === "contests"
-                    ? `Contests (${dbContests.length})`
-                    : `Support (${supportRequests.length})`;
+                  : tab === "updates"
+                    ? `Updates (${dbUpdates.length})`
+                    : tab === "contests"
+                      ? `Contests (${dbContests.length})`
+                      : `Support (${supportRequests.length})`;
 
             const active = activeTab === tab;
 
@@ -2895,6 +3437,598 @@ function Admin() {
                                 icon={Trash2}
                                 tone="danger"
                                 onClick={() => void deleteResources([resourceId])}
+                                disabled={loadingTarget !== null}
+                              >
+                                Delete
+                              </SmallButton>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </SectionCard>
+            </>
+          ) : null}
+
+          {activeTab === "updates" ? (
+            <>
+              <SectionCard
+                title="Updates Manager"
+                description="Run the public updates desk from here. Add live recruitment rows, bulk import notices, and quickly archive stale entries."
+                actions={
+                  <>
+                    <SmallButton icon={Upload} onClick={() => setShowUpdateImport(current => !current)}>
+                      {showUpdateImport ? "Hide import" : "Open import"}
+                    </SmallButton>
+                    <SmallButton icon={Plus} tone="primary" onClick={openNewUpdateForm}>
+                      Add update
+                    </SmallButton>
+                  </>
+                }
+              >
+                <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+                  <div className="space-y-4">
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                      <label className="xl:col-span-2">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Search
+                        </span>
+                        <div className="relative">
+                          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input
+                            value={updateSearch}
+                            onChange={event => setUpdateSearch(event.target.value)}
+                            placeholder="Title, organization, state, tags..."
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-10 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </div>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          State
+                        </span>
+                        <select
+                          value={updateStateFilter}
+                          onChange={event => setUpdateStateFilter(event.target.value)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {availableUpdateStates.map(state => (
+                            <option key={state} value={state}>
+                              {state}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Exam type
+                        </span>
+                        <select
+                          value={updateExamTypeFilter}
+                          onChange={event => setUpdateExamTypeFilter(event.target.value as "All" | UpdateExamType)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          <option value="All">All</option>
+                          {EXAM_TYPES.map(type => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Eligibility
+                        </span>
+                        <select
+                          value={updateQualificationFilter}
+                          onChange={event => setUpdateQualificationFilter(event.target.value as "All" | QualificationTier)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          <option value="All">All</option>
+                          {QUALIFICATION_TIERS.map(qualification => (
+                            <option key={qualification} value={qualification}>
+                              {qualification}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-5">
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Row status
+                        </span>
+                        <select
+                          value={updateStatusFilter}
+                          onChange={event => setUpdateStatusFilter(event.target.value as StatusFilter)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {STATUS_FILTERS.map(status => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Timeline
+                        </span>
+                        <select
+                          value={updateTimelineFilter}
+                          onChange={event => setUpdateTimelineFilter(event.target.value as UpdateTimelineFilter)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {UPDATE_TIMELINE_FILTERS.map(status => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Filtered
+                        </p>
+                        <p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                          {filteredUpdates.length}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Selected
+                        </p>
+                        <p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                          {selectedUpdateIds.length}
+                        </p>
+                      </div>
+
+                      <div className="flex items-end">
+                        <SmallButton icon={Download} onClick={exportFilteredUpdates} disabled={filteredUpdates.length === 0}>
+                          Export filtered
+                        </SmallButton>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <SmallButton icon={CheckCircle2} onClick={toggleSelectVisibleUpdates}>
+                        {allVisibleUpdatesSelected ? "Unselect visible" : "Select visible"}
+                      </SmallButton>
+                      <SmallButton
+                        icon={ShieldCheck}
+                        onClick={() => void updateUpdatesActiveState(selectedUpdateIds, false)}
+                        disabled={selectedUpdateIds.length === 0 || loadingTarget !== null}
+                      >
+                        Deactivate selected
+                      </SmallButton>
+                      <SmallButton
+                        icon={ShieldCheck}
+                        onClick={() => void updateUpdatesActiveState(selectedUpdateIds, true)}
+                        disabled={selectedUpdateIds.length === 0 || loadingTarget !== null}
+                      >
+                        Activate selected
+                      </SmallButton>
+                      <SmallButton
+                        icon={Trash2}
+                        tone="danger"
+                        onClick={() => void deleteUpdates(selectedUpdateIds)}
+                        disabled={selectedUpdateIds.length === 0 || loadingTarget !== null}
+                      >
+                        Delete selected
+                      </SmallButton>
+                    </div>
+                  </div>
+
+                  {showUpdateImport ? (
+                    <div className="rounded-[24px] border border-violet-200/70 bg-violet-50/70 p-4 dark:border-violet-900/60 dark:bg-violet-950/20">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-violet-800 dark:text-violet-200">Bulk updates import</p>
+                          <p className="mt-1 text-sm text-violet-700/80 dark:text-violet-200/70">
+                            Load application windows in one pass from CSV, TSV, pasted Sheets rows, or JSON.
+                          </p>
+                        </div>
+                        <input
+                          ref={updateFileInputRef}
+                          type="file"
+                          accept=".csv,.tsv,.txt,.json"
+                          className="hidden"
+                          onChange={handleUpdateFileUpload}
+                        />
+                        <SmallButton icon={FileSpreadsheet} onClick={() => updateFileInputRef.current?.click()}>
+                          Upload file
+                        </SmallButton>
+                      </div>
+
+                      <textarea
+                        value={updateImportInput}
+                        onChange={event => setUpdateImportInput(event.target.value)}
+                        rows={11}
+                        placeholder="Paste update data here..."
+                        className="mt-4 w-full rounded-[22px] border border-violet-200 bg-white px-4 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-violet-300 dark:border-violet-900/70 dark:bg-slate-950 dark:text-white"
+                      />
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <SmallButton
+                          tone="primary"
+                          icon={Upload}
+                          onClick={() => void importUpdates()}
+                          disabled={Boolean(updateImportPreview.error) || updateImportPreview.rows.length === 0 || loadingTarget !== null}
+                        >
+                          {loadingTarget === "import-updates" ? "Importing..." : "Import rows"}
+                        </SmallButton>
+                        <SmallButton onClick={() => setUpdateImportInput(BULK_UPDATE_TEMPLATE)}>
+                          Fill template
+                        </SmallButton>
+                        <SmallButton
+                          onClick={() => {
+                            setUpdateImportInput("");
+                            setUpdateImportSource("");
+                          }}
+                        >
+                          Clear
+                        </SmallButton>
+                      </div>
+
+                      <div className="mt-4 rounded-2xl border border-violet-200 bg-white/90 p-4 text-sm dark:border-violet-900/70 dark:bg-slate-950/70">
+                        {updateImportPreview.error ? (
+                          <p className="text-rose-600 dark:text-rose-300">{updateImportPreview.error}</p>
+                        ) : updateImportPreview.rows.length > 0 ? (
+                          <div className="space-y-3">
+                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                              {updateImportPreview.rows.length} row{updateImportPreview.rows.length === 1 ? "" : "s"} ready
+                              {updateImportSource ? ` from ${updateImportSource}` : ""}
+                            </p>
+                            {updateImportPreview.rows.slice(0, 2).map((row, index) => (
+                              <div key={`${row.title}-${index}`} className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
+                                <p className="text-sm font-medium text-slate-900 dark:text-white">{row.title}</p>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <Pill tone="blue">{row.exam_type}</Pill>
+                                  <Pill tone="orange">{row.qualification}</Pill>
+                                  <Pill tone="slate">{row.state}</Pill>
+                                  <Pill tone={row.is_active ? "green" : "rose"}>{row.is_active ? "Active" : "Inactive"}</Pill>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-slate-500 dark:text-slate-400">
+                            Supported fields: title, organization, exam_type, state, qualification, eligibility, application_start, last_date, exam_window, updated_at, summary, tags, apply_url, notice_url, is_active.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </SectionCard>
+
+              <SectionCard
+                title="Updates metrics"
+                description="Watch how the opportunity desk is balanced between live forms, upcoming notices, and near-deadline items."
+              >
+                <div className="grid gap-4 md:grid-cols-4">
+                  <MetricCard label="Total" value={updateStats.total} hint="All rows in Supabase" icon={Database} tone="orange" />
+                  <MetricCard label="Open" value={updateStats.open} hint="Currently accepting forms" icon={Bell} tone="green" />
+                  <MetricCard label="Closing soon" value={updateStats.closingSoon} hint="Within the next 7 days" icon={CalendarDays} tone="rose" />
+                  <MetricCard label="Upcoming" value={updateStats.upcoming} hint="Good for early tracking" icon={Layers3} tone="blue" />
+                </div>
+              </SectionCard>
+
+              {showUpdateForm ? (
+                <SectionCard
+                  title={editingUpdateId ? "Edit Update Entry" : "Create Update Entry"}
+                  description="This maps directly to the public updates page. Keep notice links official and summaries short."
+                  actions={<SmallButton onClick={resetUpdateForm} icon={X}>Close editor</SmallButton>}
+                >
+                  <div className="space-y-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Title
+                        </span>
+                        <input
+                          value={updateForm.title}
+                          onChange={event => setUpdateForm(current => ({ ...current, title: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Organization
+                        </span>
+                        <input
+                          value={updateForm.organization}
+                          onChange={event => setUpdateForm(current => ({ ...current, organization: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-4">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Exam type
+                        </span>
+                        <select
+                          value={updateForm.exam_type}
+                          onChange={event => setUpdateForm(current => ({ ...current, exam_type: event.target.value as UpdateExamType }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {EXAM_TYPES.map(type => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          State
+                        </span>
+                        <input
+                          value={updateForm.state}
+                          onChange={event => setUpdateForm(current => ({ ...current, state: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Qualification
+                        </span>
+                        <select
+                          value={updateForm.qualification}
+                          onChange={event => setUpdateForm(current => ({ ...current, qualification: event.target.value as QualificationTier }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        >
+                          {QUALIFICATION_TIERS.map(qualification => (
+                            <option key={qualification} value={qualification}>
+                              {qualification}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="flex items-end gap-2 rounded-2xl border border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <input
+                          type="checkbox"
+                          checked={updateForm.is_active}
+                          onChange={event => setUpdateForm(current => ({ ...current, is_active: event.target.checked }))}
+                          className="accent-orange-500"
+                        />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Active row</span>
+                      </label>
+                    </div>
+
+                    <label className="block">
+                      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Eligibility
+                      </span>
+                      <textarea
+                        value={updateForm.eligibility}
+                        onChange={event => setUpdateForm(current => ({ ...current, eligibility: event.target.value }))}
+                        rows={3}
+                        className="w-full rounded-[22px] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Summary
+                      </span>
+                      <textarea
+                        value={updateForm.summary}
+                        onChange={event => setUpdateForm(current => ({ ...current, summary: event.target.value }))}
+                        rows={3}
+                        className="w-full rounded-[22px] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                      />
+                    </label>
+
+                    <div className="grid gap-3 md:grid-cols-4">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Apply start
+                        </span>
+                        <input
+                          type="date"
+                          value={updateForm.application_start}
+                          onChange={event => setUpdateForm(current => ({ ...current, application_start: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Last date
+                        </span>
+                        <input
+                          type="date"
+                          value={updateForm.last_date}
+                          onChange={event => setUpdateForm(current => ({ ...current, last_date: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Updated at
+                        </span>
+                        <input
+                          type="date"
+                          value={updateForm.updated_at}
+                          onChange={event => setUpdateForm(current => ({ ...current, updated_at: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Exam window
+                        </span>
+                        <input
+                          value={updateForm.exam_window}
+                          onChange={event => setUpdateForm(current => ({ ...current, exam_window: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Apply URL
+                        </span>
+                        <input
+                          value={updateForm.apply_url}
+                          onChange={event => setUpdateForm(current => ({ ...current, apply_url: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Notice URL
+                        </span>
+                        <input
+                          value={updateForm.notice_url}
+                          onChange={event => setUpdateForm(current => ({ ...current, notice_url: event.target.value }))}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </label>
+                    </div>
+
+                    <label className="block">
+                      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Tags
+                      </span>
+                      <input
+                        value={updateForm.tags}
+                        onChange={event => setUpdateForm(current => ({ ...current, tags: event.target.value }))}
+                        placeholder="graduate jobs, central govt, tier i"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                      />
+                    </label>
+
+                    <div className="flex flex-wrap gap-2">
+                      <SmallButton tone="primary" icon={CheckCircle2} onClick={() => void saveUpdate()} disabled={loadingTarget !== null}>
+                        {loadingTarget === "save-update"
+                          ? "Saving..."
+                          : editingUpdateId
+                            ? "Update entry"
+                            : "Save entry"}
+                      </SmallButton>
+                      <SmallButton onClick={resetUpdateForm}>Cancel</SmallButton>
+                    </div>
+                  </div>
+                </SectionCard>
+              ) : null}
+
+              <SectionCard
+                title="Update Inventory"
+                description="This feeds the public updates page. Keep titles clear, links official, and inactive rows out of the live desk."
+              >
+                {filteredUpdates.length === 0 ? (
+                  <EmptyState
+                    icon={Bell}
+                    title="No updates match the current filters"
+                    description="Widen the filters or import a fresh batch of notice rows."
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {filteredUpdates.map(update => {
+                      const updateId = toId(update.id);
+                      const selected = selectedUpdateIds.includes(updateId);
+                      const active = update.is_active !== false;
+                      const timeline = adminUpdateTimeline(update);
+
+                      return (
+                        <div
+                          key={updateId}
+                          className={cn(
+                            "rounded-[24px] border p-4 transition",
+                            selected
+                              ? "border-violet-300 bg-violet-50/60 dark:border-violet-900 dark:bg-violet-950/10"
+                              : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
+                          )}
+                        >
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="flex gap-3">
+                              <input
+                                type="checkbox"
+                                checked={selected}
+                                onChange={() => toggleUpdateSelection(updateId)}
+                                className="mt-1 h-4 w-4 rounded accent-orange-500"
+                              />
+                              <div>
+                                <p className="text-base font-medium text-slate-950 dark:text-white">{update.title}</p>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                  {update.organization}
+                                </p>
+                                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{update.summary}</p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  <Pill tone="blue">{update.exam_type}</Pill>
+                                  <Pill tone="orange">{update.qualification}</Pill>
+                                  <Pill tone="slate">{update.state}</Pill>
+                                  <Pill tone={active ? "green" : "rose"}>{active ? "Active" : "Inactive"}</Pill>
+                                  <Pill tone={timeline === "Closing Soon" ? "rose" : timeline === "Open" ? "green" : "blue"}>
+                                    {timeline}
+                                  </Pill>
+                                </div>
+                                <div className="mt-3 flex flex-wrap gap-2 text-sm text-slate-500 dark:text-slate-400">
+                                  <span>{formatDate(update.application_start)} to {formatDate(update.last_date)}</span>
+                                  <span>•</span>
+                                  <span>{update.exam_window}</span>
+                                </div>
+                                <div className="mt-3 flex flex-wrap gap-3">
+                                  <a
+                                    href={update.apply_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-2 text-sm text-orange-600 hover:underline dark:text-orange-300"
+                                  >
+                                    <LinkIcon size={14} />
+                                    Apply link
+                                  </a>
+                                  <a
+                                    href={update.notice_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-2 text-sm text-orange-600 hover:underline dark:text-orange-300"
+                                  >
+                                    <LinkIcon size={14} />
+                                    Notice link
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
+                              <SmallButton icon={Edit2} onClick={() => startEditUpdate(update)}>
+                                Edit
+                              </SmallButton>
+                              <SmallButton
+                                icon={ShieldCheck}
+                                onClick={() => void updateUpdatesActiveState([updateId], !active)}
+                                disabled={loadingTarget !== null}
+                              >
+                                {active ? "Deactivate" : "Activate"}
+                              </SmallButton>
+                              <SmallButton
+                                icon={Trash2}
+                                tone="danger"
+                                onClick={() => void deleteUpdates([updateId])}
                                 disabled={loadingTarget !== null}
                               >
                                 Delete

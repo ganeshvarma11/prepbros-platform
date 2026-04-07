@@ -6,6 +6,7 @@ import { siteConfig } from "@/lib/siteConfig";
 
 const FOOTER_LINKS = [
   { label: "Practice", href: "/practice" },
+  { label: "Updates", href: "/updates" },
   { label: "Dashboard", href: "/dashboard" },
   { label: "Premium", href: "/premium" },
   { label: "Support", href: "/support" },

@@ -167,6 +167,24 @@ export const seoRoutes: SeoRoute[] = [
     schemaType: "CollectionPage",
   },
   {
+    path: "/updates",
+    title: "Exam Updates, Job Alerts & Application Deadlines",
+    description:
+      "Track upcoming exams, government job alerts, application deadlines, and official apply links with filters for state, eligibility, and exam type.",
+    keywords: [
+      "exam updates",
+      "government job alerts",
+      "application deadlines",
+      "upcoming exams",
+    ],
+    index: true,
+    includeInSitemap: true,
+    changeFrequency: "daily",
+    priority: 0.84,
+    ogType: "website",
+    schemaType: "CollectionPage",
+  },
+  {
     path: "/premium",
     title: "Premium Plans for Serious Aspirants",
     description:

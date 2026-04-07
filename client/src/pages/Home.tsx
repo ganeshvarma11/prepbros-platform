@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import {
   ArrowRight,
+  Bell,
   BookOpen,
   CircleHelp,
   Crown,
@@ -35,6 +36,7 @@ import { getPolicyUrl, siteConfig } from "@/lib/siteConfig";
 
 const NAV_ITEMS = [
   { label: "Practice", href: "/practice", type: "route" as const },
+  { label: "Updates", href: "/updates", type: "route" as const },
   { label: "Dashboard", href: "/dashboard", type: "route" as const },
   { label: "Review", href: "#review-system", type: "anchor" as const },
   { label: "Pricing", href: "/premium", type: "route" as const },
@@ -200,6 +202,12 @@ const ESSENTIAL_LINKS: Array<{
     href: "/resources",
     note: "Study material",
     icon: Sparkles,
+  },
+  {
+    label: "Updates",
+    href: "/updates",
+    note: "Exam tracker",
+    icon: Bell,
   },
   {
     label: "Premium",

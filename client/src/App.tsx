@@ -21,6 +21,7 @@ const Aptitude = lazy(() => import("./pages/Aptitude"));
 const Contests = lazy(() => import("./pages/Contests"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Resources = lazy(() => import("./pages/Resources"));
+const Updates = lazy(() => import("./pages/Updates"));
 const Premium = lazy(() => import("./pages/Premium"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -70,6 +71,7 @@ function Router() {
         <Route path="/contests" component={Contests} />
         <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/resources" component={Resources} />
+        <Route path="/updates" component={Updates} />
         <Route path="/premium" component={Premium} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/profile" component={Profile} />
