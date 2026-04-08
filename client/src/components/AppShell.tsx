@@ -50,7 +50,7 @@ type NavGroup = {
 };
 
 const SIDEBAR_STORAGE_KEY = "sb-width";
-const SIDEBAR_DEFAULT_WIDTH = 240;
+const SIDEBAR_DEFAULT_WIDTH = 256;
 const SIDEBAR_MIN_WIDTH = 88;
 const SIDEBAR_MAX_WIDTH = 320;
 const SIDEBAR_COLLAPSE_THRESHOLD = 180;
@@ -388,7 +388,13 @@ export default function AppShell({
     const parsed = Number.parseInt(storedValue, 10);
     if (!Number.isFinite(parsed)) return;
 
-    const nextWidth = normalizeSidebarWidth(parsed);
+    const normalizedWidth = normalizeSidebarWidth(parsed);
+    const nextWidth =
+      normalizedWidth > SIDEBAR_COLLAPSE_THRESHOLD
+        ? clampSidebarWidth(
+            Math.max(normalizedWidth, SIDEBAR_DEFAULT_WIDTH)
+          )
+        : normalizedWidth;
     setSidebarWidth(nextWidth);
     if (nextWidth > SIDEBAR_COLLAPSE_THRESHOLD) {
       lastExpandedWidthRef.current = nextWidth;

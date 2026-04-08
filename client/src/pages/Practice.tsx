@@ -1434,40 +1434,40 @@ export default function Practice() {
       shellClassName="practice-shell"
       contentClassName="max-w-none"
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         {!activeQ ? (
           <>
             <section className={panelClassName}>
-              <div className="px-5 py-5 md:px-6 md:py-6">
-                <div className="min-w-0 space-y-5">
-                  <div className="space-y-3">
+              <div className="px-5 py-4 md:px-6 md:py-5">
+                <div className="min-w-0 space-y-4">
+                  <div className="space-y-2">
                     <span
-                      className={`${accentChipClassName} inline-flex items-center gap-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]`}
+                      className={`${accentChipClassName} inline-flex items-center gap-2 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]`}
                     >
                       Practice studio
                     </span>
                     <div className="space-y-2">
-                      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                      <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                             Practice workspace
                           </p>
-                          <h1 className="text-[2.2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.8rem]">
+                          <h1 className="text-[2rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)] md:text-[2.45rem]">
                             Practice desk
                           </h1>
-                          <p className="mt-2 max-w-2xl text-[15px] leading-7 text-[var(--text-secondary)]">
+                          <p className="mt-1.5 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">
                             Fresh questions first, review close at hand, and a
                             quieter workspace for steady daily solving.
                           </p>
                         </div>
-                        <p className="text-sm text-[var(--text-faint)]">
+                        <p className="text-[13px] text-[var(--text-faint)]">
                           {questionStateSummary}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
                     {[
                       {
                         label: "Fresh now",
@@ -1492,22 +1492,22 @@ export default function Practice() {
                     ].map(item => (
                       <div
                         key={item.label}
-                        className={softPanelClassName + " px-4 py-4"}
+                        className={softPanelClassName + " px-4 py-3"}
                       >
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                           {item.label}
                         </p>
-                        <p className="mt-3 text-[1.9rem] tracking-[-0.06em] text-[var(--text-primary)]">
+                        <p className="mt-2 text-[1.6rem] tracking-[-0.06em] text-[var(--text-primary)]">
                           {item.value}
                         </p>
-                        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                        <p className="mt-1.5 text-[13px] leading-5 text-[var(--text-secondary)]">
                           {item.hint}
                         </p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row">
+                  <div className="flex flex-col gap-2.5 sm:flex-row">
                     <div className="relative min-w-0 flex-1">
                       <Search
                         size={16}
@@ -1520,13 +1520,13 @@ export default function Practice() {
                           setPage(1);
                         }}
                         placeholder="Search by question, topic, exam, or type"
-                        className={`${fieldClassName} h-13 pl-11`}
+                        className={`${fieldClassName} h-12 pl-11`}
                       />
                     </div>
                     <button
                       type="button"
                       onClick={openFilterPanel}
-                      className={`${ghostButtonClassName} h-13 gap-2 px-5 text-sm font-semibold`}
+                      className={`${ghostButtonClassName} h-12 gap-2 px-5 text-sm font-semibold`}
                     >
                       <SlidersHorizontal size={16} />
                       Filters
