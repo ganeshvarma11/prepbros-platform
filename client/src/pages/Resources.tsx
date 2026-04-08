@@ -283,7 +283,14 @@ export default function Resources() {
                           ) : null}
                         </div>
 
-                        <h2 className="mt-2.5 line-clamp-2 text-[0.74rem] font-medium leading-[1.42] tracking-[-0.008em] text-[var(--text-2)] sm:text-[0.8rem]">
+                        <h2
+                          className="mt-2.5 line-clamp-2 font-medium text-[var(--text-2)]"
+                          style={{
+                            fontSize: "1rem",
+                            lineHeight: 1.22,
+                            letterSpacing: "-0.02em",
+                          }}
+                        >
                           {resource.title}
                         </h2>
                         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-[var(--text-3)]">
