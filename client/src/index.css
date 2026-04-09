@@ -405,6 +405,12 @@ pre {
 .search-input-reset {
   -webkit-appearance: none;
   appearance: none;
+  background-image: none;
+}
+
+.search-input-reset[type="search"] {
+  -webkit-appearance: textfield;
+  appearance: textfield;
 }
 
 .search-input-reset::-webkit-search-decoration,
@@ -413,6 +419,12 @@ pre {
 .search-input-reset::-webkit-search-results-decoration {
   -webkit-appearance: none;
   appearance: none;
+  display: none;
+}
+
+.search-input-with-icon {
+  padding-left: 3rem !important;
+  padding-right: 1rem !important;
 }
 
 .divider {

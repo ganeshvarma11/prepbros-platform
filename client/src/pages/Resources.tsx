@@ -204,11 +204,12 @@ export default function Resources() {
                 className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-2)]"
               />
               <input
-                type="search"
+                type="text"
+                inputMode="search"
                 value={query}
                 onChange={event => setQuery(event.target.value)}
                 placeholder="Search resources"
-                className="search-input-reset h-12 w-full pl-12 pr-4"
+                className="search-input-reset search-input-with-icon h-12 w-full"
               />
             </label>
           </div>
