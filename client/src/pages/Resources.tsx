@@ -208,7 +208,7 @@ export default function Resources() {
                 value={query}
                 onChange={event => setQuery(event.target.value)}
                 placeholder="Search resources"
-                className="h-12 w-full pl-12"
+                className="search-input-reset h-12 w-full pl-12 pr-4"
               />
             </label>
           </div>

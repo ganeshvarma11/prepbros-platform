@@ -2436,7 +2436,7 @@ function Admin() {
                             value={questionSearch}
                             onChange={event => setQuestionSearch(event.target.value)}
                             placeholder="Question text, explanation, tags, topic..."
-                            className="w-full rounded-2xl border border-slate-200 bg-white px-10 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                            className="search-input-reset w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
                           />
                         </div>
                       </label>
@@ -3022,7 +3022,7 @@ function Admin() {
                             value={resourceSearch}
                             onChange={event => setResourceSearch(event.target.value)}
                             placeholder="Title, URL, description..."
-                            className="w-full rounded-2xl border border-slate-200 bg-white px-10 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                            className="search-input-reset w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
                           />
                         </div>
                       </label>
@@ -3481,7 +3481,7 @@ function Admin() {
                             value={updateSearch}
                             onChange={event => setUpdateSearch(event.target.value)}
                             placeholder="Title, organization, state, tags..."
-                            className="w-full rounded-2xl border border-slate-200 bg-white px-10 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                            className="search-input-reset w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
                           />
                         </div>
                       </label>
@@ -4192,7 +4192,7 @@ function Admin() {
                       value={supportSearch}
                       onChange={event => setSupportSearch(event.target.value)}
                       placeholder="Email, category, subject, or message..."
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-10 py-2.5 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
+                      className="search-input-reset w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-3 text-sm outline-none transition focus:border-orange-300 dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
                 </label>

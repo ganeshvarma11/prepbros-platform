@@ -1118,23 +1118,25 @@ export default function Profile() {
                   <div className="mx-auto max-w-[1120px]">
                     <div className="-mt-10 flex flex-col gap-6 px-0 sm:-mt-12 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
-                        <div className="relative flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full border-[3px] border-[var(--bg-base)] bg-[var(--surface-2)] text-[30px] text-[var(--brand)] shadow-[var(--shadow-lg)]">
-                          {avatarUrl ? (
-                            <img
-                              src={avatarUrl}
-                              alt={displayName}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <span>
-                              {getInitials(displayName)}
-                            </span>
-                          )}
+                        <div className="relative inline-flex">
+                          <div className="flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full border-[3px] border-[var(--bg-base)] bg-[var(--surface-2)] text-[30px] text-[var(--brand)] shadow-[var(--shadow-lg)]">
+                            {avatarUrl ? (
+                              <img
+                                src={avatarUrl}
+                                alt={displayName}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span>
+                                {getInitials(displayName)}
+                              </span>
+                            )}
+                          </div>
                           <button
                             type="button"
                             onClick={() => avatarInputRef.current?.click()}
                             disabled={uploadingMedia.avatar}
-                            className="absolute bottom-0 right-0 inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[var(--bg-base)] bg-[var(--brand)] text-[var(--text-on-brand)] transition hover:bg-[var(--brand-light)] disabled:opacity-70"
+                            className="absolute -bottom-0.5 -right-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[var(--bg-base)] bg-[var(--brand)] text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] transition hover:bg-[var(--brand-light)] disabled:opacity-70"
                             aria-label="Upload profile photo"
                           >
                             {uploadingMedia.avatar ? (

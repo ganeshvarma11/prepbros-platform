@@ -402,6 +402,19 @@ pre {
   background: var(--bg-card-strong);
 }
 
+.search-input-reset {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-input-reset::-webkit-search-decoration,
+.search-input-reset::-webkit-search-cancel-button,
+.search-input-reset::-webkit-search-results-button,
+.search-input-reset::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .divider {
   height: 1px;
   background: var(--border);

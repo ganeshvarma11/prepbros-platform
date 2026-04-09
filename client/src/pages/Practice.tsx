@@ -1520,7 +1520,7 @@ export default function Practice() {
                           setPage(1);
                         }}
                         placeholder="Search by question, topic, exam, or type"
-                        className={`${fieldClassName} h-12 pl-11`}
+                        className={`search-input-reset ${fieldClassName} h-12 pl-12 pr-4`}
                       />
                     </div>
                     <button
