@@ -981,6 +981,16 @@ export default function Practice() {
     setPage(1);
   };
 
+  const setQuickSort = (sortBy: SortBy) => {
+    const nextFilters = {
+      ...appliedFilters,
+      sortBy,
+    };
+    setAppliedFilters(nextFilters);
+    setDraftFilters(nextFilters);
+    setPage(1);
+  };
+
   const clearDraft = () => {
     setDraftFilters(createEmptyFilters());
   };
@@ -1146,38 +1156,26 @@ export default function Practice() {
   const visibleRangeEnd = filtered.length
     ? Math.min(page * PER_PAGE, filtered.length)
     : 0;
-  const freshShare = questions.length
-    ? Math.round((stats.fresh / questions.length) * 100)
-    : 0;
-  const practiceStatCards = [
+  const practiceSummaryItems = [
     {
-      label: "Fresh now",
+      label: "Fresh",
       value: stats.fresh,
-      hint: "Unattempted questions shown first",
-      icon: Sparkles,
-      featured: true,
-      eyebrow: `${freshShare}% of your library is ready to solve`,
+      hint: "Ready now",
     },
     {
       label: "Solved",
       value: stats.solved,
-      hint: "Questions you have already cleared",
-      icon: Check,
-      featured: false,
+      hint: "Completed",
     },
     {
-      label: "Need retry",
+      label: "Retry",
       value: stats.incorrect,
-      hint: "Incorrect attempts ready for review",
-      icon: X,
-      featured: false,
+      hint: "Needs review",
     },
     {
-      label: "Bookmarked",
+      label: "Saved",
       value: stats.bookmarked,
-      hint: "Saved for another focused pass",
-      icon: BookmarkCheck,
-      featured: false,
+      hint: "Bookmarked",
     },
   ];
 
@@ -1488,157 +1486,25 @@ export default function Practice() {
             <section
               className={cn(
                 panelClassName,
-                "relative overflow-hidden border-[var(--border-soft)] bg-[linear-gradient(180deg,var(--bg-card)_0%,var(--surface-1)_100%)]"
+                "border-[var(--border-soft)] bg-[var(--bg-card)]"
               )}
             >
-              <div className="pointer-events-none absolute inset-0">
-                <div className="absolute left-[-3rem] top-[-4rem] h-40 w-40 rounded-full bg-[rgba(255,140,50,0.12)] blur-3xl" />
-                <div className="absolute right-[8%] top-[8%] h-32 w-32 rounded-full bg-[rgba(85,121,217,0.12)] blur-3xl" />
-                <div className="absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,140,50,0.42),transparent)]" />
-              </div>
-
-              <div className="relative px-5 py-5 md:px-7 md:py-7">
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.9fr)_minmax(260px,0.72fr)] xl:items-start">
+              <div className="px-5 py-5 md:px-6 md:py-6">
+                <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0">
-                    <span
-                      className={`${accentChipClassName} inline-flex items-center gap-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em]`}
-                    >
-                      Practice studio
-                    </span>
-                    <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
                       Practice workspace
                     </p>
-                    <h1 className="mt-3 max-w-[12ch] text-[2.75rem] font-semibold leading-[0.95] tracking-[-0.08em] text-[var(--text-primary)] md:text-[4rem]">
-                      Practice desk
+                    <h1 className="mt-2 text-[2.3rem] font-semibold tracking-[-0.07em] text-[var(--text-primary)] md:text-[3rem]">
+                      Practice Questions
                     </h1>
-                    <div className="mt-5 flex flex-wrap gap-2.5">
-                      {REVIEW_OPTIONS.map(item => {
-                        const active = appliedFilters.reviewMode === item.value;
-                        return (
-                          <button
-                            key={item.value}
-                            type="button"
-                            onClick={() => setQuickReviewMode(item.value)}
-                            className={cn(
-                              "inline-flex h-10 items-center rounded-full border px-4 text-sm font-semibold transition",
-                              active
-                                ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand)] shadow-[var(--shadow-sm)]"
-                                : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]"
-                            )}
-                          >
-                            {item.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-2)] p-4 shadow-[var(--shadow-sm)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
-                      Library snapshot
+                    <p className="mt-2 text-[15px] text-[var(--text-secondary)]">
+                      {questionStateSummary}
                     </p>
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-[2.15rem] font-semibold tracking-[-0.08em] text-[var(--text-primary)] md:text-[2.65rem]">
-                          {filtered.length}
-                        </p>
-                        <p className="text-sm text-[var(--text-secondary)]">
-                          questions ready in this view
-                        </p>
-                      </div>
-                      <div className="rounded-[18px] border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-3 py-2 text-right">
-                        <p className="text-[1.15rem] font-semibold tracking-[-0.05em] text-[var(--brand)]">
-                          {stats.fresh}
-                        </p>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--brand)]">
-                          Fresh first
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between gap-3 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-faint)]">
-                        <span>Focus queue</span>
-                        <span>{freshShare}% fresh</span>
-                      </div>
-                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-3)]">
-                        <div
-                          className="h-full rounded-full bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--brand)_100%)] transition-[width] duration-300"
-                          style={{ width: `${freshShare}%` }}
-                        />
-                      </div>
-                      <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
-                        {questionStateSummary}
-                      </p>
-                    </div>
                   </div>
-                </div>
 
-                <div className="mt-6 grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(3,minmax(0,0.9fr))]">
-                  {practiceStatCards.map(item => {
-                    const Icon = item.icon;
-
-                    return item.featured ? (
-                      <div
-                        key={item.label}
-                        className="relative overflow-hidden rounded-[28px] border border-[var(--brand-muted)] bg-[linear-gradient(135deg,var(--surface-2)_0%,rgba(255,140,50,0.12)_100%)] p-5 shadow-[var(--shadow-md)]"
-                      >
-                        <div className="absolute right-[-1rem] top-[-1rem] h-24 w-24 rounded-full bg-[rgba(255,140,50,0.12)] blur-2xl" />
-                        <div className="relative">
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--brand)]">
-                                {item.label}
-                              </p>
-                              <p className="mt-2 text-[2.75rem] font-semibold tracking-[-0.08em] text-[var(--text-primary)]">
-                                {item.value}
-                              </p>
-                            </div>
-                            <span className="inline-flex h-11 w-11 items-center justify-center rounded-[16px] border border-[var(--brand-muted)] bg-[rgba(255,255,255,0.75)] text-[var(--brand)] shadow-[var(--shadow-sm)]">
-                              <Icon size={18} />
-                            </span>
-                          </div>
-                          <p className="mt-3 max-w-[26rem] text-sm leading-6 text-[var(--text-secondary)]">
-                            {item.hint}
-                          </p>
-                          <div className="mt-5 flex flex-wrap items-center gap-2">
-                            <span className="inline-flex rounded-full border border-[var(--brand-muted)] bg-[rgba(255,255,255,0.7)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--brand)]">
-                              {item.eyebrow}
-                            </span>
-                            <span className="text-xs text-[var(--text-faint)]">
-                              Best place to start right now
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        key={item.label}
-                        className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-4 shadow-[var(--shadow-sm)] transition duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)]"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
-                              {item.label}
-                            </p>
-                            <p className="mt-3 text-[2rem] font-semibold tracking-[-0.07em] text-[var(--text-primary)]">
-                              {item.value}
-                            </p>
-                          </div>
-                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)]">
-                            <Icon size={16} />
-                          </span>
-                        </div>
-                        <p className="mt-4 text-[13px] leading-5 text-[var(--text-secondary)]">
-                          {item.hint}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-6 rounded-[28px] border border-[var(--border)] bg-[var(--surface-1)] p-3 shadow-[var(--shadow-sm)] md:p-4">
-                  <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-                    <div className="relative min-w-0 flex-1">
+                  <div className="grid w-full gap-3 sm:grid-cols-[minmax(0,1fr)_200px_auto] xl:w-auto xl:min-w-[720px]">
+                    <div className="relative min-w-0">
                       <Search
                         size={18}
                         className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[var(--text-faint)]"
@@ -1650,65 +1516,109 @@ export default function Practice() {
                           setPage(1);
                         }}
                         placeholder="Search by question, topic, exam, or type"
-                        className={`search-input-reset search-input-with-icon ${fieldClassName} h-14 rounded-[20px] bg-[var(--surface-2)] text-[15px] shadow-none`}
+                        className={`search-input-reset search-input-with-icon ${fieldClassName} h-[52px] rounded-[18px] bg-[var(--surface-2)] text-[15px] shadow-none`}
                       />
                     </div>
-                    <div className="flex flex-col gap-3 sm:flex-row">
-                      <button
-                        type="button"
-                        onClick={openFilterPanel}
-                        className={`${ghostButtonClassName} h-14 gap-2 rounded-[20px] px-5 text-sm font-semibold`}
-                      >
-                        <SlidersHorizontal size={16} />
-                        Filters
-                        {filterCount > 0 ? (
-                          <span
-                            className={`${accentChipClassName} px-2 py-0.5 text-[11px]`}
-                          >
-                            {filterCount}
-                          </span>
-                        ) : null}
-                      </button>
+                    <select
+                      value={appliedFilters.sortBy}
+                      onChange={event =>
+                        setQuickSort(event.target.value as SortBy)
+                      }
+                      className={`${fieldClassName} h-[52px] rounded-[18px] bg-[var(--surface-2)] pr-10 text-[15px] shadow-none`}
+                    >
+                      <option value="default">New questions first</option>
+                      <option value="difficulty">Sort by difficulty</option>
+                      <option value="year">Latest year</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={openFilterPanel}
+                      className={`${ghostButtonClassName} h-[52px] gap-2 rounded-[18px] px-5 text-sm font-semibold`}
+                    >
+                      <SlidersHorizontal size={16} />
+                      Filters
                       {filterCount > 0 ? (
-                        <button
-                          type="button"
-                          onClick={clearAll}
-                          className={`${ghostButtonClassName} h-14 rounded-[20px] px-5 text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)]`}
+                        <span
+                          className={`${accentChipClassName} px-2 py-0.5 text-[11px]`}
                         >
-                          Reset view
-                        </button>
+                          {filterCount}
+                        </span>
                       ) : null}
-                    </div>
+                    </button>
                   </div>
+                </div>
 
-                  <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-2.5 w-2.5 rounded-full bg-[var(--brand)]" />
-                      <p className="text-sm text-[var(--text-secondary)]">
-                        {questionsLoading
-                          ? "Preparing the question library."
-                          : reviewModeSyncing
-                            ? "Restoring your saved progress."
-                            : `Showing ${visibleRangeStart}-${visibleRangeEnd} of ${filtered.length}`}
+                <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                  {REVIEW_OPTIONS.map(item => {
+                    const active = appliedFilters.reviewMode === item.value;
+                    return (
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() => setQuickReviewMode(item.value)}
+                        className={cn(
+                          "inline-flex h-10 items-center rounded-full border px-4 text-sm font-semibold transition",
+                          active
+                            ? "border-[var(--brand-muted)] bg-[var(--brand-subtle)] text-[var(--brand)]"
+                            : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-1)] hover:text-[var(--text-primary)]"
+                        )}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                  {filterCount > 0 ? (
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="text-sm font-semibold text-[var(--brand)] transition hover:text-[var(--brand-dark)]"
+                    >
+                      Clear all
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="mt-5 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+                  {practiceSummaryItems.map(item => (
+                    <div
+                      key={item.label}
+                      className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                          {item.label}
+                        </p>
+                        <span className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-faint)]">
+                          {item.hint}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-[1.7rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                        {item.value}
                       </p>
                     </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    {questionsLoading
+                      ? "Preparing the question library."
+                      : reviewModeSyncing
+                        ? "Restoring your saved progress."
+                        : `Showing ${visibleRangeStart}-${visibleRangeEnd} of ${filtered.length}`}
+                  </p>
+                  {activeFilterPills.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                      {activeFilterPills.length > 0 ? (
-                        activeFilterPills.map(item => (
-                          <span
-                            key={item.key}
-                            className={`${accentChipClassName} px-3 py-1 text-[11px] font-medium`}
-                          >
-                            {item.label}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-faint)]">
-                          Fresh questions stay pinned to the top of the queue
+                      {activeFilterPills.map(item => (
+                        <span
+                          key={item.key}
+                          className={`${accentChipClassName} px-3 py-1 text-[11px] font-medium`}
+                        >
+                          {item.label}
                         </span>
-                      )}
+                      ))}
                     </div>
-                  </div>
+                  ) : null}
                 </div>
               </div>
             </section>
@@ -1716,32 +1626,9 @@ export default function Practice() {
             <section
               className={cn(
                 panelClassName,
-                "border-[var(--border-soft)] bg-[linear-gradient(180deg,var(--bg-card)_0%,var(--surface-1)_100%)]"
+                "border-[var(--border-soft)] bg-[var(--bg-card)]"
               )}
             >
-              <div className="border-b border-[var(--border)] px-5 py-5 md:px-6">
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
-                      Question library
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`${accentChipClassName} px-3 py-1 text-[11px] font-medium`}>
-                      {filtered.length} total
-                    </span>
-                    <button
-                      type="button"
-                      onClick={openFilterPanel}
-                      className={`${ghostButtonClassName} h-11 gap-2 rounded-[18px] px-4 text-sm font-semibold`}
-                    >
-                      <SlidersHorizontal size={14} />
-                      Adjust
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               {questionsLoading ? (
                 <PracticeTableSkeleton rows={10} />
               ) : reviewModeSyncing ? (
@@ -1768,14 +1655,14 @@ export default function Practice() {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto px-3 pb-2 pt-3 md:px-4">
-                    <table className="min-w-[940px] w-full table-fixed border-separate border-spacing-y-3">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-[940px] w-full table-fixed border-collapse">
                       <thead>
-                        <tr>
+                        <tr className="border-b border-[var(--border)]">
                           {TABLE_COLUMNS.map(column => (
                             <th
                               key={column.label}
-                              className={`px-5 pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)] ${column.className}`}
+                              className={`px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)] ${column.className}`}
                             >
                               {column.label}
                             </th>
@@ -1794,17 +1681,17 @@ export default function Practice() {
                             <tr
                               key={question.id}
                               onClick={() => openQuestion(question)}
-                              className="group cursor-pointer transition duration-200 hover:-translate-y-0.5 [filter:drop-shadow(0_10px_22px_rgba(15,23,42,0.04))] hover:[filter:drop-shadow(0_18px_32px_rgba(15,23,42,0.08))]"
+                              className="cursor-pointer border-b border-[var(--border)] transition hover:bg-[var(--surface-1)]"
                             >
-                              <td className="rounded-l-[20px] border border-r-0 border-[var(--border)] bg-[var(--surface-2)] px-5 py-5 align-middle text-sm font-medium text-[var(--text-muted)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-1)]">
+                              <td className="px-5 py-4 align-middle text-sm font-medium text-[var(--text-muted)]">
                                 {rowNumber}
                               </td>
-                              <td className="border-y border-[var(--border)] bg-[var(--surface-2)] px-5 py-5 align-middle transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-1)]">
+                              <td className="px-5 py-4 align-middle">
                                 <p className="line-clamp-2 text-[15px] font-semibold leading-7 text-[var(--text-primary)]">
                                   {question.question}
                                 </p>
                               </td>
-                              <td className="border-y border-[var(--border)] bg-[var(--surface-2)] px-5 py-5 align-middle transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-1)]">
+                              <td className="px-5 py-4 align-middle">
                                 <span
                                   className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getExamPillClass(
                                     question.exam
@@ -1813,7 +1700,7 @@ export default function Practice() {
                                   {question.exam}
                                 </span>
                               </td>
-                              <td className="border-y border-[var(--border)] bg-[var(--surface-2)] px-5 py-5 align-middle transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-1)]">
+                              <td className="px-5 py-4 align-middle">
                                 <p className="text-sm font-semibold text-[var(--text-primary)]">
                                   {topicBucket}
                                 </p>
@@ -1823,7 +1710,7 @@ export default function Practice() {
                                   </p>
                                 ) : null}
                               </td>
-                              <td className="border-y border-[var(--border)] bg-[var(--surface-2)] px-5 py-5 align-middle transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-1)]">
+                              <td className="px-5 py-4 align-middle">
                                 <span
                                   className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getDifficultyPillClass(
                                     question.difficulty
@@ -1832,10 +1719,10 @@ export default function Practice() {
                                   {question.difficulty}
                                 </span>
                               </td>
-                              <td className="border-y border-[var(--border)] bg-[var(--surface-2)] px-5 py-5 align-middle text-sm font-medium text-[var(--text-secondary)] transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-1)]">
+                              <td className="px-5 py-4 align-middle text-sm font-medium text-[var(--text-secondary)]">
                                 {question.year ?? "—"}
                               </td>
-                              <td className="rounded-r-[20px] border border-l-0 border-[var(--border)] bg-[var(--surface-2)] px-5 py-5 align-middle transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-1)]">
+                              <td className="px-5 py-4 align-middle">
                                 {progressSyncing ? (
                                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-muted)]">
                                     <Loader2
