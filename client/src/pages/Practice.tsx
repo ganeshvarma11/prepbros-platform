@@ -1498,7 +1498,7 @@ export default function Practice() {
               </div>
 
               <div className="relative px-5 py-5 md:px-7 md:py-7">
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)] xl:items-start">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.9fr)_minmax(260px,0.72fr)] xl:items-start">
                   <div className="min-w-0">
                     <span
                       className={`${accentChipClassName} inline-flex items-center gap-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em]`}
@@ -1511,12 +1511,7 @@ export default function Practice() {
                     <h1 className="mt-3 max-w-[12ch] text-[2.75rem] font-semibold leading-[0.95] tracking-[-0.08em] text-[var(--text-primary)] md:text-[4rem]">
                       Practice desk
                     </h1>
-                    <p className="mt-4 max-w-2xl text-[15px] leading-7 text-[var(--text-secondary)] md:text-[16px]">
-                      Fresh questions stay front and center, retry work is easy
-                      to revisit, and the whole board feels built for deep,
-                      steady daily solving.
-                    </p>
-                    <div className="mt-6 flex flex-wrap gap-2.5">
+                    <div className="mt-5 flex flex-wrap gap-2.5">
                       {REVIEW_OPTIONS.map(item => {
                         const active = appliedFilters.reviewMode === item.value;
                         return (
@@ -1538,21 +1533,21 @@ export default function Practice() {
                     </div>
                   </div>
 
-                  <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)] p-5 shadow-[var(--shadow-md)]">
+                  <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-2)] p-4 shadow-[var(--shadow-sm)]">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-faint)]">
                       Library snapshot
                     </p>
-                    <div className="mt-5 flex items-end justify-between gap-4">
+                    <div className="mt-4 flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-[2.4rem] font-semibold tracking-[-0.08em] text-[var(--text-primary)] md:text-[3.2rem]">
+                        <p className="text-[2.15rem] font-semibold tracking-[-0.08em] text-[var(--text-primary)] md:text-[2.65rem]">
                           {filtered.length}
                         </p>
                         <p className="text-sm text-[var(--text-secondary)]">
                           questions ready in this view
                         </p>
                       </div>
-                      <div className="rounded-[20px] border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-4 py-3 text-right">
-                        <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[var(--brand)]">
+                      <div className="rounded-[18px] border border-[var(--brand-muted)] bg-[var(--brand-subtle)] px-3 py-2 text-right">
+                        <p className="text-[1.15rem] font-semibold tracking-[-0.05em] text-[var(--brand)]">
                           {stats.fresh}
                         </p>
                         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--brand)]">
@@ -1560,7 +1555,7 @@ export default function Practice() {
                         </p>
                       </div>
                     </div>
-                    <div className="mt-5">
+                    <div className="mt-4">
                       <div className="flex items-center justify-between gap-3 text-xs font-medium uppercase tracking-[0.14em] text-[var(--text-faint)]">
                         <span>Focus queue</span>
                         <span>{freshShare}% fresh</span>
@@ -1571,7 +1566,7 @@ export default function Practice() {
                           style={{ width: `${freshShare}%` }}
                         />
                       </div>
-                      <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
+                      <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
                         {questionStateSummary}
                       </p>
                     </div>
@@ -1730,14 +1725,6 @@ export default function Practice() {
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-faint)]">
                       Question library
                     </p>
-                    <h2 className="mt-3 text-[1.7rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
-                      Open a row and keep moving
-                    </h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-                      The list is tuned for quick scanning: stronger contrast,
-                      clearer hierarchy, and row-level feedback that feels like
-                      a product instead of a spreadsheet.
-                    </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`${accentChipClassName} px-3 py-1 text-[11px] font-medium`}>
@@ -1813,14 +1800,9 @@ export default function Practice() {
                                 {rowNumber}
                               </td>
                               <td className="border-y border-[var(--border)] bg-[var(--surface-2)] px-5 py-5 align-middle transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-1)]">
-                                <div className="space-y-2">
-                                  <p className="line-clamp-2 text-[15px] font-semibold leading-7 text-[var(--text-primary)]">
-                                    {question.question}
-                                  </p>
-                                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--text-faint)]">
-                                    Tap to open explanation and answer flow
-                                  </p>
-                                </div>
+                                <p className="line-clamp-2 text-[15px] font-semibold leading-7 text-[var(--text-primary)]">
+                                  {question.question}
+                                </p>
                               </td>
                               <td className="border-y border-[var(--border)] bg-[var(--surface-2)] px-5 py-5 align-middle transition group-hover:border-[var(--border-strong)] group-hover:bg-[var(--surface-1)]">
                                 <span
