@@ -124,21 +124,28 @@ function NavLink({
       <span
         onClick={onNavigate}
         className={cn(
-          "group relative flex cursor-pointer items-center rounded-[14px] border text-[14px] transition-all",
+          "group relative flex cursor-pointer items-center rounded-[18px] border text-[14px] transition-all duration-200",
           collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3.5 py-2.5",
           active
-            ? "border-[var(--border)] bg-[var(--surface-elevated)] font-semibold text-[var(--text-1)] shadow-[var(--shadow-sm)]"
-            : "border-transparent text-[var(--text-2)] hover:border-[var(--border-soft)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
+            ? "border-[var(--brand-muted)] bg-[linear-gradient(135deg,var(--surface-2)_0%,var(--brand-subtle)_100%)] font-semibold text-[var(--text-1)] shadow-[0_20px_40px_-28px_var(--brand-glow)]"
+            : "border-transparent text-[var(--text-2)] hover:border-[var(--border)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] hover:translate-x-0.5"
         )}
         title={collapsed ? item.label : undefined}
       >
         <span
           className={cn(
-            "absolute left-0 top-[8px] bottom-[8px] w-[2px] rounded-full transition",
+            "absolute left-0 top-[10px] bottom-[10px] w-[3px] rounded-full transition",
             active ? "bg-[var(--brand)]" : "bg-transparent"
           )}
         />
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+        <span
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] transition",
+            active
+              ? "bg-[rgba(255,255,255,0.72)] text-[var(--brand)]"
+              : "text-current group-hover:bg-[var(--surface-3)]"
+          )}
+        >
           <Icon size={16} className="text-current" />
         </span>
         {!collapsed ? <span className="truncate">{item.label}</span> : null}
@@ -179,54 +186,67 @@ function SidebarBody({
   return (
     <div
       className={cn(
-        "relative flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[var(--sidebar-bg)] py-4 backdrop-blur-xl",
+        "relative flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[linear-gradient(180deg,var(--sidebar-bg)_0%,var(--surface-1)_100%)] py-4 shadow-[var(--shadow-lg)] backdrop-blur-xl",
         collapsed ? "px-2" : "px-3"
       )}
     >
-      <div className={cn("pb-4", collapsed ? "px-0" : "px-1")}>
-        {collapsed ? (
-          <Link href="/">
-            <span className="flex cursor-pointer justify-center">
-              <img
-                src={BRAND_ICON_SRC}
-                alt="PrepBros"
-                className="h-9 w-9 rounded-[12px]"
-              />
-            </span>
-          </Link>
-        ) : (
-          <BrandLogo
-            compact
-            className="items-center"
-            textClassName="text-[1.4rem]"
-          />
-        )}
-        <button
-          type="button"
-          onClick={onToggle}
+      <div className={cn("pb-5", collapsed ? "px-0" : "px-1")}>
+        <div
           className={cn(
-            "mt-4 inline-flex h-10 w-full items-center justify-center rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-2)] text-[var(--text-2)] transition hover:border-[var(--border)] hover:bg-[var(--surface-1)] hover:text-[var(--text-1)]",
-            collapsed ? "px-0" : "gap-2 px-3"
+            "rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface-2)] shadow-[var(--shadow-sm)]",
+            collapsed ? "px-2 py-3" : "px-3 py-3"
           )}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          {!collapsed ? (
-            <span className="text-[13px] font-medium">Collapse</span>
-          ) : null}
-        </button>
+          {collapsed ? (
+            <Link href="/">
+              <span className="flex cursor-pointer justify-center">
+                <img
+                  src={BRAND_ICON_SRC}
+                  alt="PrepBros"
+                  className="h-10 w-10 rounded-[14px]"
+                />
+              </span>
+            </Link>
+          ) : (
+            <BrandLogo
+              compact
+              className="items-center"
+              textClassName="text-[1.4rem]"
+            />
+          )}
+          <button
+            type="button"
+            onClick={onToggle}
+            className={cn(
+              "mt-4 inline-flex h-11 w-full items-center justify-center rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-2)] transition hover:border-[var(--brand-muted)] hover:bg-[var(--brand-subtle)] hover:text-[var(--text-1)]",
+              collapsed ? "px-0" : "gap-2 px-3"
+            )}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            {!collapsed ? (
+              <span className="text-[13px] font-medium">Collapse</span>
+            ) : null}
+          </button>
+        </div>
       </div>
 
-        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto py-5 pr-1">
-          {NAV_GROUPS.map(group => (
-            <div key={group.label}>
-              {!collapsed ? (
-                <p className="section-label px-3 text-[var(--text-3)]">
-                  {group.label}
-                </p>
-              ) : null}
-            <div className="mt-2 space-y-1">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-1 pr-1">
+        {NAV_GROUPS.map(group => (
+          <div
+            key={group.label}
+            className={cn(
+              "rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
+              collapsed ? "px-1.5 py-2" : "p-2"
+            )}
+          >
+            {!collapsed ? (
+              <p className="section-label px-2.5 pt-1 text-[var(--text-3)]">
+                {group.label}
+              </p>
+            ) : null}
+            <div className={cn("space-y-1", collapsed ? "mt-0" : "mt-2")}>
               {group.items.map(item => (
                 <NavLink
                   key={item.href}
@@ -241,100 +261,114 @@ function SidebarBody({
         ))}
       </div>
 
-      <div className="space-y-3 border-t border-[var(--border-soft)] pt-4">
-        <NavLink
-          item={SUPPORT_ITEM}
-          location={location}
-          collapsed={collapsed}
-          onNavigate={onNavigate}
-        />
+      <div className="space-y-3 pt-4">
+        <div className="rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] p-2 shadow-[var(--shadow-sm)]">
+          <NavLink
+            item={SUPPORT_ITEM}
+            location={location}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
+          />
 
-        <div
-          className={cn(
-            "flex items-center rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-1)]",
-            collapsed
-              ? "justify-center px-0 py-2.5"
-              : "justify-between px-3 py-2.5"
-          )}
-        >
-          {!collapsed ? <p className="section-label">Appearance</p> : null}
-          <ThemeToggle />
+          <div
+            className={cn(
+              "mt-2 flex items-center rounded-[16px] border border-[var(--border)] bg-[var(--surface-2)]",
+              collapsed
+                ? "justify-center px-0 py-2.5"
+                : "justify-between px-3 py-2.5"
+            )}
+          >
+            {!collapsed ? <p className="section-label">Appearance</p> : null}
+            <ThemeToggle />
+          </div>
         </div>
 
         {user ? (
           <div
             className={cn(
-              "flex items-center rounded-[14px] border border-transparent transition hover:border-[var(--border-soft)] hover:bg-[var(--surface-1)]",
-              collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"
+              "rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
+              collapsed ? "px-1.5 py-2" : "px-3 py-3"
             )}
           >
-            <Link href="/profile">
-              <span
-                onClick={onNavigate}
-                className={cn(
-                  "flex cursor-pointer items-center",
-                  collapsed ? "justify-center" : "min-w-0 flex-1 gap-3"
-                )}
-              >
-                <Avatar className="h-8 w-8 rounded-full">
-                  <AvatarImage
-                    src={avatarUrl}
-                    alt={displayName}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--brand)]">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                {!collapsed ? (
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-[var(--text-1)]">
-                      {displayName}
-                    </p>
-                    <p className="truncate text-[11px] text-[var(--text-3)]">
-                      {targetExam}
-                    </p>
-                  </div>
-                ) : null}
-              </span>
-            </Link>
-            {!collapsed ? (
-              <>
+            <div
+              className={cn(
+                "flex items-center rounded-[16px] border border-transparent transition hover:border-[var(--border)] hover:bg-[var(--surface-2)]",
+                collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-3"
+              )}
+            >
+              <Link href="/profile">
+                <span
+                  onClick={onNavigate}
+                  className={cn(
+                    "flex cursor-pointer items-center",
+                    collapsed ? "justify-center" : "min-w-0 flex-1 gap-3"
+                  )}
+                >
+                  <Avatar className="h-9 w-9 rounded-full">
+                    <AvatarImage
+                      src={avatarUrl}
+                      alt={displayName}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--brand)]">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  {!collapsed ? (
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-semibold text-[var(--text-1)]">
+                        {displayName}
+                      </p>
+                      <p className="truncate text-[11px] text-[var(--text-3)]">
+                        {targetExam}
+                      </p>
+                    </div>
+                  ) : null}
+                </span>
+              </Link>
+              {!collapsed ? (
                 <button
                   type="button"
                   onClick={() => {
                     onNavigate?.();
                     signOut();
                   }}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] text-[var(--text-3)] transition hover:bg-[var(--surface-3)] hover:text-[var(--text-1)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-[12px] text-[var(--text-3)] transition hover:bg-[var(--surface-3)] hover:text-[var(--text-1)]"
                   aria-label="Sign out"
                   title="Sign out"
                 >
                   <LogOut size={14} />
                 </button>
-              </>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         ) : (
-          <div className={cn("space-y-3", collapsed ? "px-0" : "px-3")}>
-            {!collapsed ? (
-              <p className="text-sm leading-6 text-[var(--text-2)]">
-                Sign in to keep your progress, bookmarks, and daily streak
-                synced.
-              </p>
-            ) : null}
-            <Link href="/">
-              <span
-                onClick={onNavigate}
-                className={cn(
-                  "btn-ghost inline-flex cursor-pointer",
-                  collapsed ? "h-9 w-9 p-0" : "px-4 py-2 text-sm"
-                )}
-                title="Go to home"
-              >
-                {collapsed ? <ChevronRight size={14} /> : "Go to home"}
-              </span>
-            </Link>
+          <div
+            className={cn(
+              "rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
+              collapsed ? "px-1.5 py-2" : "px-3 py-3"
+            )}
+          >
+            <div className={cn("space-y-3", collapsed ? "px-0" : "px-1")}>
+              {!collapsed ? (
+                <p className="text-sm leading-6 text-[var(--text-2)]">
+                  Sign in to keep your progress, bookmarks, and daily streak
+                  synced.
+                </p>
+              ) : null}
+              <Link href="/">
+                <span
+                  onClick={onNavigate}
+                  className={cn(
+                    "btn-ghost inline-flex cursor-pointer rounded-[16px]",
+                    collapsed ? "h-10 w-10 p-0" : "px-4 py-2 text-sm"
+                  )}
+                  title="Go to home"
+                >
+                  {collapsed ? <ChevronRight size={14} /> : "Go to home"}
+                </span>
+              </Link>
+            </div>
           </div>
         )}
       </div>
