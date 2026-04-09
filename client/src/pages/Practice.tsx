@@ -1662,7 +1662,7 @@ export default function Practice() {
                           {TABLE_COLUMNS.map(column => (
                             <th
                               key={column.label}
-                              className={`px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)] ${column.className}`}
+                              className={`px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)] ${column.className}`}
                             >
                               {column.label}
                             </th>
@@ -1683,11 +1683,11 @@ export default function Practice() {
                               onClick={() => openQuestion(question)}
                               className="cursor-pointer border-b border-[var(--border)] transition hover:bg-[var(--surface-1)]"
                             >
-                              <td className="px-5 py-4 align-middle text-sm font-medium text-[var(--text-muted)]">
+                              <td className="px-5 py-4 align-middle text-sm font-semibold text-[var(--text-secondary)]">
                                 {rowNumber}
                               </td>
                               <td className="px-5 py-4 align-middle">
-                                <p className="line-clamp-2 text-[15px] font-semibold leading-7 text-[var(--text-primary)]">
+                                <p className="line-clamp-2 text-[17px] font-semibold leading-7 tracking-[-0.02em] text-[var(--text-primary)]">
                                   {question.question}
                                 </p>
                               </td>
@@ -1701,11 +1701,11 @@ export default function Practice() {
                                 </span>
                               </td>
                               <td className="px-5 py-4 align-middle">
-                                <p className="text-sm font-semibold text-[var(--text-primary)]">
+                                <p className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
                                   {topicBucket}
                                 </p>
                                 {topicBucket !== question.topic ? (
-                                  <p className="mt-1 text-xs text-[var(--text-faint)]">
+                                  <p className="mt-1 text-[14px] text-[var(--text-secondary)]">
                                     {question.topic}
                                   </p>
                                 ) : null}
@@ -1719,7 +1719,7 @@ export default function Practice() {
                                   {question.difficulty}
                                 </span>
                               </td>
-                              <td className="px-5 py-4 align-middle text-sm font-medium text-[var(--text-secondary)]">
+                              <td className="px-5 py-4 align-middle text-sm font-semibold text-[var(--text-secondary)]">
                                 {question.year ?? "—"}
                               </td>
                               <td className="px-5 py-4 align-middle">
