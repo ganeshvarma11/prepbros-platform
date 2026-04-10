@@ -70,13 +70,13 @@ function MetricCard({
     <div className={cn(adminPanelClass, "p-4")}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b7280]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1f2937]">
             {label}
           </p>
           <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[#111827]">
             {value}
           </p>
-          <p className="mt-2 text-sm leading-6 text-[#667085]">{hint}</p>
+          <p className="mt-2 text-sm leading-6 text-[#334155]">{hint}</p>
         </div>
         <div className={cn("inline-flex h-11 w-11 items-center justify-center rounded-xl border", metricToneClasses(tone))}>
           <Icon size={18} />
@@ -103,7 +103,7 @@ function SectionCard({
         <div>
           <h2 className="text-lg font-semibold tracking-[-0.03em] text-[#111827]">{title}</h2>
           {description ? (
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-[#667085]">{description}</p>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-[#334155]">{description}</p>
           ) : null}
         </div>
         {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
@@ -178,7 +178,7 @@ function EmptyState({
         <Icon size={20} />
       </div>
       <p className="mt-4 text-base font-semibold text-[#111827]">{title}</p>
-      <p className="mt-2 text-sm leading-6 text-[#667085]">{description}</p>
+      <p className="mt-2 text-sm leading-6 text-[#334155]">{description}</p>
     </div>
   );
 }
@@ -379,7 +379,7 @@ export default function AdminConsole(props: any) {
             </div>
             <div>
               <p className="text-sm font-semibold text-[#111827]">PrepBros Admin</p>
-              <p className="text-xs text-[#667085]">Operator console</p>
+              <p className="text-xs text-[#334155]">Operator console</p>
             </div>
           </Link>
           <div className="mt-4 rounded-xl border border-[#e4d2c4] bg-[#fbf4ee] px-3 py-2 text-xs font-medium text-[#9a5a2b]">
@@ -414,11 +414,11 @@ export default function AdminConsole(props: any) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm font-semibold">{meta.label}</span>
-                    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", active ? "bg-white/10 text-white" : "bg-[#eef2f6] text-[#475467]")}>
+                    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", active ? "bg-white/10 text-white" : "bg-[#eef2f6] text-[#1f2937]")}>
                       {formatNumber(tabCounts[tab])}
                     </span>
                   </div>
-                  <p className={cn("mt-1 text-xs leading-5", active ? "text-white/70" : "text-[#667085]")}>
+                  <p className={cn("mt-1 text-xs leading-5", active ? "text-white/82" : "text-[#334155]")}>
                     {meta.description}
                   </p>
                 </div>
@@ -430,15 +430,15 @@ export default function AdminConsole(props: any) {
         <div className="border-t border-[#e4e7ec] px-5 py-4">
           <div className="grid gap-3 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[#667085]">Questions</span>
+              <span className="text-[#334155]">Questions</span>
               <span className="font-semibold text-[#111827]">{questionStats.total}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[#667085]">Live updates</span>
+              <span className="text-[#334155]">Live updates</span>
               <span className="font-semibold text-[#111827]">{updateStats.active}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[#667085]">Open tickets</span>
+              <span className="text-[#334155]">Open tickets</span>
               <span className="font-semibold text-[#111827]">{supportStats.open}</span>
             </div>
           </div>
@@ -454,7 +454,7 @@ export default function AdminConsole(props: any) {
                   <ActiveTabIcon size={16} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#667085]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#334155]">
                     PrepBros Admin
                   </p>
                   <h1 className="mt-1 text-[clamp(1.9rem,2.7vw,3rem)] font-semibold tracking-[-0.06em] text-[#111827]">
@@ -462,13 +462,13 @@ export default function AdminConsole(props: any) {
                   </h1>
                 </div>
               </div>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-[#667085]">
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-[#334155]">
                 {activeTabMeta.description} The redesign uses a lighter, table-first system so operators can scan, filter, and act without wading through card clutter.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="hidden rounded-full border border-[#d7dde5] bg-white px-3 py-2 text-xs font-medium text-[#475467] md:inline-flex">
+              <span className="hidden rounded-full border border-[#d7dde5] bg-white px-3 py-2 text-xs font-medium text-[#1f2937] md:inline-flex">
                 {user.email}
               </span>
               <SmallButton icon={RefreshCcw} onClick={() => void loadAll()} disabled={loadingTarget !== null}>
@@ -482,24 +482,24 @@ export default function AdminConsole(props: any) {
 
           <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
             <div className="rounded-[20px] border border-[#d7dde5] bg-white px-5 py-5 shadow-[0_14px_38px_rgba(15,23,42,0.05)]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#667085]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">
                 Console Overview
               </p>
               <div className="mt-4 grid gap-4 md:grid-cols-4">
                 <div>
-                  <p className="text-xs text-[#667085]">Questions</p>
+                  <p className="text-xs text-[#334155]">Questions</p>
                   <p className="mt-1 text-2xl font-semibold tracking-[-0.05em] text-[#111827]">{questionStats.total}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#667085]">Resources</p>
+                  <p className="text-xs text-[#334155]">Resources</p>
                   <p className="mt-1 text-2xl font-semibold tracking-[-0.05em] text-[#111827]">{resourceStats.total}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#667085]">Open updates</p>
+                  <p className="text-xs text-[#334155]">Open updates</p>
                   <p className="mt-1 text-2xl font-semibold tracking-[-0.05em] text-[#111827]">{updateStats.open}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#667085]">Support queue</p>
+                  <p className="text-xs text-[#334155]">Support queue</p>
                   <p className="mt-1 text-2xl font-semibold tracking-[-0.05em] text-[#111827]">{supportStats.total}</p>
                 </div>
               </div>
@@ -522,7 +522,7 @@ export default function AdminConsole(props: any) {
                           ? "Contest schedule and outcomes managed like operational records."
                           : "Inbox-style support workflow with queue on the left and detail on the right."}
               </p>
-              <p className="mt-2 text-sm leading-6 text-white/72">
+              <p className="mt-2 text-sm leading-6 text-white/84">
                 This panel now commits to a crisp light console, restrained surfaces, sharper structure, and fewer nested containers.
               </p>
             </div>
@@ -536,7 +536,7 @@ export default function AdminConsole(props: any) {
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   "whitespace-nowrap rounded-xl border px-3.5 py-2 text-sm font-medium transition",
-                  activeTab === tab ? "border-[#111827] bg-[#111827] text-white" : "border-[#d7dde5] bg-white text-[#475467]"
+                  activeTab === tab ? "border-[#111827] bg-[#111827] text-white" : "border-[#d7dde5] bg-white text-[#1f2937]"
                 )}
               >
                 {adminTabMeta[tab].label} ({formatNumber(tabCounts[tab])})
@@ -569,9 +569,9 @@ export default function AdminConsole(props: any) {
                   <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-3">
                       <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#667085]">Today</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">Today</p>
                         <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[#111827]">{formatShortDateLabel(todayAnalytics?.day)}</p>
-                        <div className="mt-4 space-y-2 text-sm text-[#475467]">
+                        <div className="mt-4 space-y-2 text-sm text-[#1f2937]">
                           <p>{formatNumber(todayAnalytics?.visitors)} visitors</p>
                           <p>{formatNumber(todayAnalytics?.page_views)} page views</p>
                           <p>{formatNumber(todayAnalytics?.signins)} sign-ins</p>
@@ -579,23 +579,23 @@ export default function AdminConsole(props: any) {
                       </div>
 
                       <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#667085]">This Month</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">This Month</p>
                         <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[#111827]">{formatMonthLabel(currentMonthAnalytics?.month)}</p>
                         <div className="mt-4 flex flex-wrap gap-2">
                           <Pill tone={growthTone(currentMonthAnalytics?.visitor_growth_pct)}>Visitors {formatPercent(currentMonthAnalytics?.visitor_growth_pct)}</Pill>
                           <Pill tone={growthTone(currentMonthAnalytics?.signup_growth_pct)}>Sign-ups {formatPercent(currentMonthAnalytics?.signup_growth_pct)}</Pill>
                         </div>
-                        <p className="mt-3 text-sm leading-6 text-[#667085]">{describeGrowth("Visitors", currentMonthAnalytics?.visitor_growth_pct)}</p>
+                        <p className="mt-3 text-sm leading-6 text-[#334155]">{describeGrowth("Visitors", currentMonthAnalytics?.visitor_growth_pct)}</p>
                       </div>
 
                       <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#667085]">This Year</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">This Year</p>
                         <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[#111827]">{formatYearLabel(currentYearAnalytics?.year)}</p>
                         <div className="mt-4 flex flex-wrap gap-2">
                           <Pill tone={growthTone(currentYearAnalytics?.visitor_growth_pct)}>Visitors {formatPercent(currentYearAnalytics?.visitor_growth_pct)}</Pill>
                           <Pill tone={growthTone(currentYearAnalytics?.signin_growth_pct)}>Sign-ins {formatPercent(currentYearAnalytics?.signin_growth_pct)}</Pill>
                         </div>
-                        <p className="mt-3 text-sm leading-6 text-[#667085]">{describeGrowth("Sign-ins", currentYearAnalytics?.signin_growth_pct)}</p>
+                        <p className="mt-3 text-sm leading-6 text-[#334155]">{describeGrowth("Sign-ins", currentYearAnalytics?.signin_growth_pct)}</p>
                       </div>
                     </div>
 
@@ -606,7 +606,7 @@ export default function AdminConsole(props: any) {
                       <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
                           <thead className="bg-white">
-                            <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#667085]">
+                            <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#334155]">
                               <th className="px-4 py-3 font-semibold">Day</th>
                               <th className="px-4 py-3 font-semibold">Visitors</th>
                               <th className="px-4 py-3 font-semibold">Views</th>
@@ -618,10 +618,10 @@ export default function AdminConsole(props: any) {
                             {analyticsDaily.slice(0, 7).map((row: any) => (
                               <tr key={row.day} className="border-b border-[#edf1f5] last:border-b-0">
                                 <td className="px-4 py-3 font-medium text-[#111827]">{formatShortDateLabel(row.day)}</td>
-                                <td className="px-4 py-3 text-[#475467]">{formatNumber(row.visitors)}</td>
-                                <td className="px-4 py-3 text-[#475467]">{formatNumber(row.page_views)}</td>
-                                <td className="px-4 py-3 text-[#475467]">{formatNumber(row.signins)}</td>
-                                <td className="px-4 py-3 text-[#475467]">{formatDurationLabel(row.avg_engaged_seconds)}</td>
+                                <td className="px-4 py-3 text-[#1f2937]">{formatNumber(row.visitors)}</td>
+                                <td className="px-4 py-3 text-[#1f2937]">{formatNumber(row.page_views)}</td>
+                                <td className="px-4 py-3 text-[#1f2937]">{formatNumber(row.signins)}</td>
+                                <td className="px-4 py-3 text-[#1f2937]">{formatDurationLabel(row.avg_engaged_seconds)}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -632,17 +632,17 @@ export default function AdminConsole(props: any) {
 
                   <div className="space-y-4">
                     <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#667085]">What to tell the team</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">What to tell the team</p>
                       <p className="mt-3 text-base font-semibold tracking-[-0.03em] text-[#111827]">
                         {averagePageViewsPerVisitor > 0 ? `${averagePageViewsPerVisitor.toFixed(1)} pages per visitor` : "Still collecting traffic quality"}
                       </p>
-                      <p className="mt-2 text-sm leading-7 text-[#667085]">{trafficSummary}</p>
-                      <p className="mt-4 text-sm leading-7 text-[#667085]">{engagementSummary}</p>
+                      <p className="mt-2 text-sm leading-7 text-[#334155]">{trafficSummary}</p>
+                      <p className="mt-4 text-sm leading-7 text-[#334155]">{engagementSummary}</p>
                     </div>
 
                     <div className="rounded-[18px] border border-[#d7dde5] bg-white p-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#667085]">Reading notes</p>
-                      <div className="mt-3 space-y-3 text-sm leading-7 text-[#475467]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">Reading notes</p>
+                      <div className="mt-3 space-y-3 text-sm leading-7 text-[#1f2937]">
                         <p>Visitors approximate unique people or sessions.</p>
                         <p>Page views count every tracked open, so they should run above visitors.</p>
                         <p>Engaged time is directional and best used as a comparison signal.</p>
@@ -660,7 +660,7 @@ export default function AdminConsole(props: any) {
                     <div className="overflow-x-auto">
                       <table className="min-w-full text-left text-sm">
                         <thead className="bg-[#fbfcfd]">
-                          <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#667085]">
+                          <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#334155]">
                             <th className="px-4 py-3 font-semibold">Page</th>
                             <th className="px-4 py-3 font-semibold">Views</th>
                             <th className="px-4 py-3 font-semibold">Visitors</th>
@@ -672,10 +672,10 @@ export default function AdminConsole(props: any) {
                           {analyticsTopPages.map((page: any) => (
                             <tr key={`${page.path}-${page.page_views}-${page.visitors}`} className="border-b border-[#edf1f5] last:border-b-0">
                               <td className="px-4 py-3 font-medium text-[#111827]">{page.path || "/"}</td>
-                              <td className="px-4 py-3 text-[#475467]">{formatNumber(page.page_views)}</td>
-                              <td className="px-4 py-3 text-[#475467]">{formatNumber(page.visitors)}</td>
-                              <td className="px-4 py-3 text-[#475467]">{formatDurationLabel(page.avg_engaged_seconds)}</td>
-                              <td className="px-4 py-3 text-[#667085]">
+                              <td className="px-4 py-3 text-[#1f2937]">{formatNumber(page.page_views)}</td>
+                              <td className="px-4 py-3 text-[#1f2937]">{formatNumber(page.visitors)}</td>
+                              <td className="px-4 py-3 text-[#1f2937]">{formatDurationLabel(page.avg_engaged_seconds)}</td>
+                              <td className="px-4 py-3 text-[#334155]">
                                 {page.avg_engaged_seconds && page.avg_engaged_seconds >= 60 ? "Holding attention well" : page.page_views && page.page_views >= 3 ? "Getting repeat traffic" : "Still early"}
                               </td>
                             </tr>
@@ -705,22 +705,22 @@ export default function AdminConsole(props: any) {
                   <div className="space-y-5">
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                       <label className="xl:col-span-2">
-                        <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Search</span>
+                        <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Search</span>
                         <div className="relative">
-                          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#98a2b3]" />
+                          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
                           <input value={questionSearch} onChange={event => setQuestionSearch(event.target.value)} placeholder="Question text, explanation, tags, topic..." className={cn(adminInputClass, "pl-10")} />
                         </div>
                       </label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Exam</span><select value={questionExamFilter} onChange={event => setQuestionExamFilter(event.target.value)} className={adminInputClass}>{filterExams.map((exam: string) => <option key={exam} value={exam}>{exam}</option>)}</select></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Topic</span><select value={questionTopicFilter} onChange={event => setQuestionTopicFilter(event.target.value)} className={adminInputClass}>{availableQuestionTopics.map((topic: string) => <option key={topic} value={topic}>{topic}</option>)}</select></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Type</span><select value={questionTypeFilter} onChange={event => setQuestionTypeFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{questionTypes.map((type: string) => <option key={type} value={type}>{type}</option>)}</select></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Exam</span><select value={questionExamFilter} onChange={event => setQuestionExamFilter(event.target.value)} className={adminInputClass}>{filterExams.map((exam: string) => <option key={exam} value={exam}>{exam}</option>)}</select></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Topic</span><select value={questionTopicFilter} onChange={event => setQuestionTopicFilter(event.target.value)} className={adminInputClass}>{availableQuestionTopics.map((topic: string) => <option key={topic} value={topic}>{topic}</option>)}</select></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Type</span><select value={questionTypeFilter} onChange={event => setQuestionTypeFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{questionTypes.map((type: string) => <option key={type} value={type}>{type}</option>)}</select></label>
                     </div>
 
                     <div className="grid gap-3 md:grid-cols-4">
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Difficulty</span><select value={questionDifficultyFilter} onChange={event => setQuestionDifficultyFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{difficulties.map((difficulty: string) => <option key={difficulty} value={difficulty}>{difficulty}</option>)}</select></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Status</span><select value={questionStatusFilter} onChange={event => setQuestionStatusFilter(event.target.value)} className={adminInputClass}><option value="All">All</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label>
-                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Filtered</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{filteredQuestions.length}</p></div>
-                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Selected</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{selectedQuestionIds.length}</p></div>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Difficulty</span><select value={questionDifficultyFilter} onChange={event => setQuestionDifficultyFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{difficulties.map((difficulty: string) => <option key={difficulty} value={difficulty}>{difficulty}</option>)}</select></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Status</span><select value={questionStatusFilter} onChange={event => setQuestionStatusFilter(event.target.value)} className={adminInputClass}><option value="All">All</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label>
+                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Filtered</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{filteredQuestions.length}</p></div>
+                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Selected</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{selectedQuestionIds.length}</p></div>
                     </div>
 
                     <div className="flex flex-wrap gap-2 border-t border-[#e4e7ec] pt-4">
@@ -738,7 +738,7 @@ export default function AdminConsole(props: any) {
                         <div className="overflow-x-auto">
                           <table className="min-w-[1120px] text-left text-sm">
                             <thead className="bg-[#fbfcfd]">
-                              <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#667085]">
+                              <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#334155]">
                                 <th className="px-4 py-3 font-semibold">Select</th>
                                 <th className="px-4 py-3 font-semibold">Question</th>
                                 <th className="px-4 py-3 font-semibold">Classification</th>
@@ -754,9 +754,9 @@ export default function AdminConsole(props: any) {
                                 return (
                                   <tr key={questionId} className={cn("border-b border-[#edf1f5] last:border-b-0", selected && "bg-[#fbf4ee]")}>
                                     <td className="px-4 py-4 align-top"><input type="checkbox" checked={selected} onChange={() => toggleQuestionSelection(questionId)} className="mt-1 h-4 w-4 rounded accent-[#b86a2d]" /></td>
-                                    <td className="px-4 py-4 align-top"><p className="max-w-xl text-sm font-medium leading-6 text-[#111827]">{question.question}</p><p className="mt-2 line-clamp-2 max-w-xl text-sm leading-6 text-[#667085]">{question.explanation}</p></td>
+                                    <td className="px-4 py-4 align-top"><p className="max-w-xl text-sm font-medium leading-6 text-[#111827]">{question.question}</p><p className="mt-2 line-clamp-2 max-w-xl text-sm leading-6 text-[#334155]">{question.explanation}</p></td>
                                     <td className="px-4 py-4 align-top"><div className="flex max-w-[240px] flex-wrap gap-2"><Pill tone="orange">{question.exam}</Pill><Pill tone="blue">{question.type}</Pill><Pill tone="slate">{question.topic}</Pill><Pill tone="green">{question.difficulty}</Pill>{question.year ? <Pill tone="slate">PYQ {question.year}</Pill> : null}</div></td>
-                                    <td className="px-4 py-4 align-top text-[#475467]">{String.fromCharCode(65 + question.correct_option)}. {[question.option_a, question.option_b, question.option_c, question.option_d][question.correct_option]}</td>
+                                    <td className="px-4 py-4 align-top text-[#1f2937]">{String.fromCharCode(65 + question.correct_option)}. {[question.option_a, question.option_b, question.option_c, question.option_d][question.correct_option]}</td>
                                     <td className="px-4 py-4 align-top"><Pill tone={question.is_active ? "green" : "rose"}>{question.is_active ? "Active" : "Inactive"}</Pill></td>
                                     <td className="px-4 py-4 align-top"><div className="flex flex-wrap gap-2"><SmallButton icon={Edit2} onClick={() => startEditQuestion(question)}>Edit</SmallButton><SmallButton icon={ShieldCheck} onClick={() => void updateQuestionsActiveState([questionId], !question.is_active)} disabled={loadingTarget !== null}>{question.is_active ? "Deactivate" : "Activate"}</SmallButton><SmallButton icon={Trash2} tone="danger" onClick={() => void deleteQuestions([questionId])} disabled={loadingTarget !== null}>Delete</SmallButton></div></td>
                                   </tr>
@@ -782,7 +782,7 @@ export default function AdminConsole(props: any) {
                         <SmallButton onClick={clearQuestionImportState}>Clear</SmallButton>
                       </div>
                       <div className="mt-4 rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-4 text-sm">
-                        {questionImportPreview.error ? <p className="text-[#9c4451]">{questionImportPreview.error}</p> : questionImportPreview.rows.length > 0 ? <div className="space-y-3"><p className="font-medium text-[#111827]">{questionImportPreview.rows.length} row{questionImportPreview.rows.length === 1 ? "" : "s"} ready{questionImportSource ? ` from ${questionImportSource}` : ""}</p><p className="text-xs leading-6 text-[#667085]">Current filters match {filteredQuestions.length} question{filteredQuestions.length === 1 ? "" : "s"}.</p></div> : <p className="leading-6 text-[#667085]">Supported fields: question, option_a, option_b, option_c, option_d, correct_option, explanation, exam, topic, subtopic, difficulty, type, year, tags.</p>}
+                        {questionImportPreview.error ? <p className="text-[#9c4451]">{questionImportPreview.error}</p> : questionImportPreview.rows.length > 0 ? <div className="space-y-3"><p className="font-medium text-[#111827]">{questionImportPreview.rows.length} row{questionImportPreview.rows.length === 1 ? "" : "s"} ready{questionImportSource ? ` from ${questionImportSource}` : ""}</p><p className="text-xs leading-6 text-[#334155]">Current filters match {filteredQuestions.length} question{filteredQuestions.length === 1 ? "" : "s"}.</p></div> : <p className="leading-6 text-[#334155]">Supported fields: question, option_a, option_b, option_c, option_d, correct_option, explanation, exam, topic, subtopic, difficulty, type, year, tags.</p>}
                       </div>
                     </SectionCard>
                   ) : null}
@@ -790,13 +790,13 @@ export default function AdminConsole(props: any) {
                   {showQuestionForm ? (
                     <SectionCard title={editingQuestionId ? "Edit Question" : "Create Question"} description="Use the side editor for smaller content fixes while keeping the full table in view." actions={<SmallButton onClick={resetQuestionForm} icon={X}>Close editor</SmallButton>}>
                       <div className="space-y-4">
-                        <label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Question</span><textarea value={questionForm.question} onChange={event => setQuestionForm((current: any) => ({ ...current, question: event.target.value }))} rows={4} className={adminTextAreaClass} /></label>
-                        <div className="grid gap-3 md:grid-cols-2">{(["option_a", "option_b", "option_c", "option_d"] as const).map((field, index) => <label key={field} className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Option {String.fromCharCode(65 + index)}</span><input value={questionForm[field]} onChange={event => setQuestionForm((current: any) => ({ ...current, [field]: event.target.value }))} className={adminInputClass} /></label>)}</div>
-                        <label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Explanation</span><textarea value={questionForm.explanation} onChange={event => setQuestionForm((current: any) => ({ ...current, explanation: event.target.value }))} rows={4} className={adminTextAreaClass} /></label>
-                        <div className="grid gap-3 md:grid-cols-2"><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Correct option</span><select value={questionForm.correct_option} onChange={event => setQuestionForm((current: any) => ({ ...current, correct_option: Number(event.target.value) }))} className={adminInputClass}>{[0, 1, 2, 3].map(index => <option key={index} value={index}>{String.fromCharCode(65 + index)}</option>)}</select></label><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Exam</span><select value={questionForm.exam} onChange={event => setQuestionForm((current: any) => ({ ...current, exam: event.target.value }))} className={adminInputClass}>{questionExams.map((exam: string) => <option key={exam} value={exam}>{exam}</option>)}</select></label></div>
-                        <div className="grid gap-3 md:grid-cols-2"><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Topic</span><select value={questionForm.topic} onChange={event => setQuestionForm((current: any) => ({ ...current, topic: event.target.value }))} className={adminInputClass}>{availableQuestionTopics.filter((topic: string) => topic !== "All").map((topic: string) => <option key={topic} value={topic}>{topic}</option>)}</select></label><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Subtopic</span><input value={questionForm.subtopic} onChange={event => setQuestionForm((current: any) => ({ ...current, subtopic: event.target.value }))} className={adminInputClass} /></label></div>
-                        <div className="grid gap-3 md:grid-cols-3"><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Difficulty</span><select value={questionForm.difficulty} onChange={event => setQuestionForm((current: any) => ({ ...current, difficulty: event.target.value }))} className={adminInputClass}>{difficulties.map((difficulty: string) => <option key={difficulty} value={difficulty}>{difficulty}</option>)}</select></label><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Type</span><select value={questionForm.type} onChange={event => setQuestionForm((current: any) => ({ ...current, type: event.target.value }))} className={adminInputClass}>{questionTypes.map((type: string) => <option key={type} value={type}>{type}</option>)}</select></label><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Year</span><input value={questionForm.year} onChange={event => setQuestionForm((current: any) => ({ ...current, year: event.target.value }))} placeholder="2024" className={adminInputClass} /></label></div>
-                        <label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Tags</span><input value={questionForm.tags} onChange={event => setQuestionForm((current: any) => ({ ...current, tags: event.target.value }))} placeholder="constitution, article-21a, education" className={adminInputClass} /></label>
+                        <label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Question</span><textarea value={questionForm.question} onChange={event => setQuestionForm((current: any) => ({ ...current, question: event.target.value }))} rows={4} className={adminTextAreaClass} /></label>
+                        <div className="grid gap-3 md:grid-cols-2">{(["option_a", "option_b", "option_c", "option_d"] as const).map((field, index) => <label key={field} className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Option {String.fromCharCode(65 + index)}</span><input value={questionForm[field]} onChange={event => setQuestionForm((current: any) => ({ ...current, [field]: event.target.value }))} className={adminInputClass} /></label>)}</div>
+                        <label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Explanation</span><textarea value={questionForm.explanation} onChange={event => setQuestionForm((current: any) => ({ ...current, explanation: event.target.value }))} rows={4} className={adminTextAreaClass} /></label>
+                        <div className="grid gap-3 md:grid-cols-2"><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Correct option</span><select value={questionForm.correct_option} onChange={event => setQuestionForm((current: any) => ({ ...current, correct_option: Number(event.target.value) }))} className={adminInputClass}>{[0, 1, 2, 3].map(index => <option key={index} value={index}>{String.fromCharCode(65 + index)}</option>)}</select></label><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Exam</span><select value={questionForm.exam} onChange={event => setQuestionForm((current: any) => ({ ...current, exam: event.target.value }))} className={adminInputClass}>{questionExams.map((exam: string) => <option key={exam} value={exam}>{exam}</option>)}</select></label></div>
+                        <div className="grid gap-3 md:grid-cols-2"><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Topic</span><select value={questionForm.topic} onChange={event => setQuestionForm((current: any) => ({ ...current, topic: event.target.value }))} className={adminInputClass}>{availableQuestionTopics.filter((topic: string) => topic !== "All").map((topic: string) => <option key={topic} value={topic}>{topic}</option>)}</select></label><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Subtopic</span><input value={questionForm.subtopic} onChange={event => setQuestionForm((current: any) => ({ ...current, subtopic: event.target.value }))} className={adminInputClass} /></label></div>
+                        <div className="grid gap-3 md:grid-cols-3"><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Difficulty</span><select value={questionForm.difficulty} onChange={event => setQuestionForm((current: any) => ({ ...current, difficulty: event.target.value }))} className={adminInputClass}>{difficulties.map((difficulty: string) => <option key={difficulty} value={difficulty}>{difficulty}</option>)}</select></label><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Type</span><select value={questionForm.type} onChange={event => setQuestionForm((current: any) => ({ ...current, type: event.target.value }))} className={adminInputClass}>{questionTypes.map((type: string) => <option key={type} value={type}>{type}</option>)}</select></label><label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Year</span><input value={questionForm.year} onChange={event => setQuestionForm((current: any) => ({ ...current, year: event.target.value }))} placeholder="2024" className={adminInputClass} /></label></div>
+                        <label className="block"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Tags</span><input value={questionForm.tags} onChange={event => setQuestionForm((current: any) => ({ ...current, tags: event.target.value }))} placeholder="constitution, article-21a, education" className={adminInputClass} /></label>
                         <label className="flex items-center gap-3 rounded-xl border border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><input type="checkbox" checked={questionForm.is_active} onChange={event => setQuestionForm((current: any) => ({ ...current, is_active: event.target.checked }))} className="h-4 w-4 rounded accent-[#111827]" /><span className="text-sm font-medium text-[#344054]">Active row</span></label>
                         <div className="flex flex-wrap gap-2"><SmallButton tone="primary" icon={CheckCircle2} onClick={() => void saveQuestion()} disabled={loadingTarget !== null}>{loadingTarget === "save-question" ? "Saving..." : editingQuestionId ? "Update question" : "Save question"}</SmallButton><SmallButton onClick={resetQuestionForm}>Cancel</SmallButton></div>
                       </div>
@@ -821,16 +821,16 @@ export default function AdminConsole(props: any) {
                 <SectionCard title="Resource Inventory" description="Compact filters, clearer status signals, and a table optimized for management instead of browsing.">
                   <div className="space-y-5">
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-                      <label className="xl:col-span-2"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Search</span><div className="relative"><Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#98a2b3]" /><input value={resourceSearch} onChange={event => setResourceSearch(event.target.value)} placeholder="Title, URL, description..." className={cn(adminInputClass, "pl-10")} /></div></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Exam</span><select value={resourceExamFilter} onChange={event => setResourceExamFilter(event.target.value)} className={adminInputClass}>{resourceExams.map((exam: string) => <option key={exam} value={exam}>{exam}</option>)}</select></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Type</span><select value={resourceTypeFilter} onChange={event => setResourceTypeFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{resourceTypes.map((type: string) => <option key={type} value={type}>{type}</option>)}</select></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Category</span><select value={resourceCategoryFilter} onChange={event => setResourceCategoryFilter(event.target.value)} className={adminInputClass}>{availableResourceCategories.map((category: string) => <option key={category} value={category}>{category}</option>)}</select></label>
+                      <label className="xl:col-span-2"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Search</span><div className="relative"><Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" /><input value={resourceSearch} onChange={event => setResourceSearch(event.target.value)} placeholder="Title, URL, description..." className={cn(adminInputClass, "pl-10")} /></div></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Exam</span><select value={resourceExamFilter} onChange={event => setResourceExamFilter(event.target.value)} className={adminInputClass}>{resourceExams.map((exam: string) => <option key={exam} value={exam}>{exam}</option>)}</select></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Type</span><select value={resourceTypeFilter} onChange={event => setResourceTypeFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{resourceTypes.map((type: string) => <option key={type} value={type}>{type}</option>)}</select></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Category</span><select value={resourceCategoryFilter} onChange={event => setResourceCategoryFilter(event.target.value)} className={adminInputClass}>{availableResourceCategories.map((category: string) => <option key={category} value={category}>{category}</option>)}</select></label>
                     </div>
 
                     <div className="grid gap-3 md:grid-cols-4">
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Status</span><select value={resourceStatusFilter} onChange={event => setResourceStatusFilter(event.target.value)} className={adminInputClass}><option value="All">All</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label>
-                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Filtered</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{filteredResources.length}</p></div>
-                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Selected</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{selectedResourceIds.length}</p></div>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Status</span><select value={resourceStatusFilter} onChange={event => setResourceStatusFilter(event.target.value)} className={adminInputClass}><option value="All">All</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label>
+                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Filtered</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{filteredResources.length}</p></div>
+                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Selected</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{selectedResourceIds.length}</p></div>
                       <div className="flex items-end"><SmallButton icon={Download} onClick={exportFilteredResources} disabled={filteredResources.length === 0}>Export filtered</SmallButton></div>
                     </div>
 
@@ -848,7 +848,7 @@ export default function AdminConsole(props: any) {
                         <div className="overflow-x-auto">
                           <table className="min-w-[1020px] text-left text-sm">
                             <thead className="bg-[#fbfcfd]">
-                              <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#667085]">
+                              <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#334155]">
                                 <th className="px-4 py-3 font-semibold">Select</th><th className="px-4 py-3 font-semibold">Resource</th><th className="px-4 py-3 font-semibold">Type</th><th className="px-4 py-3 font-semibold">Exam</th><th className="px-4 py-3 font-semibold">Category</th><th className="px-4 py-3 font-semibold">Status</th><th className="px-4 py-3 font-semibold">Actions</th>
                               </tr>
                             </thead>
@@ -860,10 +860,10 @@ export default function AdminConsole(props: any) {
                                 return (
                                   <tr key={resourceId} className={cn("border-b border-[#edf1f5] last:border-b-0", selected && "bg-[#f4f7fc]")}>
                                     <td className="px-4 py-4 align-top"><input type="checkbox" checked={selected} onChange={() => toggleResourceSelection(resourceId)} className="mt-1 h-4 w-4 rounded accent-[#111827]" /></td>
-                                    <td className="px-4 py-4 align-top"><p className="text-sm font-medium text-[#111827]">{resource.title}</p>{resource.description ? <p className="mt-2 line-clamp-2 max-w-md text-sm leading-6 text-[#667085]">{resource.description}</p> : null}<a href={resource.url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#35527c] hover:underline"><LinkIcon size={14} />Open resource</a></td>
-                                    <td className="px-4 py-4 align-top text-[#475467]">{resource.type || "Link"}</td>
-                                    <td className="px-4 py-4 align-top text-[#475467]">{resource.exam || "All"}</td>
-                                    <td className="px-4 py-4 align-top text-[#475467]">{resource.category || "General"}</td>
+                                    <td className="px-4 py-4 align-top"><p className="text-sm font-medium text-[#111827]">{resource.title}</p>{resource.description ? <p className="mt-2 line-clamp-2 max-w-md text-sm leading-6 text-[#334155]">{resource.description}</p> : null}<a href={resource.url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#35527c] hover:underline"><LinkIcon size={14} />Open resource</a></td>
+                                    <td className="px-4 py-4 align-top text-[#1f2937]">{resource.type || "Link"}</td>
+                                    <td className="px-4 py-4 align-top text-[#1f2937]">{resource.exam || "All"}</td>
+                                    <td className="px-4 py-4 align-top text-[#1f2937]">{resource.category || "General"}</td>
                                     <td className="px-4 py-4 align-top"><Pill tone={active ? "green" : "rose"}>{active ? "Active" : "Inactive"}</Pill></td>
                                     <td className="px-4 py-4 align-top"><div className="flex flex-wrap gap-2"><SmallButton icon={Edit2} onClick={() => startEditResource(resource)}>Edit</SmallButton><SmallButton icon={ShieldCheck} onClick={() => void updateResourcesActiveState([resourceId], !active)} disabled={loadingTarget !== null}>{active ? "Deactivate" : "Activate"}</SmallButton><SmallButton icon={Trash2} tone="danger" onClick={() => void deleteResources([resourceId])} disabled={loadingTarget !== null}>Delete</SmallButton></div></td>
                                   </tr>
@@ -917,16 +917,16 @@ export default function AdminConsole(props: any) {
                 <SectionCard title="Update Inventory" description="Structured to make status, timing, location, and official links easy to scan.">
                   <div className="space-y-5">
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-                      <label className="xl:col-span-2"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Search</span><div className="relative"><Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#98a2b3]" /><input value={updateSearch} onChange={event => setUpdateSearch(event.target.value)} placeholder="Title, organization, state, tags..." className={cn(adminInputClass, "pl-10")} /></div></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">State</span><select value={updateStateFilter} onChange={event => setUpdateStateFilter(event.target.value)} className={adminInputClass}>{availableUpdateStates.map((state: string) => <option key={state} value={state}>{state}</option>)}</select></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Exam type</span><select value={updateExamTypeFilter} onChange={event => setUpdateExamTypeFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{examTypes.map((type: string) => <option key={type} value={type}>{type}</option>)}</select></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Eligibility</span><select value={updateQualificationFilter} onChange={event => setUpdateQualificationFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{qualificationTiers.map((qualification: string) => <option key={qualification} value={qualification}>{qualification}</option>)}</select></label>
+                      <label className="xl:col-span-2"><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Search</span><div className="relative"><Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" /><input value={updateSearch} onChange={event => setUpdateSearch(event.target.value)} placeholder="Title, organization, state, tags..." className={cn(adminInputClass, "pl-10")} /></div></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">State</span><select value={updateStateFilter} onChange={event => setUpdateStateFilter(event.target.value)} className={adminInputClass}>{availableUpdateStates.map((state: string) => <option key={state} value={state}>{state}</option>)}</select></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Exam type</span><select value={updateExamTypeFilter} onChange={event => setUpdateExamTypeFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{examTypes.map((type: string) => <option key={type} value={type}>{type}</option>)}</select></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Eligibility</span><select value={updateQualificationFilter} onChange={event => setUpdateQualificationFilter(event.target.value)} className={adminInputClass}><option value="All">All</option>{qualificationTiers.map((qualification: string) => <option key={qualification} value={qualification}>{qualification}</option>)}</select></label>
                     </div>
                     <div className="grid gap-3 md:grid-cols-5">
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Row status</span><select value={updateStatusFilter} onChange={event => setUpdateStatusFilter(event.target.value)} className={adminInputClass}><option value="All">All</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label>
-                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Timeline</span><select value={updateTimelineFilter} onChange={event => setUpdateTimelineFilter(event.target.value)} className={adminInputClass}>{updateTimelineFilters.map((status: string) => <option key={status} value={status}>{status}</option>)}</select></label>
-                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Filtered</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{filteredUpdates.length}</p></div>
-                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Selected</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{selectedUpdateIds.length}</p></div>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Row status</span><select value={updateStatusFilter} onChange={event => setUpdateStatusFilter(event.target.value)} className={adminInputClass}><option value="All">All</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label>
+                      <label><span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Timeline</span><select value={updateTimelineFilter} onChange={event => setUpdateTimelineFilter(event.target.value)} className={adminInputClass}>{updateTimelineFilters.map((status: string) => <option key={status} value={status}>{status}</option>)}</select></label>
+                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Filtered</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{filteredUpdates.length}</p></div>
+                      <div className="rounded-xl border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Selected</p><p className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#111827]">{selectedUpdateIds.length}</p></div>
                       <div className="flex items-end"><SmallButton icon={Download} onClick={exportFilteredUpdates} disabled={filteredUpdates.length === 0}>Export filtered</SmallButton></div>
                     </div>
 
@@ -942,7 +942,7 @@ export default function AdminConsole(props: any) {
                         <div className="overflow-x-auto">
                           <table className="min-w-[1180px] text-left text-sm">
                             <thead className="bg-[#fbfcfd]">
-                              <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#667085]">
+                              <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#334155]">
                                 <th className="px-4 py-3 font-semibold">Select</th><th className="px-4 py-3 font-semibold">Update</th><th className="px-4 py-3 font-semibold">Location</th><th className="px-4 py-3 font-semibold">Timeline</th><th className="px-4 py-3 font-semibold">Links</th><th className="px-4 py-3 font-semibold">Actions</th>
                               </tr>
                             </thead>
@@ -955,9 +955,9 @@ export default function AdminConsole(props: any) {
                                 return (
                                   <tr key={updateId} className={cn("border-b border-[#edf1f5] last:border-b-0", selected && "bg-[#f6f3fb]")}>
                                     <td className="px-4 py-4 align-top"><input type="checkbox" checked={selected} onChange={() => toggleUpdateSelection(updateId)} className="mt-1 h-4 w-4 rounded accent-[#111827]" /></td>
-                                    <td className="px-4 py-4 align-top"><p className="text-sm font-medium text-[#111827]">{update.title}</p><p className="mt-1 text-sm text-[#667085]">{update.organization}</p><p className="mt-2 max-w-md text-sm leading-6 text-[#475467]">{update.summary}</p><div className="mt-3 flex flex-wrap gap-2"><Pill tone="blue">{update.exam_type}</Pill><Pill tone="orange">{update.qualification}</Pill><Pill tone={active ? "green" : "rose"}>{active ? "Active" : "Inactive"}</Pill></div></td>
-                                    <td className="px-4 py-4 align-top"><div className="space-y-2 text-sm text-[#475467]"><p>{update.state}</p><p>{update.qualification}</p><p className="text-[#667085]">{update.exam_window}</p></div></td>
-                                    <td className="px-4 py-4 align-top"><div className="space-y-2"><Pill tone={timeline === "Closing Soon" ? "rose" : timeline === "Open" ? "green" : "blue"}>{timeline}</Pill><p className="text-sm text-[#475467]">{formatDate(update.application_start)} to {formatDate(update.last_date)}</p></div></td>
+                                    <td className="px-4 py-4 align-top"><p className="text-sm font-medium text-[#111827]">{update.title}</p><p className="mt-1 text-sm text-[#334155]">{update.organization}</p><p className="mt-2 max-w-md text-sm leading-6 text-[#1f2937]">{update.summary}</p><div className="mt-3 flex flex-wrap gap-2"><Pill tone="blue">{update.exam_type}</Pill><Pill tone="orange">{update.qualification}</Pill><Pill tone={active ? "green" : "rose"}>{active ? "Active" : "Inactive"}</Pill></div></td>
+                                    <td className="px-4 py-4 align-top"><div className="space-y-2 text-sm text-[#1f2937]"><p>{update.state}</p><p>{update.qualification}</p><p className="text-[#334155]">{update.exam_window}</p></div></td>
+                                    <td className="px-4 py-4 align-top"><div className="space-y-2"><Pill tone={timeline === "Closing Soon" ? "rose" : timeline === "Open" ? "green" : "blue"}>{timeline}</Pill><p className="text-sm text-[#1f2937]">{formatDate(update.application_start)} to {formatDate(update.last_date)}</p></div></td>
                                     <td className="px-4 py-4 align-top"><div className="flex flex-col items-start gap-2"><a href={update.apply_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-[#35527c] hover:underline"><LinkIcon size={14} />Apply</a><a href={update.notice_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-[#35527c] hover:underline"><LinkIcon size={14} />Notice</a></div></td>
                                     <td className="px-4 py-4 align-top"><div className="flex flex-wrap gap-2"><SmallButton icon={Edit2} onClick={() => startEditUpdate(update)}>Edit</SmallButton><SmallButton icon={ShieldCheck} onClick={() => void updateUpdatesActiveState([updateId], !active)} disabled={loadingTarget !== null}>{active ? "Deactivate" : "Activate"}</SmallButton><SmallButton icon={Trash2} tone="danger" onClick={() => void deleteUpdates([updateId])} disabled={loadingTarget !== null}>Delete</SmallButton></div></td>
                                   </tr>
@@ -1020,17 +1020,17 @@ export default function AdminConsole(props: any) {
                       <div className="overflow-x-auto">
                         <table className="min-w-[920px] text-left text-sm">
                           <thead className="bg-[#fbfcfd]">
-                            <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#667085]">
+                            <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#334155]">
                               <th className="px-4 py-3 font-semibold">Contest</th><th className="px-4 py-3 font-semibold">Date</th><th className="px-4 py-3 font-semibold">Duration</th><th className="px-4 py-3 font-semibold">Prize</th><th className="px-4 py-3 font-semibold">Status</th><th className="px-4 py-3 font-semibold">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white">
                             {dbContests.map((contest: any) => (
                               <tr key={toId(contest.id)} className="border-b border-[#edf1f5] last:border-b-0">
-                                <td className="px-4 py-4 align-top"><p className="text-sm font-medium text-[#111827]">{contest.name}</p><p className="mt-2 text-sm leading-6 text-[#667085]">{contest.topics}</p>{contest.winner ? <p className="mt-2 text-sm text-[#475467]">Winner: {contest.winner}</p> : null}</td>
-                                <td className="px-4 py-4 align-top text-[#475467]">{contest.date}</td>
-                                <td className="px-4 py-4 align-top text-[#475467]">{contest.duration}</td>
-                                <td className="px-4 py-4 align-top text-[#475467]">{contest.prize}</td>
+                                <td className="px-4 py-4 align-top"><p className="text-sm font-medium text-[#111827]">{contest.name}</p><p className="mt-2 text-sm leading-6 text-[#334155]">{contest.topics}</p>{contest.winner ? <p className="mt-2 text-sm text-[#1f2937]">Winner: {contest.winner}</p> : null}</td>
+                                <td className="px-4 py-4 align-top text-[#1f2937]">{contest.date}</td>
+                                <td className="px-4 py-4 align-top text-[#1f2937]">{contest.duration}</td>
+                                <td className="px-4 py-4 align-top text-[#1f2937]">{contest.prize}</td>
                                 <td className="px-4 py-4 align-top"><Pill tone={contest.status === "upcoming" ? "orange" : "blue"}>{contest.status}</Pill></td>
                                 <td className="px-4 py-4 align-top"><div className="flex flex-wrap gap-2"><SmallButton icon={Edit2} onClick={() => startEditContest(contest)}>Edit</SmallButton><SmallButton icon={Trash2} tone="danger" onClick={() => void deleteContest(toId(contest.id))}>Delete</SmallButton></div></td>
                               </tr>
@@ -1077,9 +1077,9 @@ export default function AdminConsole(props: any) {
               <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
                 <SectionCard title="Queue" description="Search and choose a conversation to open in the detail pane.">
                   <label className="block">
-                    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Search</span>
+                    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#334155]">Search</span>
                     <div className="relative">
-                      <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#98a2b3]" />
+                      <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
                       <input value={supportSearch} onChange={event => setSupportSearch(event.target.value)} placeholder="Email, category, subject, or message..." className={cn(adminInputClass, "pl-10")} />
                     </div>
                   </label>
@@ -1094,11 +1094,11 @@ export default function AdminConsole(props: any) {
                         return (
                           <button key={requestId} type="button" onClick={() => setSelectedSupportId(requestId)} className={cn("w-full rounded-[18px] border px-4 py-3 text-left transition", active ? "border-[#111827] bg-[#111827] text-white shadow-[0_16px_28px_rgba(15,23,42,0.18)]" : "border-[#d7dde5] bg-white hover:bg-[#fbfcfd]")}>
                             <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0"><p className={cn("truncate text-sm font-semibold", active ? "text-white" : "text-[#111827]")}>{request.subject || "No subject"}</p><p className={cn("mt-1 truncate text-xs", active ? "text-white/70" : "text-[#667085]")}>{request.email}</p></div>
+                              <div className="min-w-0"><p className={cn("truncate text-sm font-semibold", active ? "text-white" : "text-[#111827]")}>{request.subject || "No subject"}</p><p className={cn("mt-1 truncate text-xs", active ? "text-white/82" : "text-[#334155]")}>{request.email}</p></div>
                               <Pill tone={supportStatusTone(request.status)}>{request.status || "open"}</Pill>
                             </div>
-                            <p className={cn("mt-3 line-clamp-2 text-sm leading-6", active ? "text-white/75" : "text-[#475467]")}>{request.message || "No message provided."}</p>
-                            <div className="mt-3 flex items-center justify-between gap-3 text-xs"><span className={active ? "text-white/65" : "text-[#667085]"}>{request.category || "General support"}</span><span className={active ? "text-white/65" : "text-[#98a2b3]"}>{formatDate(request.created_at)}</span></div>
+                            <p className={cn("mt-3 line-clamp-2 text-sm leading-6", active ? "text-white/86" : "text-[#1f2937]")}>{request.message || "No message provided."}</p>
+                            <div className="mt-3 flex items-center justify-between gap-3 text-xs"><span className={active ? "text-white/76" : "text-[#334155]"}>{request.category || "General support"}</span><span className={active ? "text-white/76" : "text-[#64748b]"}>{formatDate(request.created_at)}</span></div>
                           </button>
                         );
                       })}
@@ -1119,16 +1119,16 @@ export default function AdminConsole(props: any) {
 
                       <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-5">
                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                          <div><p className="text-sm font-semibold text-[#111827]">{selectedSupportRequest.subject || "No subject"}</p><p className="mt-1 text-sm text-[#667085]">Received {formatDate(selectedSupportRequest.created_at)}</p></div>
+                          <div><p className="text-sm font-semibold text-[#111827]">{selectedSupportRequest.subject || "No subject"}</p><p className="mt-1 text-sm text-[#334155]">Received {formatDate(selectedSupportRequest.created_at)}</p></div>
                           <div className="flex flex-wrap gap-2"><SmallButton onClick={() => void updateSupportStatus(toId(selectedSupportRequest.id), "open")} disabled={selectedSupportRequest.status === "open"}>Open</SmallButton><SmallButton onClick={() => void updateSupportStatus(toId(selectedSupportRequest.id), "in_progress")} disabled={selectedSupportRequest.status === "in_progress"}>In progress</SmallButton><SmallButton onClick={() => void updateSupportStatus(toId(selectedSupportRequest.id), "resolved")} disabled={selectedSupportRequest.status === "resolved"}>Resolved</SmallButton></div>
                         </div>
-                        <div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-[#475467]">{selectedSupportRequest.message || "No message provided."}</div>
+                        <div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-[#1f2937]">{selectedSupportRequest.message || "No message provided."}</div>
                       </div>
 
                       <div className="rounded-[18px] border border-[#d7dde5] bg-white">
                         <div className="border-b border-[#e4e7ec] px-5 py-4"><p className="text-sm font-semibold text-[#111827]">Reply history</p></div>
                         <div className="space-y-4 px-5 py-5">
-                          {supportRepliesByRequestId[toId(selectedSupportRequest.id)]?.length ? supportRepliesByRequestId[toId(selectedSupportRequest.id)].map((reply: any) => <div key={toId(reply.id)} className="rounded-[18px] border border-[#e4e7ec] bg-[#fbfcfd] p-4"><div className="flex flex-wrap items-center gap-2"><Pill tone="blue">Sent</Pill><Pill tone="slate">{reply.to_email}</Pill>{reply.sent_by_email ? <Pill tone="slate">{reply.sent_by_email}</Pill> : null}</div><p className="mt-3 text-sm font-semibold text-[#111827]">{reply.subject}</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#475467]">{reply.message}</p><p className="mt-3 text-xs text-[#667085]">{formatDate(reply.sent_at || reply.created_at)}</p></div>) : <EmptyState icon={Send} title="No replies yet" description="Send the first reply from the detail pane to start a clean history here." />}
+                          {supportRepliesByRequestId[toId(selectedSupportRequest.id)]?.length ? supportRepliesByRequestId[toId(selectedSupportRequest.id)].map((reply: any) => <div key={toId(reply.id)} className="rounded-[18px] border border-[#e4e7ec] bg-[#fbfcfd] p-4"><div className="flex flex-wrap items-center gap-2"><Pill tone="blue">Sent</Pill><Pill tone="slate">{reply.to_email}</Pill>{reply.sent_by_email ? <Pill tone="slate">{reply.sent_by_email}</Pill> : null}</div><p className="mt-3 text-sm font-semibold text-[#111827]">{reply.subject}</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#1f2937]">{reply.message}</p><p className="mt-3 text-xs text-[#334155]">{formatDate(reply.sent_at || reply.created_at)}</p></div>) : <EmptyState icon={Send} title="No replies yet" description="Send the first reply from the detail pane to start a clean history here." />}
                         </div>
                       </div>
                     </div>
