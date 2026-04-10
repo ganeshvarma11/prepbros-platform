@@ -28,7 +28,27 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  XAxis,
+  YAxis,
+} from "recharts";
 
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
 const adminInputClass =
@@ -37,6 +57,40 @@ const adminTextAreaClass =
   "w-full rounded-xl border border-[#d7dde5] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none transition placeholder:text-[#8b95a7] focus:border-[#b86a2d] focus:ring-4 focus:ring-[#b86a2d]/10";
 const adminPanelClass =
   "rounded-[20px] border border-[#d7dde5] bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)]";
+
+const compactNumberFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+const trendChartConfig = {
+  visitors: { label: "Visitors", color: "#35527c" },
+  pageViews: { label: "Page views", color: "#b86a2d" },
+  signins: { label: "Sign-ins", color: "#2d6b52" },
+} satisfies ChartConfig;
+
+const activityMixChartConfig = {
+  pageViews: { label: "Page views", color: "#35527c" },
+  visitors: { label: "Visitors", color: "#b86a2d" },
+  signins: { label: "Sign-ins", color: "#2d6b52" },
+  signups: { label: "Sign-ups", color: "#9c4451" },
+} satisfies ChartConfig;
+
+const topPagesChartConfig = {
+  pageViews: { label: "Page views", color: "#35527c" },
+  visitors: { label: "Visitors", color: "#b86a2d" },
+} satisfies ChartConfig;
+
+function formatCompactNumber(value: number | null | undefined) {
+  return compactNumberFormatter.format(value || 0);
+}
+
+function formatPathLabel(path: string | null) {
+  if (!path || path === "/") return "Home";
+
+  const normalized = path.replace(/^\/+/, "");
+  return normalized.length > 18 ? `${normalized.slice(0, 18)}…` : normalized;
+}
 
 function metricToneClasses(tone: string) {
   switch (tone) {
@@ -373,6 +427,64 @@ export default function AdminConsole(props: any) {
   } = props;
 
   const ActiveTabIcon = activeTabMeta.icon;
+  const analyticsTrendData = analyticsDaily
+    .slice(0, 14)
+    .reverse()
+    .map((row: any) => ({
+      day: formatShortDateLabel(row.day),
+      visitors: Number(row.visitors) || 0,
+      pageViews: Number(row.page_views) || 0,
+      signins: Number(row.signins) || 0,
+    }));
+  const activityMixData = [
+    {
+      key: "pageViews",
+      label: "Page views",
+      color: "#35527c",
+      value:
+        Number(currentMonthAnalytics?.page_views) ||
+        Number(todayAnalytics?.page_views) ||
+        0,
+    },
+    {
+      key: "visitors",
+      label: "Visitors",
+      color: "#b86a2d",
+      value:
+        Number(currentMonthAnalytics?.visitors) ||
+        Number(todayAnalytics?.visitors) ||
+        0,
+    },
+    {
+      key: "signins",
+      label: "Sign-ins",
+      color: "#2d6b52",
+      value:
+        Number(currentMonthAnalytics?.signins) ||
+        Number(todayAnalytics?.signins) ||
+        0,
+    },
+    {
+      key: "signups",
+      label: "Sign-ups",
+      color: "#9c4451",
+      value:
+        Number(currentMonthAnalytics?.signups) ||
+        Number(todayAnalytics?.signups) ||
+        0,
+    },
+  ].filter(item => item.value > 0);
+  const activityMixTotal = activityMixData.reduce(
+    (sum, item) => sum + item.value,
+    0
+  );
+  const topPagesChartData = analyticsTopPages.slice(0, 6).map((page: any) => ({
+    path: page.path || "/",
+    shortPath: formatPathLabel(page.path),
+    pageViews: Number(page.page_views) || 0,
+    visitors: Number(page.visitors) || 0,
+    engagedSeconds: Number(page.avg_engaged_seconds) || 0,
+  }));
 
   return (
     <div className="mx-auto flex max-w-[1580px] gap-6 px-4 py-4 sm:px-6 lg:px-8">
@@ -570,13 +682,99 @@ export default function AdminConsole(props: any) {
               </SectionCard>
 
               <SectionCard
-                title="Growth And Interpretation"
-                description="A simple, operator-friendly read on how today compares with month and year movement."
+                title="Traffic Trends"
+                description="Interactive charts make it easier to scan traffic movement, activity mix, and period changes without digging through raw rows first."
               >
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_0.85fr]">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+                  <div className="overflow-hidden rounded-[18px] border border-[#d7dde5] bg-white">
+                    <div className="flex flex-col gap-3 border-b border-[#e4e7ec] bg-[#fbfcfd] px-5 py-4 md:flex-row md:items-end md:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-[#111827]">Traffic curve</p>
+                        <p className="mt-1 text-sm leading-6 text-[#334155]">
+                          Hover the chart to compare visitors, page views, and sign-ins across the last two weeks.
+                        </p>
+                      </div>
+                      <Pill tone="slate">{analyticsTrendData.length} days</Pill>
+                    </div>
+
+                    {analyticsTrendData.length === 0 ? (
+                      <div className="p-5">
+                        <EmptyState icon={CalendarDays} title="No trend data yet" description="Once daily analytics land here, this chart will show movement and spikes automatically." />
+                      </div>
+                    ) : (
+                      <div className="px-3 pb-4 pt-3">
+                        <ChartContainer config={trendChartConfig} className="h-[320px] w-full aspect-auto">
+                          <AreaChart data={analyticsTrendData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="traffic-visitors" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="var(--color-visitors)" stopOpacity={0.26} />
+                                <stop offset="95%" stopColor="var(--color-visitors)" stopOpacity={0.02} />
+                              </linearGradient>
+                              <linearGradient id="traffic-pageViews" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="var(--color-pageViews)" stopOpacity={0.22} />
+                                <stop offset="95%" stopColor="var(--color-pageViews)" stopOpacity={0.02} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid vertical={false} stroke="#e7edf3" strokeDasharray="3 3" />
+                            <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#475467", fontSize: 12 }} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: "#475467", fontSize: 12 }} tickFormatter={formatCompactNumber} width={44} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <ChartLegend content={<ChartLegendContent />} />
+                            <Area type="monotone" dataKey="pageViews" fill="url(#traffic-pageViews)" stroke="var(--color-pageViews)" strokeWidth={2.2} />
+                            <Area type="monotone" dataKey="visitors" fill="url(#traffic-visitors)" stroke="var(--color-visitors)" strokeWidth={2.2} />
+                            <Area type="monotone" dataKey="signins" fillOpacity={0} stroke="var(--color-signins)" strokeWidth={2.2} />
+                          </AreaChart>
+                        </ChartContainer>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-4">
+                    <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">Activity mix</p>
+                      <p className="mt-2 text-sm leading-6 text-[#334155]">
+                        Uses this month when available, otherwise it falls back to today so the chart is never empty.
+                      </p>
+
+                      {activityMixData.length === 0 ? (
+                        <div className="mt-4">
+                          <EmptyState icon={MousePointerClick} title="No activity mix yet" description="As page views and account activity come in, the donut will show the current balance." />
+                        </div>
+                      ) : (
+                        <div className="mt-4 grid gap-4">
+                          <ChartContainer config={activityMixChartConfig} className="mx-auto h-[220px] w-full max-w-[280px] aspect-auto">
+                            <PieChart>
+                              <ChartTooltip content={<ChartTooltipContent nameKey="key" hideLabel />} />
+                              <Pie data={activityMixData} dataKey="value" nameKey="key" innerRadius={56} outerRadius={84} paddingAngle={3} stroke="#ffffff" strokeWidth={4}>
+                                {activityMixData.map(item => (
+                                  <Cell key={item.key} fill={item.color} />
+                                ))}
+                              </Pie>
+                            </PieChart>
+                          </ChartContainer>
+
+                          <div className="grid gap-2">
+                            {activityMixData.map(item => (
+                              <div key={item.key} className="flex items-center justify-between rounded-xl border border-[#d7dde5] bg-white px-3 py-2.5">
+                                <div className="flex items-center gap-3">
+                                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                                  <span className="text-sm font-medium text-[#111827]">{item.label}</span>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-sm font-semibold text-[#111827]">{formatNumber(item.value)}</p>
+                                  <p className="text-xs text-[#334155]">
+                                    {activityMixTotal > 0 ? `${Math.round((item.value / activityMixTotal) * 100)}%` : "0%"}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+                      <div className="rounded-[18px] border border-[#d7dde5] bg-white p-4">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">Today</p>
                         <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[#111827]">{formatShortDateLabel(todayAnalytics?.day)}</p>
                         <div className="mt-4 space-y-2 text-sm text-[#1f2937]">
@@ -586,7 +784,7 @@ export default function AdminConsole(props: any) {
                         </div>
                       </div>
 
-                      <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-4">
+                      <div className="rounded-[18px] border border-[#d7dde5] bg-white p-4">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">This Month</p>
                         <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[#111827]">{formatMonthLabel(currentMonthAnalytics?.month)}</p>
                         <div className="mt-4 flex flex-wrap gap-2">
@@ -596,7 +794,7 @@ export default function AdminConsole(props: any) {
                         <p className="mt-3 text-sm leading-6 text-[#334155]">{describeGrowth("Visitors", currentMonthAnalytics?.visitor_growth_pct)}</p>
                       </div>
 
-                      <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-4">
+                      <div className="rounded-[18px] border border-[#d7dde5] bg-white p-4">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">This Year</p>
                         <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[#111827]">{formatYearLabel(currentYearAnalytics?.year)}</p>
                         <div className="mt-4 flex flex-wrap gap-2">
@@ -606,90 +804,86 @@ export default function AdminConsole(props: any) {
                         <p className="mt-3 text-sm leading-6 text-[#334155]">{describeGrowth("Sign-ins", currentYearAnalytics?.signin_growth_pct)}</p>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Page Attention" description="A visual read on which pages are attracting the most traffic before you drop into the raw ranking table.">
+                {analyticsTopPages.length === 0 ? (
+                  <EmptyState icon={Database} title="No analytics pages yet" description="Open the product a few times and the ranking table will start filling in." />
+                ) : (
+                  <div className="space-y-5">
+                    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_0.8fr]">
+                      <div className="overflow-hidden rounded-[18px] border border-[#d7dde5] bg-white">
+                        <div className="border-b border-[#e4e7ec] bg-[#fbfcfd] px-5 py-4">
+                          <p className="text-sm font-semibold text-[#111827]">Top pages by traffic</p>
+                          <p className="mt-1 text-sm leading-6 text-[#334155]">
+                            Hover the bars to compare total attention and unique visitor reach per page.
+                          </p>
+                        </div>
+                        <div className="px-3 pb-4 pt-3">
+                          <ChartContainer config={topPagesChartConfig} className="h-[340px] w-full aspect-auto">
+                            <BarChart data={topPagesChartData} layout="vertical" margin={{ top: 8, right: 16, left: 16, bottom: 0 }} barCategoryGap={14}>
+                              <CartesianGrid horizontal={false} stroke="#edf1f5" />
+                              <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: "#475467", fontSize: 12 }} tickFormatter={formatCompactNumber} />
+                              <YAxis dataKey="shortPath" type="category" axisLine={false} tickLine={false} tick={{ fill: "#1f2937", fontSize: 12 }} width={110} />
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                              <ChartLegend content={<ChartLegendContent />} />
+                              <Bar dataKey="pageViews" fill="var(--color-pageViews)" radius={[0, 8, 8, 0]} />
+                              <Bar dataKey="visitors" fill="var(--color-visitors)" radius={[0, 8, 8, 0]} />
+                            </BarChart>
+                          </ChartContainer>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-5">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">What to tell the team</p>
+                          <p className="mt-3 text-base font-semibold tracking-[-0.03em] text-[#111827]">
+                            {averagePageViewsPerVisitor > 0 ? `${averagePageViewsPerVisitor.toFixed(1)} pages per visitor` : "Still collecting traffic quality"}
+                          </p>
+                          <p className="mt-2 text-sm leading-7 text-[#334155]">{trafficSummary}</p>
+                          <p className="mt-4 text-sm leading-7 text-[#334155]">{engagementSummary}</p>
+                        </div>
+
+                        <div className="rounded-[18px] border border-[#d7dde5] bg-white p-5">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">Reading notes</p>
+                          <div className="mt-3 space-y-3 text-sm leading-7 text-[#1f2937]">
+                            <p>Visitors approximate unique people or sessions.</p>
+                            <p>Page views count every tracked open, so they should run above visitors.</p>
+                            <p>Engaged time is directional and best used as a comparison signal.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="overflow-hidden rounded-[18px] border border-[#d7dde5]">
-                      <div className="border-b border-[#e4e7ec] bg-[#fbfcfd] px-4 py-3">
-                        <p className="text-sm font-semibold text-[#111827]">Recent daily pattern</p>
-                      </div>
                       <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
-                          <thead className="bg-white">
+                          <thead className="bg-[#fbfcfd]">
                             <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#334155]">
-                              <th className="px-4 py-3 font-semibold">Day</th>
-                              <th className="px-4 py-3 font-semibold">Visitors</th>
+                              <th className="px-4 py-3 font-semibold">Page</th>
                               <th className="px-4 py-3 font-semibold">Views</th>
-                              <th className="px-4 py-3 font-semibold">Sign-ins</th>
-                              <th className="px-4 py-3 font-semibold">Engaged</th>
+                              <th className="px-4 py-3 font-semibold">Visitors</th>
+                              <th className="px-4 py-3 font-semibold">Avg engaged</th>
+                              <th className="px-4 py-3 font-semibold">Read</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white">
-                            {analyticsDaily.slice(0, 7).map((row: any) => (
-                              <tr key={row.day} className="border-b border-[#edf1f5] last:border-b-0">
-                                <td className="px-4 py-3 font-medium text-[#111827]">{formatShortDateLabel(row.day)}</td>
-                                <td className="px-4 py-3 text-[#1f2937]">{formatNumber(row.visitors)}</td>
-                                <td className="px-4 py-3 text-[#1f2937]">{formatNumber(row.page_views)}</td>
-                                <td className="px-4 py-3 text-[#1f2937]">{formatNumber(row.signins)}</td>
-                                <td className="px-4 py-3 text-[#1f2937]">{formatDurationLabel(row.avg_engaged_seconds)}</td>
+                            {analyticsTopPages.map((page: any) => (
+                              <tr key={`${page.path}-${page.page_views}-${page.visitors}`} className="border-b border-[#edf1f5] last:border-b-0">
+                                <td className="px-4 py-3 font-medium text-[#111827]">{page.path || "/"}</td>
+                                <td className="px-4 py-3 text-[#1f2937]">{formatNumber(page.page_views)}</td>
+                                <td className="px-4 py-3 text-[#1f2937]">{formatNumber(page.visitors)}</td>
+                                <td className="px-4 py-3 text-[#1f2937]">{formatDurationLabel(page.avg_engaged_seconds)}</td>
+                                <td className="px-4 py-3 text-[#334155]">
+                                  {page.avg_engaged_seconds && page.avg_engaged_seconds >= 60 ? "Holding attention well" : page.page_views && page.page_views >= 3 ? "Getting repeat traffic" : "Still early"}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="rounded-[18px] border border-[#d7dde5] bg-[#fbfcfd] p-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">What to tell the team</p>
-                      <p className="mt-3 text-base font-semibold tracking-[-0.03em] text-[#111827]">
-                        {averagePageViewsPerVisitor > 0 ? `${averagePageViewsPerVisitor.toFixed(1)} pages per visitor` : "Still collecting traffic quality"}
-                      </p>
-                      <p className="mt-2 text-sm leading-7 text-[#334155]">{trafficSummary}</p>
-                      <p className="mt-4 text-sm leading-7 text-[#334155]">{engagementSummary}</p>
-                    </div>
-
-                    <div className="rounded-[18px] border border-[#d7dde5] bg-white p-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#334155]">Reading notes</p>
-                      <div className="mt-3 space-y-3 text-sm leading-7 text-[#1f2937]">
-                        <p>Visitors approximate unique people or sessions.</p>
-                        <p>Page views count every tracked open, so they should run above visitors.</p>
-                        <p>Engaged time is directional and best used as a comparison signal.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </SectionCard>
-
-              <SectionCard title="Top Pages" description="Traffic and attention ranked by page so operators can spot what is holding user focus.">
-                {analyticsTopPages.length === 0 ? (
-                  <EmptyState icon={Database} title="No analytics pages yet" description="Open the product a few times and the ranking table will start filling in." />
-                ) : (
-                  <div className="overflow-hidden rounded-[18px] border border-[#d7dde5]">
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full text-left text-sm">
-                        <thead className="bg-[#fbfcfd]">
-                          <tr className="border-b border-[#e4e7ec] text-[11px] uppercase tracking-[0.18em] text-[#334155]">
-                            <th className="px-4 py-3 font-semibold">Page</th>
-                            <th className="px-4 py-3 font-semibold">Views</th>
-                            <th className="px-4 py-3 font-semibold">Visitors</th>
-                            <th className="px-4 py-3 font-semibold">Avg engaged</th>
-                            <th className="px-4 py-3 font-semibold">Read</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white">
-                          {analyticsTopPages.map((page: any) => (
-                            <tr key={`${page.path}-${page.page_views}-${page.visitors}`} className="border-b border-[#edf1f5] last:border-b-0">
-                              <td className="px-4 py-3 font-medium text-[#111827]">{page.path || "/"}</td>
-                              <td className="px-4 py-3 text-[#1f2937]">{formatNumber(page.page_views)}</td>
-                              <td className="px-4 py-3 text-[#1f2937]">{formatNumber(page.visitors)}</td>
-                              <td className="px-4 py-3 text-[#1f2937]">{formatDurationLabel(page.avg_engaged_seconds)}</td>
-                              <td className="px-4 py-3 text-[#334155]">
-                                {page.avg_engaged_seconds && page.avg_engaged_seconds >= 60 ? "Holding attention well" : page.page_views && page.page_views >= 3 ? "Getting repeat traffic" : "Still early"}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
                     </div>
                   </div>
                 )}
