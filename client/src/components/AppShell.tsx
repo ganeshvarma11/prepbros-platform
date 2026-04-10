@@ -124,11 +124,11 @@ function NavLink({
       <span
         onClick={onNavigate}
         className={cn(
-          "group relative flex cursor-pointer items-center rounded-[18px] border text-[14px] transition-all duration-200",
+          "app-shell-nav-link group relative flex cursor-pointer items-center rounded-[18px] border text-[14px] transition-all duration-200",
           collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3.5 py-2.5",
           active
-            ? "border-[var(--brand-muted)] bg-[linear-gradient(135deg,var(--surface-2)_0%,var(--brand-subtle)_100%)] font-semibold text-[var(--text-1)] shadow-[0_20px_40px_-28px_var(--brand-glow)]"
-            : "border-transparent text-[var(--text-2)] hover:border-[var(--border)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] hover:translate-x-0.5"
+            ? "is-active border-[var(--brand-muted)] font-semibold text-[var(--text-1)] shadow-[0_20px_40px_-28px_var(--brand-glow)]"
+            : "border-transparent text-[var(--text-2)] hover:text-[var(--text-1)] hover:translate-x-0.5"
         )}
         title={collapsed ? item.label : undefined}
       >
@@ -140,10 +140,10 @@ function NavLink({
         />
         <span
           className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] transition",
+            "app-shell-nav-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] transition",
             active
-              ? "bg-[rgba(255,255,255,0.72)] text-[var(--brand)]"
-              : "text-current group-hover:bg-[var(--surface-3)]"
+              ? "is-active text-[var(--brand)]"
+              : "text-current"
           )}
         >
           <Icon size={16} className="text-current" />
@@ -262,7 +262,7 @@ function SidebarBody({
       </div>
 
       <div className="space-y-3 pt-4">
-        <div className="rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] p-2 shadow-[var(--shadow-sm)]">
+        <div className="app-shell-support-card rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] p-2 shadow-[var(--shadow-sm)]">
           <NavLink
             item={SUPPORT_ITEM}
             location={location}
