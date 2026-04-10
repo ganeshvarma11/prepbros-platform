@@ -52,9 +52,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const adminInputClass =
-  "w-full rounded-xl border border-[#d7dde5] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none transition placeholder:text-[#8b95a7] focus:border-[#b86a2d] focus:ring-4 focus:ring-[#b86a2d]/10";
+  "w-full rounded-xl border border-[#d7dde5] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none transition placeholder:text-[#111827] placeholder:opacity-70 focus:border-[#b86a2d] focus:ring-4 focus:ring-[#b86a2d]/10";
 const adminTextAreaClass =
-  "w-full rounded-xl border border-[#d7dde5] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none transition placeholder:text-[#8b95a7] focus:border-[#b86a2d] focus:ring-4 focus:ring-[#b86a2d]/10";
+  "w-full rounded-xl border border-[#d7dde5] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none transition placeholder:text-[#111827] placeholder:opacity-70 focus:border-[#b86a2d] focus:ring-4 focus:ring-[#b86a2d]/10";
 const adminPanelClass =
   "rounded-[20px] border border-[#d7dde5] bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)]";
 
@@ -489,12 +489,24 @@ export default function AdminConsole(props: any) {
   return (
     <>
       <style>{`
+        .admin-console {
+          color: #111827;
+        }
+
         .admin-console [class*="text-\\[\\#334155\\]"],
         .admin-console [class*="text-\\[\\#1f2937\\]"],
         .admin-console [class*="text-\\[\\#475467\\]"],
-        .admin-console [class*="text-\\[\\#64748b\\]"] {
+        .admin-console [class*="text-\\[\\#64748b\\]"],
+        .admin-console [class*="text-\\[\\#344054\\]"],
+        .admin-console [class*="text-\\[\\#4b5563\\]"] {
           color: #111827 !important;
           opacity: 1 !important;
+        }
+
+        .admin-console input::placeholder,
+        .admin-console textarea::placeholder {
+          color: #111827 !important;
+          opacity: 0.7 !important;
         }
       `}</style>
       <div className="admin-console mx-auto flex max-w-[1580px] gap-6 px-4 py-4 sm:px-6 lg:px-8">
