@@ -101,7 +101,12 @@ function SectionCard({
     <section className={cn(adminPanelClass, "overflow-hidden p-5 md:p-6")}>
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold tracking-[-0.03em] text-[#111827]">{title}</h2>
+          <h2
+            className="text-lg font-semibold tracking-[-0.03em] text-[#0f172a]"
+            style={{ color: "#0f172a", opacity: 1 }}
+          >
+            {title}
+          </h2>
           {description ? (
             <p className="mt-1 max-w-3xl text-sm leading-6 text-[#334155]">{description}</p>
           ) : null}
@@ -446,7 +451,7 @@ export default function AdminConsole(props: any) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        <div className="sticky top-0 z-30 -mx-4 border-b border-[#dde3ea] bg-[#f7f7f6]/95 px-4 pb-5 pt-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="-mx-4 border-b border-[#dde3ea] bg-[#f7f7f6] px-4 pb-5 pt-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="flex items-center gap-3">
@@ -457,7 +462,10 @@ export default function AdminConsole(props: any) {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#334155]">
                     PrepBros Admin
                   </p>
-                  <h1 className="mt-1 text-[clamp(1.9rem,2.7vw,3rem)] font-semibold tracking-[-0.06em] text-[#111827]">
+                  <h1
+                    className="mt-1 text-[clamp(1.9rem,2.7vw,3rem)] font-semibold tracking-[-0.06em] text-[#0f172a]"
+                    style={{ color: "#0f172a", opacity: 1 }}
+                  >
                     {activeTabMeta.label}
                   </h1>
                 </div>
