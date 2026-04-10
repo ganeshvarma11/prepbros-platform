@@ -186,14 +186,14 @@ function SidebarBody({
   return (
     <div
       className={cn(
-        "relative flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[linear-gradient(180deg,var(--sidebar-bg)_0%,var(--surface-1)_100%)] py-4 shadow-[var(--shadow-lg)] backdrop-blur-xl",
+        "app-shell-sidebar relative flex h-full min-h-0 flex-col overflow-hidden border-r border-[var(--border-soft)] bg-[linear-gradient(180deg,var(--sidebar-bg)_0%,var(--surface-1)_100%)] py-4 shadow-[var(--shadow-lg)] backdrop-blur-xl",
         collapsed ? "px-2" : "px-3"
       )}
     >
       <div className={cn("pb-5", collapsed ? "px-0" : "px-1")}>
         <div
           className={cn(
-            "rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface-2)] shadow-[var(--shadow-sm)]",
+            "app-shell-brand-card rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface-2)] shadow-[var(--shadow-sm)]",
             collapsed ? "px-2 py-3" : "px-3 py-3"
           )}
         >
@@ -237,7 +237,7 @@ function SidebarBody({
           <div
             key={group.label}
             className={cn(
-              "rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
+              "app-shell-nav-group rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
               collapsed ? "px-1.5 py-2" : "p-2"
             )}
           >
@@ -286,7 +286,7 @@ function SidebarBody({
         {user ? (
           <div
             className={cn(
-              "rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
+              "app-shell-profile-card rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
               collapsed ? "px-1.5 py-2" : "px-3 py-3"
             )}
           >
@@ -345,7 +345,7 @@ function SidebarBody({
         ) : (
           <div
             className={cn(
-              "rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
+              "app-shell-profile-card rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-1)] shadow-[var(--shadow-sm)]",
               collapsed ? "px-1.5 py-2" : "px-3 py-3"
             )}
           >

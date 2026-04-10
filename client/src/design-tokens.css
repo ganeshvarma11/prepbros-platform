@@ -112,38 +112,38 @@ html.dark {
 html.light {
   color-scheme: light;
 
-  --app-bg: #f4f5f7;
-  --sidebar-bg: #eff1f4;
-  --canvas-bg: #f8f9fb;
+  --app-bg: #edf3fb;
+  --sidebar-bg: #f3f7fc;
+  --canvas-bg: #f8fbff;
 
-  --surface-1: rgba(255, 255, 255, 0.9);
+  --surface-1: rgba(255, 255, 255, 0.92);
   --surface-2: #ffffff;
-  --surface-3: #eef2f6;
+  --surface-3: #eef4fb;
   --surface-elevated: #ffffff;
-  --surface-overlay: rgba(255, 255, 255, 0.94);
+  --surface-overlay: rgba(255, 255, 255, 0.96);
 
-  --border-soft: rgba(15, 23, 42, 0.06);
-  --border: rgba(15, 23, 42, 0.09);
-  --border-strong: rgba(15, 23, 42, 0.14);
+  --border-soft: rgba(31, 41, 55, 0.07);
+  --border: rgba(31, 41, 55, 0.11);
+  --border-strong: rgba(31, 41, 55, 0.16);
 
-  --text-1: #121821;
-  --text-2: #5f6977;
-  --text-3: #8590a0;
+  --text-1: #172033;
+  --text-2: #516074;
+  --text-3: #7a8799;
   --text-on-brand: #111315;
 
   --brand: #ff8c32;
-  --brand-light: #ff9b4d;
+  --brand-light: #ffa752;
   --brand-dark: #dd7c2d;
-  --brand-subtle: rgba(255, 140, 50, 0.12);
-  --brand-muted: rgba(255, 140, 50, 0.2);
-  --brand-glow: rgba(255, 140, 50, 0.16);
+  --brand-subtle: rgba(255, 140, 50, 0.14);
+  --brand-muted: rgba(255, 140, 50, 0.24);
+  --brand-glow: rgba(255, 140, 50, 0.22);
 
-  --accent: #5579d9;
-  --accent-subtle: rgba(85, 121, 217, 0.12);
-  --accent-muted: rgba(85, 121, 217, 0.18);
+  --accent: #5979e8;
+  --accent-subtle: rgba(89, 121, 232, 0.14);
+  --accent-muted: rgba(89, 121, 232, 0.22);
 
-  --green: #348a60;
-  --green-bg: rgba(52, 138, 96, 0.12);
+  --green: #2f8f67;
+  --green-bg: rgba(47, 143, 103, 0.13);
   --yellow: #ae7d27;
   --yellow-bg: rgba(174, 125, 39, 0.12);
   --red: #bb6262;
@@ -154,9 +154,9 @@ html.light {
   --bg: var(--app-bg);
   --bg-base: var(--app-bg);
   --bg-subtle: var(--canvas-bg);
-  --bg-muted: #edf1f5;
-  --bg-elevated: rgba(255, 255, 255, 0.9);
-  --bg-card: rgba(255, 255, 255, 0.94);
+  --bg-muted: #e8eff8;
+  --bg-elevated: rgba(255, 255, 255, 0.92);
+  --bg-card: rgba(255, 255, 255, 0.95);
   --bg-card-strong: #ffffff;
   --bg-inverse: #111315;
 
@@ -167,26 +167,31 @@ html.light {
 
   --page-background:
     radial-gradient(
-      circle at 12% 0%,
-      rgba(85, 121, 217, 0.06),
-      transparent 28%
+      circle at 10% 0%,
+      rgba(89, 121, 232, 0.15),
+      transparent 30%
     ),
     radial-gradient(
-      circle at 88% 8%,
-      rgba(255, 140, 50, 0.06),
+      circle at 88% 6%,
+      rgba(255, 140, 50, 0.15),
       transparent 24%
     ),
-    linear-gradient(180deg, #f4f5f7 0%, #f8f9fb 54%, #f4f5f7 100%);
-  --navbar-bg: rgba(248, 249, 251, 0.86);
-  --navbar-border: rgba(15, 23, 42, 0.08);
+    radial-gradient(
+      circle at 52% 100%,
+      rgba(47, 143, 103, 0.08),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #eef4fb 0%, #f8fbff 52%, #eef3fb 100%);
+  --navbar-bg: rgba(248, 251, 255, 0.82);
+  --navbar-border: rgba(31, 41, 55, 0.08);
   --logo-mark: #121821;
   --logo-mark-glow: rgba(15, 23, 42, 0.05);
   --logo-mark-border: #121821;
 
-  --shadow-sm: 0 10px 28px -22px rgba(15, 23, 42, 0.12);
-  --shadow-md: 0 18px 44px -26px rgba(15, 23, 42, 0.16);
-  --shadow-lg: 0 30px 72px -38px rgba(15, 23, 42, 0.18);
-  --shadow-xl: 0 46px 110px -54px rgba(15, 23, 42, 0.22);
+  --shadow-sm: 0 18px 40px -30px rgba(27, 39, 64, 0.16);
+  --shadow-md: 0 26px 56px -34px rgba(27, 39, 64, 0.2);
+  --shadow-lg: 0 38px 88px -44px rgba(27, 39, 64, 0.22);
+  --shadow-xl: 0 50px 120px -54px rgba(27, 39, 64, 0.26);
 }
 
 html {
@@ -434,6 +439,42 @@ html.light .btn-secondary {
   box-shadow: var(--shadow-md);
 }
 
+.app-shell-sidebar {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-shell-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 18px 14px auto;
+  height: 180px;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top left, rgba(89, 121, 232, 0.14), transparent 54%),
+    radial-gradient(circle at top right, rgba(255, 140, 50, 0.14), transparent 48%);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.app-shell-brand-card,
+.app-shell-nav-group,
+.app-shell-profile-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.app-shell-brand-card::before,
+.app-shell-nav-group::before,
+.app-shell-profile-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 48%);
+  pointer-events: none;
+}
+
 .stat-card-label {
   color: var(--text-3);
   font-size: 11px;
@@ -478,6 +519,185 @@ html.light .badge-amber {
   border-color: var(--brand-muted);
   background: var(--brand-subtle);
   color: var(--brand-light);
+}
+
+.dashboard-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 22%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 22%, transparent 78%, rgba(255, 255, 255, 0.06));
+  pointer-events: none;
+}
+
+.dashboard-hero,
+.dashboard-panel,
+.dashboard-sidecard,
+.dashboard-stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-hero::before,
+.dashboard-panel::before,
+.dashboard-sidecard::before,
+.dashboard-stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.56), transparent 38%);
+  pointer-events: none;
+}
+
+.dashboard-hero {
+  border-color: rgba(255, 140, 50, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(255, 140, 50, 0.14), transparent 28%),
+    radial-gradient(circle at top left, rgba(89, 121, 232, 0.12), transparent 30%),
+    var(--bg-card);
+  box-shadow: 0 34px 90px -48px rgba(39, 52, 81, 0.26);
+}
+
+.dashboard-hero-panel {
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.42)),
+    linear-gradient(135deg, rgba(89, 121, 232, 0.08), rgba(255, 140, 50, 0.08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 22px 50px -36px rgba(27, 39, 64, 0.32);
+  backdrop-filter: blur(18px);
+}
+
+.dashboard-glass-tile,
+.dashboard-mini-panel {
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.62)),
+    linear-gradient(135deg, rgba(89, 121, 232, 0.05), rgba(255, 140, 50, 0.06));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 22px 44px -34px rgba(27, 39, 64, 0.24);
+  backdrop-filter: blur(18px);
+}
+
+.dashboard-panel {
+  background:
+    radial-gradient(circle at top right, rgba(255, 140, 50, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.9));
+}
+
+.dashboard-sidecard {
+  background:
+    radial-gradient(circle at top left, rgba(89, 121, 232, 0.08), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+}
+
+.dashboard-stat-card {
+  background:
+    radial-gradient(circle at top right, rgba(255, 140, 50, 0.09), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.9));
+}
+
+.dashboard-stat-card:nth-child(2n)::after {
+  background: linear-gradient(180deg, rgba(89, 121, 232, 0.24), transparent);
+}
+
+.dashboard-stat-card::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(255, 140, 50, 0.45), rgba(89, 121, 232, 0.32));
+  opacity: 0.9;
+}
+
+.dashboard-progress-track {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.16), rgba(148, 163, 184, 0.1));
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.55);
+}
+
+.dashboard-chip {
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.dashboard-day-tile {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.5)),
+    linear-gradient(180deg, rgba(89, 121, 232, 0.04), rgba(255, 140, 50, 0.04));
+}
+
+.dashboard-day-tile.is-active {
+  background:
+    linear-gradient(180deg, rgba(255, 140, 50, 0.14), rgba(255, 255, 255, 0.68)),
+    linear-gradient(135deg, rgba(89, 121, 232, 0.08), transparent);
+  box-shadow: 0 24px 44px -34px rgba(255, 140, 50, 0.34);
+}
+
+.dashboard-list-link {
+  border-color: rgba(31, 41, 55, 0.03);
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.dashboard-list-link:hover {
+  border-color: var(--border-strong);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.68)),
+    linear-gradient(135deg, rgba(89, 121, 232, 0.05), rgba(255, 140, 50, 0.06));
+  box-shadow: 0 20px 40px -34px rgba(27, 39, 64, 0.18);
+}
+
+html.dark .dashboard-hero-panel,
+html.dark .dashboard-glass-tile,
+html.dark .dashboard-mini-panel,
+html.dark .dashboard-chip,
+html.dark .dashboard-day-tile,
+html.dark .dashboard-list-link,
+html.dark .app-shell-brand-card::before,
+html.dark .app-shell-nav-group::before,
+html.dark .app-shell-profile-card::before {
+  box-shadow: none;
+}
+
+html.dark .dashboard-hero-panel,
+html.dark .dashboard-glass-tile,
+html.dark .dashboard-mini-panel {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(16, 23, 34, 0.88), rgba(16, 23, 34, 0.72)),
+    linear-gradient(135deg, rgba(110, 151, 255, 0.08), rgba(255, 140, 50, 0.08));
+}
+
+html.dark .dashboard-chip {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(16, 23, 34, 0.74);
+}
+
+html.dark .dashboard-day-tile {
+  background:
+    linear-gradient(180deg, rgba(16, 23, 34, 0.82), rgba(16, 23, 34, 0.64)),
+    linear-gradient(180deg, rgba(110, 151, 255, 0.05), rgba(255, 140, 50, 0.05));
+}
+
+html.dark .dashboard-day-tile.is-active {
+  background:
+    linear-gradient(180deg, rgba(255, 140, 50, 0.16), rgba(16, 23, 34, 0.82)),
+    linear-gradient(135deg, rgba(110, 151, 255, 0.08), transparent);
+}
+
+html.dark .dashboard-list-link {
+  border-color: rgba(255, 255, 255, 0.03);
+  background: rgba(16, 23, 34, 0.2);
+}
+
+html.dark .dashboard-list-link:hover {
+  background:
+    linear-gradient(180deg, rgba(16, 23, 34, 0.92), rgba(16, 23, 34, 0.8)),
+    linear-gradient(135deg, rgba(110, 151, 255, 0.06), rgba(255, 140, 50, 0.07));
 }
 
 input,

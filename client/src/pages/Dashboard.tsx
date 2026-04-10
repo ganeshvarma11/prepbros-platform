@@ -101,7 +101,7 @@ function DashboardListLink({
 }) {
   return (
     <Link href={href}>
-      <span className="group flex cursor-pointer items-start justify-between gap-4 rounded-[18px] border border-transparent px-3 py-3 transition hover:border-[var(--border)] hover:bg-[var(--surface-1)]">
+      <span className="dashboard-list-link group flex cursor-pointer items-start justify-between gap-4 rounded-[20px] border px-4 py-4 transition">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[var(--text-primary)] transition group-hover:text-[var(--text-primary)]">
             {title}
@@ -113,14 +113,13 @@ function DashboardListLink({
 
         <div className="flex shrink-0 items-center gap-3">
           {meta ? (
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            <span className="rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
               {meta}
             </span>
           ) : null}
-          <ArrowRight
-            size={14}
-            className="text-[var(--text-faint)] transition group-hover:translate-x-0.5 group-hover:text-[var(--text-primary)]"
-          />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-faint)] transition group-hover:translate-x-0.5 group-hover:border-[var(--brand-muted)] group-hover:text-[var(--brand)]">
+            <ArrowRight size={14} />
+          </span>
         </div>
       </span>
     </Link>
@@ -528,8 +527,8 @@ export default function Dashboard() {
         }}
       />
 
-      <div className="relative">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(110,151,255,0.08),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(255,140,50,0.08),transparent_22%)]" />
+      <div className="dashboard-shell relative">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(87,123,235,0.14),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(255,140,50,0.14),transparent_22%),radial-gradient(circle_at_50%_100%,rgba(97,185,149,0.08),transparent_30%)]" />
         <div
           {...dashboardRefresh.bind}
           className="relative z-10 mx-auto w-full max-w-[1120px] space-y-6 pb-6 transition-transform duration-200"
@@ -561,8 +560,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <section className="card overflow-hidden p-6 md:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <section className="card dashboard-hero overflow-hidden p-6 md:p-8">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-end">
               <PageHeader
                 eyebrow="Dashboard"
                 title="Your practice command center."
@@ -601,6 +600,44 @@ export default function Dashboard() {
                   </div>
                 }
               />
+
+              <div className="dashboard-hero-panel rounded-[24px] p-5">
+                <p className="section-label">Momentum</p>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="dashboard-glass-tile rounded-[18px] p-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                      Accuracy
+                    </p>
+                    <p className="mt-2 text-[1.9rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                      {accuracy}%
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                      Across {formatCount(totalAttempts)} attempts
+                    </p>
+                  </div>
+                  <div className="dashboard-glass-tile rounded-[18px] p-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                      Review
+                    </p>
+                    <p className="mt-2 text-[1.9rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                      {formatCount(totalRetry)}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                      Ready for another pass
+                    </p>
+                  </div>
+                </div>
+                <div className="dashboard-glass-tile mt-4 rounded-[18px] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                    Today&apos;s pulse
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                    {todayAttempts > 0
+                      ? `${todayAttempts} question${todayAttempts === 1 ? "" : "s"} completed so far. Stay with the same rhythm and you will close strong.`
+                      : "Start with one short set. Momentum usually appears after the first 10 minutes."}
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -612,7 +649,7 @@ export default function Dashboard() {
 
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {summaryStats.map(item => (
-              <div key={item.label} className="stat-card">
+              <div key={item.label} className="stat-card dashboard-stat-card">
                 <p className="stat-card-label">{item.label}</p>
                 <p className="stat-card-value">{item.value}</p>
                 <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
@@ -624,7 +661,7 @@ export default function Dashboard() {
 
           <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_340px]">
             <div className="space-y-6">
-              <div className="card grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <div className="card dashboard-panel grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
                 <div>
                   <p className="section-label">Coverage</p>
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -637,7 +674,7 @@ export default function Dashboard() {
                         {formatCount(totalUnattempted)} still untouched.
                       </p>
                     </div>
-                    <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3">
+                    <div className="dashboard-mini-panel rounded-[20px] px-4 py-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                         Today&apos;s target
                       </p>
@@ -646,9 +683,9 @@ export default function Dashboard() {
                           ? "A small finish line keeps the day focused."
                           : "Today is open for revision and retries."}
                       </p>
-                      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--bg-muted)]">
+                      <div className="dashboard-progress-track mt-4 h-2.5 overflow-hidden rounded-full">
                         <div
-                          className="h-full rounded-full bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--brand)_100%)] transition-all duration-500"
+                          className="h-full rounded-full bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--brand)_55%,#ffb15f_100%)] shadow-[0_10px_20px_-12px_var(--brand-glow)] transition-all duration-500"
                           style={{
                             width: `${Math.max(
                               dailyProgressPercent,
@@ -672,14 +709,14 @@ export default function Dashboard() {
                       return (
                         <div
                           key={item.difficulty}
-                          className="grid gap-3 sm:grid-cols-[70px_minmax(0,1fr)_64px] sm:items-center"
+                          className="grid gap-3 sm:grid-cols-[84px_minmax(0,1fr)_76px] sm:items-center"
                         >
-                          <span className="text-sm font-medium text-[var(--text-secondary)]">
+                          <span className="dashboard-chip inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-secondary)]">
                             {item.difficulty}
                           </span>
-                          <div className="h-2 overflow-hidden rounded-full bg-[var(--bg-muted)]">
+                          <div className="dashboard-progress-track h-2.5 overflow-hidden rounded-full">
                             <div
-                              className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent)_0%,var(--brand)_100%)] transition-all duration-500"
+                              className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent)_0%,var(--brand)_100%)] shadow-[0_10px_20px_-12px_rgba(87,123,235,0.32)] transition-all duration-500"
                               style={{
                                 width: `${Math.max(percent, item.solved > 0 ? 7 : 0)}%`,
                               }}
@@ -695,7 +732,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sm)]">
+                <div className="dashboard-mini-panel rounded-[22px] p-5">
                   <p className="section-label">Signals</p>
                   <div className="mt-4 space-y-5">
                     <div>
@@ -727,7 +764,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="card">
+              <div className="card dashboard-panel">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="section-label">Activity</p>
@@ -759,20 +796,32 @@ export default function Dashboard() {
                         key={day.key}
                         className="flex flex-1 flex-col items-center gap-3"
                       >
-                        <span className="text-[11px] text-[var(--text-faint)]">
+                        <span className="text-[11px] font-medium text-[var(--text-faint)]">
                           {day.count}
                         </span>
-                        <div className="relative flex h-[160px] w-full items-end rounded-[14px] bg-[var(--surface-1)] px-2 pb-2">
+                        <div
+                          className={`dashboard-day-tile relative flex h-[160px] w-full items-end rounded-[16px] border px-2 pb-2 ${
+                            day.key === todayKey
+                              ? "is-active border-[var(--brand-muted)]"
+                              : "border-[var(--border-soft)]"
+                          }`}
+                        >
                           <div
                             title={`${day.title}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
-                            className="w-full rounded-[10px] bg-[linear-gradient(180deg,var(--accent)_0%,var(--brand)_100%)] transition duration-300 hover:-translate-y-0.5"
+                            className="w-full rounded-[10px] bg-[linear-gradient(180deg,var(--accent)_0%,var(--brand)_100%)] shadow-[0_16px_26px_-18px_rgba(87,123,235,0.42)] transition duration-300 hover:-translate-y-0.5"
                             style={{
                               height: `${height}%`,
                               opacity: day.count === 0 ? 0.18 : 0.94,
                             }}
                           />
                         </div>
-                        <span className="text-xs text-[var(--text-secondary)]">
+                        <span
+                          className={`text-xs ${
+                            day.key === todayKey
+                              ? "font-semibold text-[var(--text-primary)]"
+                              : "text-[var(--text-secondary)]"
+                          }`}
+                        >
                           {day.label}
                         </span>
                       </div>
@@ -783,7 +832,7 @@ export default function Dashboard() {
             </div>
 
             <aside className="space-y-6">
-              <div className="card">
+              <div className="card dashboard-sidecard">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="section-label">Focus</p>
@@ -814,7 +863,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="card">
+              <div className="card dashboard-sidecard">
                 <p className="section-label">Weak topics</p>
                 <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
                   Areas to revisit
@@ -842,7 +891,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="card">
+              <div className="card dashboard-sidecard">
                 <p className="section-label">Recent</p>
                 <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
                   Latest activity
