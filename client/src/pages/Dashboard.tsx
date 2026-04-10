@@ -560,13 +560,13 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <section className="card dashboard-hero overflow-hidden p-6 md:p-8">
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-end">
+          <section className="card dashboard-hero overflow-hidden p-5 md:p-6">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_236px] lg:items-center">
               <PageHeader
                 eyebrow="Dashboard"
                 title="Your practice command center."
                 description={`${displayName}, you’re working toward ${targetExam}. ${formatLongDate(new Date())}. ${dailyRemaining > 0 ? `${dailyRemaining} question${dailyRemaining === 1 ? "" : "s"} still close today’s target.` : "Today’s target is complete, so this is a good moment for review."}`}
-                className="mb-0 flex-1"
+                className="dashboard-page-header mb-0 flex-1"
                 actions={
                   <div className="flex flex-wrap gap-3">
                     <button
@@ -601,37 +601,37 @@ export default function Dashboard() {
                 }
               />
 
-              <div className="dashboard-hero-panel rounded-[24px] p-5">
+              <div className="dashboard-hero-panel rounded-[22px] p-4">
                 <p className="section-label">Momentum</p>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="dashboard-glass-tile rounded-[18px] p-4">
+                <div className="mt-3 grid grid-cols-2 gap-2.5">
+                  <div className="dashboard-glass-tile rounded-[18px] p-3.5">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                       Accuracy
                     </p>
                     <p className="mt-2 text-[1.9rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
                       {accuracy}%
                     </p>
-                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                    <p className="dashboard-detail-text mt-1 text-xs">
                       Across {formatCount(totalAttempts)} attempts
                     </p>
                   </div>
-                  <div className="dashboard-glass-tile rounded-[18px] p-4">
+                  <div className="dashboard-glass-tile rounded-[18px] p-3.5">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                       Review
                     </p>
                     <p className="mt-2 text-[1.9rem] font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
                       {formatCount(totalRetry)}
                     </p>
-                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                    <p className="dashboard-detail-text mt-1 text-xs">
                       Ready for another pass
                     </p>
                   </div>
                 </div>
-                <div className="dashboard-glass-tile mt-4 rounded-[18px] px-4 py-3">
+                <div className="dashboard-glass-tile mt-3 rounded-[18px] px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                     Today&apos;s pulse
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                  <p className="dashboard-detail-text mt-2 text-sm leading-6">
                     {todayAttempts > 0
                       ? `${todayAttempts} question${todayAttempts === 1 ? "" : "s"} completed so far. Stay with the same rhythm and you will close strong.`
                       : "Start with one short set. Momentum usually appears after the first 10 minutes."}
@@ -652,7 +652,7 @@ export default function Dashboard() {
               <div key={item.label} className="stat-card dashboard-stat-card">
                 <p className="stat-card-label">{item.label}</p>
                 <p className="stat-card-value">{item.value}</p>
-                <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+                <p className="dashboard-detail-text mt-3 text-sm leading-6">
                   {item.detail}
                 </p>
               </div>
@@ -669,7 +669,7 @@ export default function Dashboard() {
                       <p className="text-[3.7rem] leading-none tracking-[-0.07em] text-[var(--text-primary)]">
                         {solvedPercent}%
                       </p>
-                      <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+                      <p className="dashboard-detail-text mt-3 text-sm leading-6">
                         {formatCount(totalSolved)} solved and{" "}
                         {formatCount(totalUnattempted)} still untouched.
                       </p>
@@ -678,7 +678,7 @@ export default function Dashboard() {
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
                         Today&apos;s target
                       </p>
-                      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                      <p className="dashboard-detail-text mt-2 text-sm">
                         {dailyRemaining > 0
                           ? "A small finish line keeps the day focused."
                           : "Today is open for revision and retries."}
@@ -711,7 +711,7 @@ export default function Dashboard() {
                           key={item.difficulty}
                           className="grid gap-3 sm:grid-cols-[84px_minmax(0,1fr)_76px] sm:items-center"
                         >
-                          <span className="dashboard-chip inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-secondary)]">
+                          <span className="dashboard-chip inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-primary)]">
                             {item.difficulty}
                           </span>
                           <div className="dashboard-progress-track h-2.5 overflow-hidden rounded-full">
@@ -722,7 +722,7 @@ export default function Dashboard() {
                               }}
                             />
                           </div>
-                          <span className="text-right text-sm text-[var(--text-faint)]">
+                          <span className="text-right text-sm font-medium text-[var(--text-secondary)]">
                             {formatCount(item.solved)} /{" "}
                             {formatCount(item.total)}
                           </span>
@@ -742,7 +742,7 @@ export default function Dashboard() {
                       <p className="mt-2 text-lg font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
                         {strongestTopic?.topic || "Still emerging"}
                       </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                      <p className="dashboard-detail-text mt-2 text-sm leading-6">
                         {strongestTopic
                           ? `${strongestTopic.accuracy}% accuracy across ${strongestTopic.total} attempt${strongestTopic.total === 1 ? "" : "s"}.`
                           : "Your strongest topic will appear once there is enough answer history."}
@@ -756,7 +756,7 @@ export default function Dashboard() {
                       <p className="mt-2 text-[2.1rem] tracking-[-0.05em] text-[var(--text-primary)]">
                         {formatCount(totalRetry)}
                       </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                      <p className="dashboard-detail-text mt-2 text-sm leading-6">
                         Questions worth revisiting before starting fresh sets.
                       </p>
                     </div>
@@ -772,20 +772,20 @@ export default function Dashboard() {
                       Weekly practice pattern
                     </p>
                   </div>
-                  <p className="text-sm text-[var(--text-secondary)]">
+                  <p className="dashboard-detail-text text-sm">
                     {weeklyActivity.total > 0
                       ? `${weeklyActivity.total} attempts in the last 7 days`
                       : "Your weekly rhythm will appear after your next session"}
                   </p>
                 </div>
 
-                <div className="mt-6 flex h-[210px] items-end gap-4">
+                <div className="mt-5 flex h-[176px] items-end gap-3">
                   {weeklyActivity.days.map(day => {
                     const height =
                       day.count === 0
-                        ? 12
+                        ? 14
                         : Math.max(
-                            20,
+                            24,
                             Math.round(
                               (day.count / weeklyActivity.maxCount) * 100
                             )
@@ -794,13 +794,13 @@ export default function Dashboard() {
                     return (
                       <div
                         key={day.key}
-                        className="flex flex-1 flex-col items-center gap-3"
+                        className="flex flex-1 flex-col items-center gap-2.5"
                       >
-                        <span className="text-[11px] font-medium text-[var(--text-faint)]">
+                        <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
                           {day.count}
                         </span>
                         <div
-                          className={`dashboard-day-tile relative flex h-[160px] w-full items-end rounded-[16px] border px-2 pb-2 ${
+                          className={`dashboard-day-tile relative flex h-[124px] w-full items-end rounded-[16px] border px-2 pb-2 ${
                             day.key === todayKey
                               ? "is-active border-[var(--brand-muted)]"
                               : "border-[var(--border-soft)]"
@@ -811,7 +811,7 @@ export default function Dashboard() {
                             className="w-full rounded-[10px] bg-[linear-gradient(180deg,var(--accent)_0%,var(--brand)_100%)] shadow-[0_16px_26px_-18px_rgba(87,123,235,0.42)] transition duration-300 hover:-translate-y-0.5"
                             style={{
                               height: `${height}%`,
-                              opacity: day.count === 0 ? 0.18 : 0.94,
+                              opacity: day.count === 0 ? 0.42 : 1,
                             }}
                           />
                         </div>
@@ -855,7 +855,7 @@ export default function Dashboard() {
                       />
                     ))
                   ) : (
-                    <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
+                    <p className="dashboard-detail-text mt-4 text-sm leading-6">
                       Your next focus areas will appear after a few more
                       answers.
                     </p>
@@ -884,7 +884,7 @@ export default function Dashboard() {
                       />
                     ))
                   ) : (
-                    <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
+                    <p className="dashboard-detail-text mt-4 text-sm leading-6">
                       Weak topics will show up once you build more history.
                     </p>
                   )}
@@ -940,7 +940,7 @@ export default function Dashboard() {
                       </Link>
                     ))
                   ) : (
-                    <p className="text-sm leading-6 text-[var(--text-secondary)]">
+                    <p className="dashboard-detail-text text-sm leading-6">
                       Recent activity will appear after your next practice
                       session.
                     </p>
