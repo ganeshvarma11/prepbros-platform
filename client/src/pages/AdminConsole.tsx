@@ -487,7 +487,17 @@ export default function AdminConsole(props: any) {
   }));
 
   return (
-    <div className="mx-auto flex max-w-[1580px] gap-6 px-4 py-4 sm:px-6 lg:px-8">
+    <>
+      <style>{`
+        .admin-console [class*="text-\\[\\#334155\\]"],
+        .admin-console [class*="text-\\[\\#1f2937\\]"],
+        .admin-console [class*="text-\\[\\#475467\\]"],
+        .admin-console [class*="text-\\[\\#64748b\\]"] {
+          color: #111827 !important;
+          opacity: 1 !important;
+        }
+      `}</style>
+      <div className="admin-console mx-auto flex max-w-[1580px] gap-6 px-4 py-4 sm:px-6 lg:px-8">
       <aside className="hidden lg:sticky lg:top-4 lg:flex lg:h-[calc(100vh-2rem)] lg:w-[280px] lg:flex-col lg:overflow-hidden lg:rounded-[24px] lg:border lg:border-[#d7dde5] lg:bg-[#fbfbfa] lg:shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
         <div className="border-b border-[#e4e7ec] px-5 py-5">
           <Link href="/" className="flex items-center gap-3">
@@ -716,8 +726,8 @@ export default function AdminConsole(props: any) {
                               </linearGradient>
                             </defs>
                             <CartesianGrid vertical={false} stroke="#e7edf3" strokeDasharray="3 3" />
-                            <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#475467", fontSize: 12 }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fill: "#475467", fontSize: 12 }} tickFormatter={formatCompactNumber} width={44} />
+                            <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#111827", fontSize: 12 }} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: "#111827", fontSize: 12 }} tickFormatter={formatCompactNumber} width={44} />
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <ChartLegend content={<ChartLegendContent />} />
                             <Area type="monotone" dataKey="pageViews" fill="url(#traffic-pageViews)" stroke="var(--color-pageViews)" strokeWidth={2.2} />
@@ -825,8 +835,8 @@ export default function AdminConsole(props: any) {
                           <ChartContainer config={topPagesChartConfig} className="h-[340px] w-full aspect-auto">
                             <BarChart data={topPagesChartData} layout="vertical" margin={{ top: 8, right: 16, left: 16, bottom: 0 }} barCategoryGap={14}>
                               <CartesianGrid horizontal={false} stroke="#edf1f5" />
-                              <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: "#475467", fontSize: 12 }} tickFormatter={formatCompactNumber} />
-                              <YAxis dataKey="shortPath" type="category" axisLine={false} tickLine={false} tick={{ fill: "#1f2937", fontSize: 12 }} width={110} />
+                              <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: "#111827", fontSize: 12 }} tickFormatter={formatCompactNumber} />
+                              <YAxis dataKey="shortPath" type="category" axisLine={false} tickLine={false} tick={{ fill: "#111827", fontSize: 12 }} width={110} />
                               <ChartTooltip content={<ChartTooltipContent />} />
                               <ChartLegend content={<ChartLegendContent />} />
                               <Bar dataKey="pageViews" fill="var(--color-pageViews)" radius={[0, 8, 8, 0]} />
@@ -1343,6 +1353,7 @@ export default function AdminConsole(props: any) {
           ) : null}
         </main>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
