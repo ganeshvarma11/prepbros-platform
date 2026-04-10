@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   AlertCircle,
   Bell,
+  ChartColumn,
   BookOpen,
   CalendarDays,
   CheckCircle2,
@@ -15,13 +16,18 @@ import {
   Link as LinkIcon,
   Loader2,
   LogOut,
+  MousePointerClick,
   Plus,
   RefreshCcw,
   Search,
   Send,
   ShieldCheck,
+  Timer,
   Trash2,
   Trophy,
+  TrendingUp,
+  UserPlus,
+  Users,
   Upload,
   X,
   type LucideIcon,
@@ -40,6 +46,7 @@ import { chunkQuestions, parseBulkQuestionInput, type ImportedQuestionPayload } 
 import { buildMailtoLink } from "@/lib/siteConfig";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import AdminConsole from "@/pages/AdminConsole";
 
 const ADMIN_EMAIL = "rakeshmeesa631@gmail.com";
 
@@ -80,7 +87,43 @@ const RESOURCE_EXAMS = ["All", ...QUESTION_EXAMS] as const;
 const CONTEST_STATUSES = ["upcoming", "past"] as const;
 const STATUS_FILTERS = ["All", "Active", "Inactive"] as const;
 const UPDATE_TIMELINE_FILTERS = ["All", "Open", "Upcoming", "Closing Soon"] as const;
-const ADMIN_TABS = ["questions", "resources", "updates", "contests", "support"] as const;
+const ADMIN_TABS = ["analytics", "questions", "resources", "updates", "contests", "support"] as const;
+
+const ADMIN_TAB_META: Record<
+  (typeof ADMIN_TABS)[number],
+  { label: string; description: string; icon: LucideIcon }
+> = {
+  analytics: {
+    label: "Analytics",
+    description: "Traffic, engagement, and top pages.",
+    icon: ChartColumn,
+  },
+  questions: {
+    label: "Questions",
+    description: "Question bank operations and cleanup.",
+    icon: BookOpen,
+  },
+  resources: {
+    label: "Resources",
+    description: "Links, PDFs, and study materials.",
+    icon: Layers3,
+  },
+  updates: {
+    label: "Updates",
+    description: "Publishing desk for opportunities and notices.",
+    icon: Bell,
+  },
+  contests: {
+    label: "Contests",
+    description: "Schedule, prizes, and contest records.",
+    icon: Trophy,
+  },
+  support: {
+    label: "Support",
+    description: "Inbox for customer operations and replies.",
+    icon: AlertCircle,
+  },
+};
 
 const BULK_IMPORT_TEMPLATE = `question,option_a,option_b,option_c,option_d,correct_option,explanation,exam,topic,subtopic,difficulty,type,year,tags
 Which Article of the Indian Constitution deals with the Right to Education?,Article 19,Article 21A,Article 24,Article 32,B,Article 21A makes free and compulsory education a fundamental right for children aged 6-14.,UPSC,Polity,Fundamental Rights,Easy,PYQ,2019,constitution|education|article-21a`;
@@ -256,6 +299,39 @@ type SupportReply = {
   sent_by_email?: string | null;
   sent_at?: string | null;
   created_at?: string | null;
+};
+
+type AnalyticsOverviewRow = {
+  page_views: number | null;
+  visitors: number | null;
+  signins: number | null;
+  signups: number | null;
+  avg_engaged_seconds: number | null;
+};
+
+type AnalyticsDailyOverviewRow = AnalyticsOverviewRow & {
+  day: string;
+};
+
+type AnalyticsPeriodOverviewRow = AnalyticsOverviewRow & {
+  visitor_growth_pct: number | null;
+  signup_growth_pct: number | null;
+  signin_growth_pct: number | null;
+};
+
+type AnalyticsMonthlyOverviewRow = AnalyticsPeriodOverviewRow & {
+  month: string;
+};
+
+type AnalyticsYearlyOverviewRow = AnalyticsPeriodOverviewRow & {
+  year: string;
+};
+
+type AnalyticsTopPageRow = {
+  path: string | null;
+  page_views: number | null;
+  visitors: number | null;
+  avg_engaged_seconds: number | null;
 };
 
 const EMPTY_Q: QuestionForm = {
@@ -582,6 +658,89 @@ function formatDate(value?: string | null) {
   }).format(date);
 }
 
+function formatNumber(value?: number | null) {
+  return new Intl.NumberFormat("en-IN").format(value ?? 0);
+}
+
+function formatPercent(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) return "Not enough data yet";
+
+  const direction = value > 0 ? "+" : "";
+  return `${direction}${value.toFixed(1)}%`;
+}
+
+function formatDurationLabel(value?: number | null) {
+  if (value === null || value === undefined || value <= 0) return "Still collecting";
+
+  if (value < 60) {
+    return `${Math.round(value)} sec`;
+  }
+
+  const minutes = Math.floor(value / 60);
+  const seconds = Math.round(value % 60);
+
+  if (seconds === 0) return `${minutes} min`;
+  return `${minutes} min ${seconds} sec`;
+}
+
+function formatShortDateLabel(value?: string | null) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
+
+function formatMonthLabel(value?: string | null) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-IN", {
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatYearLabel(value?: string | null) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-IN", {
+    year: "numeric",
+  }).format(date);
+}
+
+function growthTone(value?: number | null): Tone {
+  if (value === null || value === undefined || Number.isNaN(value)) return "slate";
+  if (value > 0) return "green";
+  if (value < 0) return "rose";
+  return "blue";
+}
+
+function describeGrowth(metric: string, value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return `${metric}: waiting for an older period to compare against.`;
+  }
+
+  if (value > 0) {
+    return `${metric}: growing ${value.toFixed(1)}% versus the previous period.`;
+  }
+
+  if (value < 0) {
+    return `${metric}: down ${Math.abs(value).toFixed(1)}% versus the previous period.`;
+  }
+
+  return `${metric}: flat versus the previous period.`;
+}
+
 function adminUpdateTimeline(update: {
   application_start: string;
   last_date: string;
@@ -655,17 +814,24 @@ function tagText(tags: string[] | null | undefined) {
 function metricToneClasses(tone: Tone) {
   switch (tone) {
     case "orange":
-      return "border-orange-200/70 bg-orange-50 text-orange-700 dark:border-orange-900/70 dark:bg-orange-950/30 dark:text-orange-300";
+      return "border-[#e8d1bf] bg-[#fbf4ee] text-[#9a5a2b]";
     case "blue":
-      return "border-sky-200/70 bg-sky-50 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/30 dark:text-sky-300";
+      return "border-[#cfd8ec] bg-[#f4f7fc] text-[#35527c]";
     case "green":
-      return "border-emerald-200/70 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300";
+      return "border-[#cfe2d8] bg-[#f2f8f4] text-[#2d6b52]";
     case "rose":
-      return "border-rose-200/70 bg-rose-50 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300";
+      return "border-[#edd2d6] bg-[#fcf4f5] text-[#9c4451]";
     default:
-      return "border-slate-200/80 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-300";
+      return "border-[#d8dde5] bg-[#f6f7f9] text-[#4b5563]";
   }
 }
+
+const adminInputClass =
+  "w-full rounded-xl border border-[#d7dde5] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none transition placeholder:text-[#8b95a7] focus:border-[#b86a2d] focus:ring-4 focus:ring-[#b86a2d]/10";
+const adminTextAreaClass =
+  "w-full rounded-xl border border-[#d7dde5] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none transition placeholder:text-[#8b95a7] focus:border-[#b86a2d] focus:ring-4 focus:ring-[#b86a2d]/10";
+const adminPanelClass =
+  "rounded-[20px] border border-[#d7dde5] bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)]";
 
 function MetricCard({
   label,
@@ -681,18 +847,18 @@ function MetricCard({
   tone?: Tone;
 }) {
   return (
-    <div className="rounded-[24px] border border-white/60 bg-white/90 p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur dark:border-white/5 dark:bg-slate-950/70">
-      <div className="flex items-start justify-between gap-3">
+    <div className={cn(adminPanelClass, "p-4")}>
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b7280]">
             {label}
           </p>
-          <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white">
+          <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[#111827]">
             {value}
           </p>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{hint}</p>
+          <p className="mt-2 text-sm leading-6 text-[#667085]">{hint}</p>
         </div>
-        <div className={cn("inline-flex h-11 w-11 items-center justify-center rounded-2xl border", metricToneClasses(tone))}>
+        <div className={cn("inline-flex h-11 w-11 items-center justify-center rounded-xl border", metricToneClasses(tone))}>
           <Icon size={18} />
         </div>
       </div>
@@ -712,14 +878,14 @@ function SectionCard({
   actions?: React.ReactNode;
 }) {
   return (
-    <section className="rounded-[28px] border border-white/60 bg-white/90 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur dark:border-white/5 dark:bg-slate-950/70 md:p-6">
+    <section className={cn(adminPanelClass, "overflow-hidden p-5 md:p-6")}>
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+          <h2 className="text-lg font-semibold tracking-[-0.03em] text-[#111827]">
             {title}
           </h2>
           {description ? (
-            <p className="mt-1 max-w-3xl text-sm text-slate-500 dark:text-slate-400">{description}</p>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-[#667085]">{description}</p>
           ) : null}
         </div>
         {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
@@ -739,7 +905,7 @@ function Pill({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium",
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-[0.01em]",
         metricToneClasses(tone)
       )}
     >
@@ -767,13 +933,13 @@ function SmallButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "inline-flex items-center gap-2 rounded-2xl px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
         tone === "primary" &&
-          "bg-orange-500 text-white hover:bg-orange-600",
+          "bg-[#111827] text-white hover:bg-[#1f2937]",
         tone === "danger" &&
-          "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50",
+          "border border-[#e7cfd4] bg-[#fcf4f5] text-[#9c4451] hover:bg-[#faecef]",
         tone === "neutral" &&
-          "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+          "border border-[#d7dde5] bg-white text-[#334155] hover:bg-[#f8fafc]"
       )}
     >
       {Icon ? <Icon size={15} /> : null}
@@ -792,12 +958,12 @@ function EmptyState({
   description: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-dashed border-slate-200 px-6 py-12 text-center dark:border-slate-800">
-      <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-300">
+    <div className="rounded-[20px] border border-dashed border-[#d7dde5] bg-[#fbfcfd] px-6 py-12 text-center">
+      <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef2f6] text-[#64748b]">
         <Icon size={20} />
       </div>
-      <p className="mt-4 text-base font-semibold text-slate-900 dark:text-white">{title}</p>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{description}</p>
+      <p className="mt-4 text-base font-semibold text-[#111827]">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-[#667085]">{description}</p>
     </div>
   );
 }
@@ -806,7 +972,7 @@ function Admin() {
   const [, navigate] = useLocation();
   const { user, session, signOut, loading: authLoading } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<AdminTab>("questions");
+  const [activeTab, setActiveTab] = useState<AdminTab>("analytics");
   const [booting, setBooting] = useState(true);
   const [loadingTarget, setLoadingTarget] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
@@ -860,9 +1026,15 @@ function Admin() {
   const [editingContestId, setEditingContestId] = useState<string | null>(null);
   const [showContestForm, setShowContestForm] = useState(false);
 
+  const [analyticsDaily, setAnalyticsDaily] = useState<AnalyticsDailyOverviewRow[]>([]);
+  const [analyticsMonthly, setAnalyticsMonthly] = useState<AnalyticsMonthlyOverviewRow[]>([]);
+  const [analyticsYearly, setAnalyticsYearly] = useState<AnalyticsYearlyOverviewRow[]>([]);
+  const [analyticsTopPages, setAnalyticsTopPages] = useState<AnalyticsTopPageRow[]>([]);
+
   const [supportRequests, setSupportRequests] = useState<SupportRequest[]>([]);
   const [supportReplies, setSupportReplies] = useState<SupportReply[]>([]);
   const [supportSearch, setSupportSearch] = useState("");
+  const [selectedSupportId, setSelectedSupportId] = useState<string | null>(null);
   const [replyTarget, setReplyTarget] = useState<SupportRequest | null>(null);
   const [replySubject, setReplySubject] = useState("");
   const [replyMessage, setReplyMessage] = useState("");
@@ -921,6 +1093,49 @@ function Admin() {
     setDbContests((data || []) as ContestRecord[]);
   };
 
+  const loadAnalyticsDaily = async () => {
+    const { data, error } = await supabase
+      .from("analytics_daily_overview")
+      .select("*")
+      .order("day", { ascending: false })
+      .limit(30);
+
+    if (error) throw error;
+    setAnalyticsDaily((data || []) as AnalyticsDailyOverviewRow[]);
+  };
+
+  const loadAnalyticsMonthly = async () => {
+    const { data, error } = await supabase
+      .from("analytics_monthly_overview")
+      .select("*")
+      .order("month", { ascending: false })
+      .limit(12);
+
+    if (error) throw error;
+    setAnalyticsMonthly((data || []) as AnalyticsMonthlyOverviewRow[]);
+  };
+
+  const loadAnalyticsYearly = async () => {
+    const { data, error } = await supabase
+      .from("analytics_yearly_overview")
+      .select("*")
+      .order("year", { ascending: false })
+      .limit(5);
+
+    if (error) throw error;
+    setAnalyticsYearly((data || []) as AnalyticsYearlyOverviewRow[]);
+  };
+
+  const loadAnalyticsTopPages = async () => {
+    const { data, error } = await supabase
+      .from("analytics_top_pages")
+      .select("*")
+      .limit(20);
+
+    if (error) throw error;
+    setAnalyticsTopPages((data || []) as AnalyticsTopPageRow[]);
+  };
+
   const loadSupportRequests = async () => {
     const { data, error } = await supabase
       .from("support_requests")
@@ -946,6 +1161,10 @@ function Admin() {
 
     try {
       await Promise.all([
+        loadAnalyticsDaily(),
+        loadAnalyticsMonthly(),
+        loadAnalyticsYearly(),
+        loadAnalyticsTopPages(),
         loadQuestions(),
         loadResources(),
         loadUpdates(),
@@ -982,6 +1201,10 @@ function Admin() {
 
       try {
         await Promise.all([
+          loadAnalyticsDaily(),
+          loadAnalyticsMonthly(),
+          loadAnalyticsYearly(),
+          loadAnalyticsTopPages(),
           loadQuestions(),
           loadResources(),
           loadUpdates(),
@@ -1213,8 +1436,25 @@ function Admin() {
         .join(" ")
         .toLowerCase()
         .includes(query)
-    );
+      );
   }, [supportRequests, supportSearch]);
+
+  const supportStats = useMemo(() => {
+    const open = supportRequests.filter(request => (request.status || "open") === "open").length;
+    const inProgress = supportRequests.filter(
+      request => (request.status || "open") === "in_progress"
+    ).length;
+    const resolved = supportRequests.filter(
+      request => (request.status || "open") === "resolved"
+    ).length;
+
+    return {
+      total: supportRequests.length,
+      open,
+      inProgress,
+      resolved,
+    };
+  }, [supportRequests]);
 
   const supportRepliesByRequestId = useMemo(() => {
     return supportReplies.reduce<Record<string, SupportReply[]>>((acc, reply) => {
@@ -1224,6 +1464,30 @@ function Admin() {
       return acc;
     }, {});
   }, [supportReplies]);
+
+  const selectedSupportRequest = useMemo(() => {
+    if (!filteredSupportRequests.length) return null;
+
+    return (
+      filteredSupportRequests.find(request => toId(request.id) === selectedSupportId) ||
+      filteredSupportRequests[0]
+    );
+  }, [filteredSupportRequests, selectedSupportId]);
+
+  useEffect(() => {
+    if (!filteredSupportRequests.length) {
+      if (selectedSupportId !== null) setSelectedSupportId(null);
+      return;
+    }
+
+    const hasCurrent = filteredSupportRequests.some(
+      request => toId(request.id) === selectedSupportId
+    );
+
+    if (!hasCurrent) {
+      setSelectedSupportId(toId(filteredSupportRequests[0].id));
+    }
+  }, [filteredSupportRequests, selectedSupportId]);
 
   const questionStats = useMemo(() => {
     const active = dbQuestions.filter(question => question.is_active).length;
@@ -1264,6 +1528,25 @@ function Admin() {
     };
   }, [dbUpdates]);
 
+  const todayAnalytics = analyticsDaily[0] || null;
+  const currentMonthAnalytics = analyticsMonthly[0] || null;
+  const currentYearAnalytics = analyticsYearly[0] || null;
+  const topPage = analyticsTopPages[0] || null;
+  const averagePageViewsPerVisitor =
+    (todayAnalytics?.visitors || 0) > 0
+      ? (todayAnalytics?.page_views || 0) / (todayAnalytics?.visitors || 1)
+      : 0;
+  const engagementSummary = todayAnalytics?.avg_engaged_seconds
+    ? `People are staying about ${formatDurationLabel(
+        todayAnalytics.avg_engaged_seconds
+      )} on average before leaving or switching tabs.`
+    : "Engaged time will fill in as more people stay on a page and then switch tabs or close it.";
+  const trafficSummary = topPage
+    ? `${topPage.path || "/"} is the strongest page right now with ${formatNumber(
+        topPage.page_views
+      )} views and ${formatDurationLabel(topPage.avg_engaged_seconds)} average engaged time.`
+    : "Top-page signals will appear here once traffic starts flowing through the app.";
+
   const visibleQuestionIds = filteredQuestions.map(question => toId(question.id));
   const visibleResourceIds = filteredResources.map(resource => toId(resource.id));
   const visibleUpdateIds = filteredUpdates.map(update => toId(update.id));
@@ -1276,6 +1559,15 @@ function Admin() {
   const allVisibleUpdatesSelected =
     visibleUpdateIds.length > 0 &&
     visibleUpdateIds.every(id => selectedUpdateIds.includes(id));
+  const activeTabMeta = ADMIN_TAB_META[activeTab];
+  const tabCounts: Record<AdminTab, number> = {
+    analytics: todayAnalytics?.visitors || 0,
+    questions: dbQuestions.length,
+    resources: dbResources.length,
+    updates: dbUpdates.length,
+    contests: dbContests.length,
+    support: supportRequests.length,
+  };
 
   const resetQuestionForm = () => {
     setQuestionForm({ ...EMPTY_Q });
@@ -2215,16 +2507,265 @@ function Admin() {
   if (!user || user.email !== ADMIN_EMAIL) return null;
 
   return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f7f6_0%,#f1f3f5_100%)] text-[#111827]">
+      {toast ? (
+        <div
+          className={cn(
+            "fixed right-4 top-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium shadow-[0_18px_48px_rgba(15,23,42,0.18)]",
+            toast?.ok ? "bg-[#111827] text-white" : "bg-[#9c4451] text-white"
+          )}
+        >
+          {toast?.ok ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
+          {toast?.msg}
+        </div>
+      ) : null}
+
+      <Dialog open={Boolean(replyTarget)} onOpenChange={(open) => (open ? null : closeReplyDialog())}>
+        <DialogContent className="max-w-2xl border border-[#d7dde5] bg-[#fbfcfd]">
+          <DialogHeader>
+            <DialogTitle>Reply To Support Request</DialogTitle>
+            <DialogDescription>
+              Send a direct reply from the admin panel using your verified PrepBros support domain.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[#344054]">To</label>
+              <input
+                value={replyTarget?.email || ""}
+                readOnly
+                className={cn(adminInputClass, "bg-[#f7f8fa] text-[#667085]")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[#344054]">Subject</label>
+              <input
+                value={replySubject}
+                onChange={(event) => setReplySubject(event.target.value)}
+                className={adminInputClass}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[#344054]">Reply</label>
+              <textarea
+                value={replyMessage}
+                onChange={(event) => setReplyMessage(event.target.value)}
+                rows={10}
+                className={adminTextAreaClass}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <SmallButton onClick={closeReplyDialog} disabled={sendingReply}>
+              Cancel
+            </SmallButton>
+            <SmallButton icon={Send} tone="primary" onClick={() => void sendSupportReply()} disabled={sendingReply}>
+              {sendingReply ? "Sending..." : "Send Reply"}
+            </SmallButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AdminConsole
+        user={{ ...user, email: user?.email || "" }}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        activeTabMeta={activeTabMeta}
+        tabCounts={tabCounts}
+        loadingTarget={loadingTarget}
+        loadAll={loadAll}
+        signOut={signOut}
+        adminTabs={ADMIN_TABS}
+        adminTabMeta={ADMIN_TAB_META}
+        questionStats={questionStats}
+        resourceStats={resourceStats}
+        updateStats={updateStats}
+        supportStats={supportStats}
+        todayAnalytics={todayAnalytics}
+        currentMonthAnalytics={currentMonthAnalytics}
+        currentYearAnalytics={currentYearAnalytics}
+        averagePageViewsPerVisitor={averagePageViewsPerVisitor}
+        trafficSummary={trafficSummary}
+        engagementSummary={engagementSummary}
+        analyticsDaily={analyticsDaily}
+        analyticsTopPages={analyticsTopPages}
+        formatNumber={formatNumber}
+        formatPercent={formatPercent}
+        formatDate={formatDate}
+        formatDurationLabel={formatDurationLabel}
+        formatShortDateLabel={formatShortDateLabel}
+        formatMonthLabel={formatMonthLabel}
+        formatYearLabel={formatYearLabel}
+        growthTone={growthTone}
+        describeGrowth={describeGrowth}
+        adminUpdateTimeline={adminUpdateTimeline}
+        questionSearch={questionSearch}
+        setQuestionSearch={setQuestionSearch}
+        questionExamFilter={questionExamFilter}
+        setQuestionExamFilter={setQuestionExamFilter}
+        questionTopicFilter={questionTopicFilter}
+        setQuestionTopicFilter={setQuestionTopicFilter}
+        questionTypeFilter={questionTypeFilter}
+        setQuestionTypeFilter={setQuestionTypeFilter}
+        questionDifficultyFilter={questionDifficultyFilter}
+        setQuestionDifficultyFilter={setQuestionDifficultyFilter}
+        questionStatusFilter={questionStatusFilter}
+        setQuestionStatusFilter={setQuestionStatusFilter}
+        availableQuestionTopics={availableQuestionTopics}
+        filteredQuestions={filteredQuestions}
+        selectedQuestionIds={selectedQuestionIds}
+        allVisibleQuestionsSelected={allVisibleQuestionsSelected}
+        toggleSelectVisibleQuestions={toggleSelectVisibleQuestions}
+        updateQuestionsActiveState={updateQuestionsActiveState}
+        deleteQuestions={deleteQuestions}
+        exportFilteredQuestions={exportFilteredQuestions}
+        showQuestionImport={showQuestionImport}
+        setShowQuestionImport={setShowQuestionImport}
+        openNewQuestionForm={openNewQuestionForm}
+        questionFileInputRef={questionFileInputRef}
+        handleQuestionFileUpload={handleQuestionFileUpload}
+        questionImportInput={questionImportInput}
+        setQuestionImportInput={setQuestionImportInput}
+        questionImportPreview={questionImportPreview}
+        importQuestions={importQuestions}
+        replaceFilteredQuestionsWithImport={replaceFilteredQuestionsWithImport}
+        clearQuestionImportState={clearQuestionImportState}
+        questionImportSource={questionImportSource}
+        bulkImportTemplate={BULK_IMPORT_TEMPLATE}
+        showQuestionForm={showQuestionForm}
+        editingQuestionId={editingQuestionId}
+        resetQuestionForm={resetQuestionForm}
+        questionForm={questionForm}
+        setQuestionForm={setQuestionForm}
+        saveQuestion={saveQuestion}
+        startEditQuestion={startEditQuestion}
+        toggleQuestionSelection={toggleQuestionSelection}
+        filterExams={FILTER_EXAMS}
+        questionExams={QUESTION_EXAMS}
+        questionTypes={QUESTION_TYPES}
+        difficulties={DIFFICULTIES}
+        resourceSearch={resourceSearch}
+        setResourceSearch={setResourceSearch}
+        resourceExamFilter={resourceExamFilter}
+        setResourceExamFilter={setResourceExamFilter}
+        resourceTypeFilter={resourceTypeFilter}
+        setResourceTypeFilter={setResourceTypeFilter}
+        resourceCategoryFilter={resourceCategoryFilter}
+        setResourceCategoryFilter={setResourceCategoryFilter}
+        resourceStatusFilter={resourceStatusFilter}
+        setResourceStatusFilter={setResourceStatusFilter}
+        availableResourceCategories={availableResourceCategories}
+        filteredResources={filteredResources}
+        selectedResourceIds={selectedResourceIds}
+        allVisibleResourcesSelected={allVisibleResourcesSelected}
+        toggleSelectVisibleResources={toggleSelectVisibleResources}
+        updateResourcesActiveState={updateResourcesActiveState}
+        deleteResources={deleteResources}
+        exportFilteredResources={exportFilteredResources}
+        showResourceImport={showResourceImport}
+        setShowResourceImport={setShowResourceImport}
+        openNewResourceForm={openNewResourceForm}
+        resourceFileInputRef={resourceFileInputRef}
+        handleResourceFileUpload={handleResourceFileUpload}
+        resourceImportInput={resourceImportInput}
+        setResourceImportInput={setResourceImportInput}
+        resourceImportPreview={resourceImportPreview}
+        importResources={importResources}
+        resourceImportSource={resourceImportSource}
+        bulkResourceTemplate={BULK_RESOURCE_TEMPLATE}
+        showResourceForm={showResourceForm}
+        editingResourceId={editingResourceId}
+        resetResourceForm={resetResourceForm}
+        resourceForm={resourceForm}
+        setResourceForm={setResourceForm}
+        saveResource={saveResource}
+        startEditResource={startEditResource}
+        toggleResourceSelection={toggleResourceSelection}
+        resourceExams={RESOURCE_EXAMS}
+        resourceTypes={RESOURCE_TYPES}
+        updateSearch={updateSearch}
+        setUpdateSearch={setUpdateSearch}
+        updateStateFilter={updateStateFilter}
+        setUpdateStateFilter={setUpdateStateFilter}
+        updateExamTypeFilter={updateExamTypeFilter}
+        setUpdateExamTypeFilter={setUpdateExamTypeFilter}
+        updateQualificationFilter={updateQualificationFilter}
+        setUpdateQualificationFilter={setUpdateQualificationFilter}
+        updateStatusFilter={updateStatusFilter}
+        setUpdateStatusFilter={setUpdateStatusFilter}
+        updateTimelineFilter={updateTimelineFilter}
+        setUpdateTimelineFilter={setUpdateTimelineFilter}
+        availableUpdateStates={availableUpdateStates}
+        filteredUpdates={filteredUpdates}
+        selectedUpdateIds={selectedUpdateIds}
+        allVisibleUpdatesSelected={allVisibleUpdatesSelected}
+        toggleSelectVisibleUpdates={toggleSelectVisibleUpdates}
+        updateUpdatesActiveState={updateUpdatesActiveState}
+        deleteUpdates={deleteUpdates}
+        exportFilteredUpdates={exportFilteredUpdates}
+        showUpdateImport={showUpdateImport}
+        setShowUpdateImport={setShowUpdateImport}
+        openNewUpdateForm={openNewUpdateForm}
+        updateFileInputRef={updateFileInputRef}
+        handleUpdateFileUpload={handleUpdateFileUpload}
+        updateImportInput={updateImportInput}
+        setUpdateImportInput={setUpdateImportInput}
+        updateImportPreview={updateImportPreview}
+        importUpdates={importUpdates}
+        updateImportSource={updateImportSource}
+        bulkUpdateTemplate={BULK_UPDATE_TEMPLATE}
+        showUpdateForm={showUpdateForm}
+        editingUpdateId={editingUpdateId}
+        resetUpdateForm={resetUpdateForm}
+        updateForm={updateForm}
+        setUpdateForm={setUpdateForm}
+        saveUpdate={saveUpdate}
+        startEditUpdate={startEditUpdate}
+        toggleUpdateSelection={toggleUpdateSelection}
+        examTypes={EXAM_TYPES}
+        qualificationTiers={QUALIFICATION_TIERS}
+        updateTimelineFilters={UPDATE_TIMELINE_FILTERS}
+        dbContests={dbContests}
+        showContestForm={showContestForm}
+        setShowContestForm={setShowContestForm}
+        contestForm={contestForm}
+        setContestForm={setContestForm}
+        resetContestForm={resetContestForm}
+        saveContest={saveContest}
+        editingContestId={editingContestId}
+        startEditContest={startEditContest}
+        deleteContest={deleteContest}
+        contestStatuses={CONTEST_STATUSES}
+        supportSearch={supportSearch}
+        setSupportSearch={setSupportSearch}
+        filteredSupportRequests={filteredSupportRequests}
+        selectedSupportRequest={selectedSupportRequest}
+        setSelectedSupportId={setSelectedSupportId}
+        supportRepliesByRequestId={supportRepliesByRequestId}
+        openReplyDialog={openReplyDialog}
+        buildSupportReplyLink={buildSupportReplyLink}
+        updateSupportStatus={updateSupportStatus}
+        supportStatusTone={supportStatusTone}
+        toId={toId}
+      />
+    </div>
+  );
+
+  return (
     <div className="min-h-screen bg-[var(--page-background)] text-[var(--text-primary)]">
       {toast ? (
         <div
           className={cn(
             "fixed right-4 top-4 z-50 flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium shadow-lg",
-            toast.ok ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+            toast?.ok ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
           )}
         >
-          {toast.ok ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
-          {toast.msg}
+          {toast?.ok ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
+          {toast?.msg}
         </div>
       ) : null}
 
@@ -2294,7 +2835,7 @@ function Admin() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden text-xs text-[var(--text-faint)] md:inline">{user.email}</span>
+            <span className="hidden text-xs text-[var(--text-faint)] md:inline">{user?.email}</span>
             <SmallButton
               icon={RefreshCcw}
               onClick={() => void loadAll()}
@@ -2376,7 +2917,9 @@ function Admin() {
         <section className="mt-6 flex flex-wrap gap-2 rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-2 backdrop-blur">
           {ADMIN_TABS.map(tab => {
             const label =
-              tab === "questions"
+              tab === "analytics"
+                ? `Analytics (${formatNumber(todayAnalytics?.visitors)})`
+                : tab === "questions"
                 ? `Questions (${dbQuestions.length})`
                 : tab === "resources"
                   ? `Resources (${dbResources.length})`
@@ -2407,6 +2950,248 @@ function Admin() {
         </section>
 
         <div className="mt-6 space-y-6">
+          {activeTab === "analytics" ? (
+            <>
+              <SectionCard
+                title="Product Analytics"
+                description="These numbers are designed to answer simple questions fast: how many people came, what they opened, whether they logged in or signed up, and which pages are holding attention."
+              >
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                  <MetricCard
+                    label="Visitors Today"
+                    value={formatNumber(todayAnalytics?.visitors)}
+                    hint="Unique people or sessions that opened at least one tracked page today"
+                    icon={Users}
+                    tone="blue"
+                  />
+                  <MetricCard
+                    label="Page Views Today"
+                    value={formatNumber(todayAnalytics?.page_views)}
+                    hint="Total page opens across the product today"
+                    icon={MousePointerClick}
+                    tone="orange"
+                  />
+                  <MetricCard
+                    label="Sign-ins Today"
+                    value={formatNumber(todayAnalytics?.signins)}
+                    hint="Successful logins recorded today"
+                    icon={ShieldCheck}
+                    tone="green"
+                  />
+                  <MetricCard
+                    label="Sign-ups Today"
+                    value={formatNumber(todayAnalytics?.signups)}
+                    hint="New accounts successfully created today"
+                    icon={UserPlus}
+                    tone="blue"
+                  />
+                  <MetricCard
+                    label="Avg Engaged Time"
+                    value={formatDurationLabel(todayAnalytics?.avg_engaged_seconds)}
+                    hint="Average time before a person switches tabs or closes the page"
+                    icon={Timer}
+                    tone="rose"
+                  />
+                </div>
+
+                <div className="mt-5 grid gap-4 xl:grid-cols-3">
+                  <div className="rounded-[22px] border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/40">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      Read this first
+                    </p>
+                    <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      <p>
+                        Visitors are unique people or sessions.
+                      </p>
+                      <p>
+                        Page views count every page open, so this will usually be higher than visitors.
+                      </p>
+                      <p>
+                        Engaged time is a simple attention signal, not an exact stopwatch.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[22px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      Traffic quality
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
+                      {averagePageViewsPerVisitor > 0
+                        ? `${averagePageViewsPerVisitor.toFixed(1)} pages / visitor`
+                        : "Still collecting"}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      {trafficSummary}
+                    </p>
+                  </div>
+
+                  <div className="rounded-[22px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      Engagement read
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
+                      {formatDurationLabel(todayAnalytics?.avg_engaged_seconds)}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      {engagementSummary}
+                    </p>
+                  </div>
+                </div>
+              </SectionCard>
+
+              <SectionCard
+                title="Trends and Growth"
+                description="Today shows live movement. Monthly and yearly views help you see whether the product is growing or flattening out."
+              >
+                <div className="grid gap-4 xl:grid-cols-3">
+                  <div className="rounded-[22px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Today
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
+                          {formatShortDateLabel(todayAnalytics?.day)}
+                        </p>
+                      </div>
+                      <div className={cn("inline-flex h-11 w-11 items-center justify-center rounded-2xl border", metricToneClasses("orange"))}>
+                        <ChartColumn size={18} />
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                      <p>{formatNumber(todayAnalytics?.page_views)} page views</p>
+                      <p>{formatNumber(todayAnalytics?.visitors)} visitors</p>
+                      <p>{formatNumber(todayAnalytics?.signins)} sign-ins</p>
+                      <p>{formatNumber(todayAnalytics?.signups)} sign-ups</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[22px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          This Month
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
+                          {formatMonthLabel(currentMonthAnalytics?.month)}
+                        </p>
+                      </div>
+                      <div className={cn("inline-flex h-11 w-11 items-center justify-center rounded-2xl border", metricToneClasses(growthTone(currentMonthAnalytics?.visitor_growth_pct)))}>
+                        <TrendingUp size={18} />
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                      <p>{formatNumber(currentMonthAnalytics?.page_views)} page views</p>
+                      <p>{formatNumber(currentMonthAnalytics?.visitors)} visitors</p>
+                      <p>{formatNumber(currentMonthAnalytics?.signins)} sign-ins</p>
+                      <p>{formatNumber(currentMonthAnalytics?.signups)} sign-ups</p>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Pill tone={growthTone(currentMonthAnalytics?.visitor_growth_pct)}>
+                        Visitors {formatPercent(currentMonthAnalytics?.visitor_growth_pct)}
+                      </Pill>
+                      <Pill tone={growthTone(currentMonthAnalytics?.signup_growth_pct)}>
+                        Sign-ups {formatPercent(currentMonthAnalytics?.signup_growth_pct)}
+                      </Pill>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                      {describeGrowth("Visitors", currentMonthAnalytics?.visitor_growth_pct)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-[22px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          This Year
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
+                          {formatYearLabel(currentYearAnalytics?.year)}
+                        </p>
+                      </div>
+                      <div className={cn("inline-flex h-11 w-11 items-center justify-center rounded-2xl border", metricToneClasses(growthTone(currentYearAnalytics?.signin_growth_pct)))}>
+                        <CalendarDays size={18} />
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                      <p>{formatNumber(currentYearAnalytics?.page_views)} page views</p>
+                      <p>{formatNumber(currentYearAnalytics?.visitors)} visitors</p>
+                      <p>{formatNumber(currentYearAnalytics?.signins)} sign-ins</p>
+                      <p>{formatNumber(currentYearAnalytics?.signups)} sign-ups</p>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Pill tone={growthTone(currentYearAnalytics?.visitor_growth_pct)}>
+                        Visitors {formatPercent(currentYearAnalytics?.visitor_growth_pct)}
+                      </Pill>
+                      <Pill tone={growthTone(currentYearAnalytics?.signin_growth_pct)}>
+                        Sign-ins {formatPercent(currentYearAnalytics?.signin_growth_pct)}
+                      </Pill>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                      {describeGrowth("Sign-ins", currentYearAnalytics?.signin_growth_pct)}
+                    </p>
+                  </div>
+                </div>
+              </SectionCard>
+
+              <SectionCard
+                title="Top Pages"
+                description="This shows where attention is actually landing. Higher engaged time usually means the page is holding focus better."
+              >
+                {analyticsTopPages.length === 0 ? (
+                  <EmptyState
+                    icon={ChartColumn}
+                    title="No analytics pages yet"
+                    description="Open the product a few times and this table will start ranking your strongest pages."
+                  />
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-xs uppercase tracking-[0.18em] text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                          <th className="px-3 py-3 font-semibold">Page</th>
+                          <th className="px-3 py-3 font-semibold">Views</th>
+                          <th className="px-3 py-3 font-semibold">Visitors</th>
+                          <th className="px-3 py-3 font-semibold">Avg Engaged Time</th>
+                          <th className="px-3 py-3 font-semibold">Quick Read</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {analyticsTopPages.map(page => (
+                          <tr
+                            key={`${page.path}-${page.page_views}-${page.visitors}`}
+                            className="border-b border-slate-100 last:border-b-0 dark:border-slate-900"
+                          >
+                            <td className="px-3 py-3 font-medium text-slate-950 dark:text-white">
+                              {page.path || "/"}
+                            </td>
+                            <td className="px-3 py-3 text-slate-600 dark:text-slate-300">
+                              {formatNumber(page.page_views)}
+                            </td>
+                            <td className="px-3 py-3 text-slate-600 dark:text-slate-300">
+                              {formatNumber(page.visitors)}
+                            </td>
+                            <td className="px-3 py-3 text-slate-600 dark:text-slate-300">
+                              {formatDurationLabel(page.avg_engaged_seconds)}
+                            </td>
+                            <td className="px-3 py-3 text-slate-500 dark:text-slate-400">
+                              {page.avg_engaged_seconds && page.avg_engaged_seconds >= 60
+                                ? "Holding attention well"
+                                : page.page_views && page.page_views >= 3
+                                  ? "Getting repeat traffic"
+                                  : "Still early"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </SectionCard>
+            </>
+          ) : null}
+
           {activeTab === "questions" ? (
             <>
               <SectionCard
