@@ -619,6 +619,15 @@ pre {
   font-family: var(--font-sans);
   background: var(--page-background);
   overflow-x: clip;
+  --practice-ink: #0b0b0b;
+  --practice-ink-soft: #1f2937;
+  --practice-explanation-ink: #111827;
+}
+
+html.dark .practice-shell {
+  --practice-ink: #f8fafc;
+  --practice-ink-soft: #e2e8f0;
+  --practice-explanation-ink: #e5edf8;
 }
 
 .landing-minimal-page::before {

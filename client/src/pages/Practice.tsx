@@ -138,7 +138,7 @@ const primaryButtonClassName =
 const insetCardClassName =
   "rounded-[16px] border border-[var(--border)] bg-[var(--surface-2)]";
 const sectionLabelClassName =
-  "text-[0.78rem] font-semibold uppercase tracking-[0.24em] text-[var(--text-secondary)]";
+  "text-[0.78rem] font-semibold uppercase tracking-[0.24em] text-[var(--practice-ink-soft)]";
 const neutralMetaPillClassName =
   "inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-3 py-1.5 text-[0.72rem] font-semibold tracking-[0.03em] text-[var(--text-secondary)] shadow-[var(--shadow-sm)]";
 const navigationButtonClassName =
@@ -1687,7 +1687,7 @@ export default function Practice() {
                                 {rowNumber}
                               </td>
                               <td className="px-5 py-4 align-middle">
-                                <p className="line-clamp-2 text-[17px] font-semibold leading-7 tracking-[-0.02em] text-[var(--text-primary)]">
+                                <p className="line-clamp-2 text-[17px] font-semibold leading-7 tracking-[-0.02em] text-[var(--practice-ink)]">
                                   {question.question}
                                 </p>
                               </td>
@@ -1701,7 +1701,7 @@ export default function Practice() {
                                 </span>
                               </td>
                               <td className="px-5 py-4 align-middle">
-                                <p className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
+                                <p className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--practice-ink-soft)]">
                                   {topicBucket}
                                 </p>
                                 {topicBucket !== question.topic ? (
@@ -1937,7 +1937,7 @@ export default function Practice() {
                 >
                   <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--brand-light)_0%,var(--brand)_60%,transparent_100%)]" />
                   <p className={sectionLabelClassName}>Question</p>
-                  <div className="mt-4 max-w-[46rem] whitespace-pre-line text-[1.08rem] font-semibold leading-[1.65] tracking-[-0.025em] text-[var(--text-primary)] md:text-[1.32rem]">
+                  <div className="mt-4 max-w-[46rem] whitespace-pre-line text-[1.08rem] font-semibold leading-[1.65] tracking-[-0.025em] text-[var(--practice-ink)] md:text-[1.32rem]">
                     {formattedActiveQuestion}
                   </div>
                 </div>
@@ -2062,7 +2062,7 @@ export default function Practice() {
                     <div className="space-y-4 px-5 py-5 md:px-6">
                       <div className={`${insetCardClassName} px-4 py-4`}>
                         <p className={sectionLabelClassName}>Explanation</p>
-                        <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)] md:text-[0.98rem]">
+                        <p className="mt-3 text-sm leading-7 text-[var(--practice-explanation-ink)] md:text-[0.98rem]">
                           {activeQ.explanation}
                         </p>
                       </div>
