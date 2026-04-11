@@ -29,6 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSwipeable } from "@/hooks/useSwipeable";
+import { preloadRoute } from "@/lib/routePreload";
 import { cn } from "@/lib/utils";
 
 type AppShellProps = {
@@ -152,6 +153,9 @@ function NavLink({
     <Link href={item.href}>
       <span
         onClick={onNavigate}
+        onMouseEnter={() => preloadRoute(item.href)}
+        onFocus={() => preloadRoute(item.href)}
+        onPointerDown={() => preloadRoute(item.href)}
         className={cn(
           "app-shell-nav-link group relative flex cursor-pointer items-center rounded-[18px] border text-[14px] transition-all duration-200",
           collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3.5 py-2.5",

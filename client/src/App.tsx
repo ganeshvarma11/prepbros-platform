@@ -13,28 +13,29 @@ import {
   buildPreferredSiteUrl,
   shouldRedirectToConfiguredHost,
 } from "@/lib/siteConfig";
+import { loadRoute, preloadCoreRoutes } from "@/lib/routePreload";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { setupAnalytics, trackPage } from "./lib/analytics";
 
-const Home = lazy(() => import("./pages/Home"));
-const Practice = lazy(() => import("./pages/Practice"));
-const Aptitude = lazy(() => import("./pages/Aptitude"));
-const Contests = lazy(() => import("./pages/Contests"));
-const Leaderboard = lazy(() => import("./pages/Leaderboard"));
-const Resources = lazy(() => import("./pages/Resources"));
-const Updates = lazy(() => import("./pages/Updates"));
-const Premium = lazy(() => import("./pages/Premium"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Explore = lazy(() => import("./pages/Explore"));
-const Admin = lazy(() => import("./pages/Admin"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const Support = lazy(() => import("./pages/Support"));
-const Status = lazy(() => import("./pages/Status"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+const Home = lazy(() => loadRoute("/"));
+const Practice = lazy(() => loadRoute("/practice"));
+const Aptitude = lazy(() => loadRoute("/aptitude"));
+const Contests = lazy(() => loadRoute("/contests"));
+const Leaderboard = lazy(() => loadRoute("/leaderboard"));
+const Resources = lazy(() => loadRoute("/resources"));
+const Updates = lazy(() => loadRoute("/updates"));
+const Premium = lazy(() => loadRoute("/premium"));
+const Dashboard = lazy(() => loadRoute("/dashboard"));
+const Profile = lazy(() => loadRoute("/profile"));
+const Explore = lazy(() => loadRoute("/explore"));
+const Admin = lazy(() => loadRoute("/admin"));
+const Privacy = lazy(() => loadRoute("/privacy"));
+const Terms = lazy(() => loadRoute("/terms"));
+const Support = lazy(() => loadRoute("/support"));
+const Status = lazy(() => loadRoute("/status"));
+const ResetPassword = lazy(() => loadRoute("/reset-password"));
+const NotFound = lazy(() => loadRoute("/404"));
 
 function RouteTracker() {
   const [location] = useLocation();
@@ -95,6 +96,10 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    preloadCoreRoutes();
+  }, []);
+
   return (
     <ErrorBoundary>
       <AuthProvider>
