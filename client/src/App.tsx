@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Route, Switch } from "wouter";
 import { useLocation } from "wouter";
 
@@ -105,6 +106,7 @@ function App() {
             <SeoManager />
             <Router />
             <Analytics />
+            <SpeedInsights />
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>
