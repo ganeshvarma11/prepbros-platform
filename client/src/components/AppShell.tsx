@@ -98,6 +98,35 @@ const normalizeSidebarWidth = (value: number) =>
     ? SIDEBAR_MIN_WIDTH
     : clampSidebarWidth(value);
 
+const getInitialSidebarWidth = () => {
+  if (typeof window === "undefined") {
+    return SIDEBAR_DEFAULT_WIDTH;
+  }
+
+  const storedValue = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
+  if (!storedValue) {
+    return SIDEBAR_DEFAULT_WIDTH;
+  }
+
+  const parsed = Number.parseInt(storedValue, 10);
+  if (!Number.isFinite(parsed)) {
+    return SIDEBAR_DEFAULT_WIDTH;
+  }
+
+  const normalizedWidth = normalizeSidebarWidth(parsed);
+  return normalizedWidth > SIDEBAR_COLLAPSE_THRESHOLD
+    ? clampSidebarWidth(Math.max(normalizedWidth, SIDEBAR_DEFAULT_WIDTH))
+    : normalizedWidth;
+};
+
+const getInitialDesktopViewport = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT}px)`).matches;
+};
+
 const getInitials = (value: string) =>
   value
     .split(" ")
@@ -403,10 +432,16 @@ export default function AppShell({
   void allowDesktopSidebarToggle;
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH);
+  const [sidebarWidth, setSidebarWidth] = useState(getInitialSidebarWidth);
   const [isResizing, setIsResizing] = useState(false);
-  const [isDesktopViewport, setIsDesktopViewport] = useState(false);
-  const lastExpandedWidthRef = useRef(SIDEBAR_DEFAULT_WIDTH);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(
+    getInitialDesktopViewport
+  );
+  const lastExpandedWidthRef = useRef(
+    sidebarWidth > SIDEBAR_COLLAPSE_THRESHOLD
+      ? sidebarWidth
+      : SIDEBAR_DEFAULT_WIDTH
+  );
   const { user } = useAuth();
 
   useEffect(() => {
@@ -416,34 +451,10 @@ export default function AppShell({
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const storedValue = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
-    if (!storedValue) return;
-
-    const parsed = Number.parseInt(storedValue, 10);
-    if (!Number.isFinite(parsed)) return;
-
-    const normalizedWidth = normalizeSidebarWidth(parsed);
-    const nextWidth =
-      normalizedWidth > SIDEBAR_COLLAPSE_THRESHOLD
-        ? clampSidebarWidth(
-            Math.max(normalizedWidth, SIDEBAR_DEFAULT_WIDTH)
-          )
-        : normalizedWidth;
-    setSidebarWidth(nextWidth);
-    if (nextWidth > SIDEBAR_COLLAPSE_THRESHOLD) {
-      lastExpandedWidthRef.current = nextWidth;
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
     const mediaQuery = window.matchMedia(
       `(min-width: ${DESKTOP_BREAKPOINT}px)`
     );
     const updateViewport = () => setIsDesktopViewport(mediaQuery.matches);
-
-    updateViewport();
     mediaQuery.addEventListener("change", updateViewport);
 
     return () => mediaQuery.removeEventListener("change", updateViewport);

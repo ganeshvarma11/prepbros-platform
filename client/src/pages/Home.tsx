@@ -1,4 +1,11 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import {
   ArrowRight,
   Bell,
@@ -476,38 +483,106 @@ function LandingAuthPanel({
 type InteractiveSurfaceProps = {
   children: ReactNode;
   className?: string;
+  interactive?: boolean;
 };
 
-const interactiveRestStyle = {
-  "--mx": "50%",
-  "--my": "50%",
+type InteractiveSurfaceStyle = {
+  mx: string;
+  my: string;
+  transform: string;
+};
+
+const interactiveRestStyle: InteractiveSurfaceStyle = {
+  mx: "50%",
+  my: "50%",
   transform: "perspective(1200px) rotateX(0deg) rotateY(0deg)",
-} as CSSProperties;
+};
+
+const toInteractiveCssProperties = (
+  style: InteractiveSurfaceStyle
+) =>
+  ({
+    "--mx": style.mx,
+    "--my": style.my,
+    transform: style.transform,
+  }) as CSSProperties;
 
 function InteractiveSurface({
   children,
   className = "",
+  interactive = true,
 }: InteractiveSurfaceProps) {
-  const [style, setStyle] = useState<CSSProperties>(interactiveRestStyle);
+  const surfaceRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<number | null>(null);
+  const latestStyleRef = useRef<InteractiveSurfaceStyle>(interactiveRestStyle);
+
+  const flushStyle = () => {
+    const node = surfaceRef.current;
+    if (!node) {
+      return;
+    }
+
+    const style = latestStyleRef.current;
+    node.style.setProperty("--mx", style.mx);
+    node.style.setProperty("--my", style.my);
+    node.style.transform = style.transform;
+  };
+
+  const scheduleStyleFlush = () => {
+    if (frameRef.current !== null || typeof window === "undefined") {
+      return;
+    }
+
+    frameRef.current = window.requestAnimationFrame(() => {
+      frameRef.current = null;
+      flushStyle();
+    });
+  };
+
+  useEffect(
+    () => () => {
+      if (frameRef.current !== null && typeof window !== "undefined") {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+    },
+    []
+  );
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!interactive || event.pointerType === "touch") {
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    const rotateY = ((x - 50) / 50) * 4;
+    const rotateX = ((50 - y) / 50) * 4;
+
+    latestStyleRef.current = {
+      mx: `${x}%`,
+      my: `${y}%`,
+      transform: `perspective(1200px) rotateX(${rotateX * 0.45}deg) rotateY(${rotateY * 0.45}deg)`,
+    };
+    scheduleStyleFlush();
+  };
+
+  const handlePointerLeave = () => {
+    if (!interactive) {
+      return;
+    }
+
+    latestStyleRef.current = interactiveRestStyle;
+    scheduleStyleFlush();
+  };
 
   return (
     <div
+      ref={surfaceRef}
       className={`group relative overflow-hidden transition duration-300 will-change-transform hover:-translate-y-0.5 ${className}`}
-      style={style}
-      onPointerMove={event => {
-        const rect = event.currentTarget.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 100;
-        const y = ((event.clientY - rect.top) / rect.height) * 100;
-        const rotateY = ((x - 50) / 50) * 4;
-        const rotateX = ((50 - y) / 50) * 4;
-
-        setStyle({
-          "--mx": `${x}%`,
-          "--my": `${y}%`,
-          transform: `perspective(1200px) rotateX(${rotateX * 0.45}deg) rotateY(${rotateY * 0.45}deg)`,
-        } as CSSProperties);
-      }}
-      onPointerLeave={() => setStyle(interactiveRestStyle)}
+      style={toInteractiveCssProperties(interactiveRestStyle)}
+      onPointerMove={interactive ? handlePointerMove : undefined}
+      onPointerLeave={interactive ? handlePointerLeave : undefined}
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100"
@@ -767,7 +842,10 @@ export default function Home() {
 
       <div className="relative bg-[var(--page-background)] pb-4">
         <div className="mx-auto w-[min(1180px,calc(100vw-32px))] space-y-6 pb-8 pt-4 sm:space-y-7 sm:pb-10">
-          <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
+          <InteractiveSurface
+            interactive={false}
+            className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10"
+          >
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-start">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
@@ -829,7 +907,10 @@ export default function Home() {
             </div>
           </InteractiveSurface>
 
-          <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+          <InteractiveSurface
+            interactive={false}
+            className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8"
+          >
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
@@ -895,7 +976,10 @@ export default function Home() {
           </InteractiveSurface>
 
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-            <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface
+              interactive={false}
+              className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8"
+            >
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
@@ -951,7 +1035,10 @@ export default function Home() {
               </Carousel>
             </InteractiveSurface>
 
-            <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface
+              interactive={false}
+              className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8"
+            >
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                 Testimonials
               </p>
@@ -995,7 +1082,10 @@ export default function Home() {
             </InteractiveSurface>
           </section>
 
-          <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10">
+          <InteractiveSurface
+            interactive={false}
+            className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8 lg:p-10"
+          >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
@@ -1058,7 +1148,10 @@ export default function Home() {
           </InteractiveSurface>
 
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-            <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface
+              interactive={false}
+              className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8"
+            >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
@@ -1097,7 +1190,10 @@ export default function Home() {
               </div>
             </InteractiveSurface>
 
-            <InteractiveSurface className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8">
+            <InteractiveSurface
+              interactive={false}
+              className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-8"
+            >
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-faint)]">
                 Trust and legal
               </p>
