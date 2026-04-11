@@ -1,5 +1,7 @@
 import {
+  createContext,
   useEffect,
+  useContext,
   useMemo,
   useRef,
   useState,
@@ -49,6 +51,8 @@ type NavGroup = {
   label: string;
   items: NavItem[];
 };
+
+const AppShellContext = createContext(false);
 
 const SIDEBAR_STORAGE_KEY = "sb-width";
 const SIDEBAR_DEFAULT_WIDTH = 256;
@@ -433,6 +437,12 @@ export default function AppShell({
   shellClassName,
   allowDesktopSidebarToggle,
 }: AppShellProps) {
+  const hasParentShell = useContext(AppShellContext);
+
+  if (hasParentShell) {
+    return <>{children}</>;
+  }
+
   void allowDesktopSidebarToggle;
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -541,112 +551,119 @@ export default function AppShell({
   });
 
   return (
-    <div className={cn("min-h-screen bg-[var(--bg)]", shellClassName)}>
-      <div className="layout">
-        <aside
-          className="group fixed inset-y-0 left-0 z-40 hidden lg:flex"
-          style={{
-            width: `${sidebarWidth}px`,
-            transition: isResizing
-              ? "none"
-              : "width 0.22s cubic-bezier(0.4,0,0.2,1)",
-          }}
-        >
-          <SidebarBody
-            location={location}
-            collapsed={collapsed}
-            onToggle={toggleSidebar}
-            onResizeStart={startResize}
-            isResizing={isResizing}
-          />
-        </aside>
+    <AppShellContext.Provider value>
+      <div className={cn("min-h-screen bg-[var(--bg)]", shellClassName)}>
+        <div className="layout">
+          <aside
+            className="group fixed inset-y-0 left-0 z-40 hidden lg:flex"
+            style={{
+              width: `${sidebarWidth}px`,
+              transition: isResizing
+                ? "none"
+                : "width 0.22s cubic-bezier(0.4,0,0.2,1)",
+            }}
+          >
+            <SidebarBody
+              location={location}
+              collapsed={collapsed}
+              onToggle={toggleSidebar}
+              onResizeStart={startResize}
+              isResizing={isResizing}
+            />
+          </aside>
 
-        <div
-          className="relative min-w-0 flex-1"
-          style={{
-            paddingLeft: isDesktopViewport ? `${sidebarWidth}px` : undefined,
-            transition: isResizing
-              ? "none"
-              : "padding-left 0.22s cubic-bezier(0.4,0,0.2,1)",
-          }}
-        >
-          <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-[var(--navbar-bg)] backdrop-blur-xl lg:hidden">
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                  <button
-                    type="button"
-                    onClick={() => setMobileOpen(true)}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-1)]"
-                    aria-label="Open navigation"
-                  >
-                    <Menu size={18} />
-                  </button>
-                  <SheetContent
-                    side="left"
-                    className="w-[84vw] max-w-[312px] border-r border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[var(--text-1)]"
-                  >
-                    <div
-                      {...mobileNavSwipe.bind}
-                      className="h-full transition-[transform,opacity] duration-200"
-                      style={{
-                        transform: `translateX(${Math.min(0, mobileNavSwipe.offsetX)}px)`,
-                        opacity: mobileNavSwipe.isDragging
-                          ? Math.max(
-                              0.74,
-                              1 - Math.abs(mobileNavSwipe.offsetX) / 220
-                            )
-                          : 1,
-                        touchAction: mobileNavSwipe.touchAction,
-                        transition: mobileNavSwipe.isDragging
-                          ? "none"
-                          : "transform 200ms cubic-bezier(0.4,0,0.2,1), opacity 200ms cubic-bezier(0.4,0,0.2,1)",
-                      }}
+          <div
+            className="relative min-w-0 flex-1"
+            style={{
+              paddingLeft: isDesktopViewport ? `${sidebarWidth}px` : undefined,
+              transition: isResizing
+                ? "none"
+                : "padding-left 0.22s cubic-bezier(0.4,0,0.2,1)",
+            }}
+          >
+            <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-[var(--navbar-bg)] backdrop-blur-xl lg:hidden">
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                    <button
+                      type="button"
+                      onClick={() => setMobileOpen(true)}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-1)]"
+                      aria-label="Open navigation"
                     >
-                      <SidebarBody
-                        location={location}
-                        collapsed={false}
-                        onNavigate={() => setMobileOpen(false)}
-                      />
-                    </div>
-                  </SheetContent>
-                </Sheet>
+                      <Menu size={18} />
+                    </button>
+                    <SheetContent
+                      side="left"
+                      className="w-[84vw] max-w-[312px] border-r border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[var(--text-1)]"
+                    >
+                      <div
+                        {...mobileNavSwipe.bind}
+                        className="h-full transition-[transform,opacity] duration-200"
+                        style={{
+                          transform: `translateX(${Math.min(0, mobileNavSwipe.offsetX)}px)`,
+                          opacity: mobileNavSwipe.isDragging
+                            ? Math.max(
+                                0.74,
+                                1 - Math.abs(mobileNavSwipe.offsetX) / 220
+                              )
+                            : 1,
+                          touchAction: mobileNavSwipe.touchAction,
+                          transition: mobileNavSwipe.isDragging
+                            ? "none"
+                            : "transform 200ms cubic-bezier(0.4,0,0.2,1), opacity 200ms cubic-bezier(0.4,0,0.2,1)",
+                        }}
+                      >
+                        <SidebarBody
+                          location={location}
+                          collapsed={false}
+                          onNavigate={() => setMobileOpen(false)}
+                        />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
 
-                <div className="min-w-0">
-                  <p className="page-label">Workspace</p>
-                  <p className="truncate text-sm font-medium text-[var(--text-1)]">
-                    {currentLabel}
-                  </p>
+                  <div className="min-w-0">
+                    <p className="page-label">Workspace</p>
+                    <p className="truncate text-sm font-medium text-[var(--text-1)]">
+                      {currentLabel}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
+                  <Link href={user ? "/profile" : "/"}>
+                    <span className="flex cursor-pointer items-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] p-1.5">
+                      <Avatar className="h-8 w-8 rounded-full">
+                        <AvatarImage
+                          src={avatarUrl}
+                          alt={displayName}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--brand)]">
+                          {getInitials(displayName)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </span>
+                  </Link>
                 </div>
               </div>
+            </header>
 
-              <div className="flex items-center gap-2">
-                <ThemeToggle />
-                <Link href={user ? "/profile" : "/"}>
-                  <span className="flex cursor-pointer items-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] p-1.5">
-                    <Avatar className="h-8 w-8 rounded-full">
-                      <AvatarImage
-                        src={avatarUrl}
-                        alt={displayName}
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="rounded-full bg-[var(--surface-3)] text-[13px] font-medium text-[var(--brand)]">
-                        {getInitials(displayName)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </span>
-                </Link>
+            <main className="main">
+              <div
+                className={cn(
+                  "min-w-0 w-full max-w-[1240px]",
+                  contentClassName
+                )}
+              >
+                {children}
               </div>
-            </div>
-          </header>
-
-          <main className="main">
-            <div className={cn("min-w-0 w-full max-w-[1240px]", contentClassName)}>
-              {children}
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </AppShellContext.Provider>
   );
 }

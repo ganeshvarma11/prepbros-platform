@@ -4,8 +4,10 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Route, Switch } from "wouter";
 import { useLocation } from "wouter";
 
+import AppShell from "./components/AppShell";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PageLoader from "./components/PageLoader";
+import { PageSkeleton } from "./components/PageState";
 import SeoManager from "./components/SeoManager";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -36,6 +38,41 @@ const Support = lazy(() => loadRoute("/support"));
 const Status = lazy(() => loadRoute("/status"));
 const ResetPassword = lazy(() => loadRoute("/reset-password"));
 const NotFound = lazy(() => loadRoute("/404"));
+
+type AppRouteConfig = {
+  path: string;
+  contentClassName?: string;
+  shellClassName?: string;
+  allowDesktopSidebarToggle?: boolean;
+};
+
+const APP_ROUTE_CONFIG: AppRouteConfig[] = [
+  {
+    path: "/practice",
+    contentClassName: "max-w-none",
+    shellClassName: "practice-shell",
+    allowDesktopSidebarToggle: true,
+  },
+  { path: "/aptitude", contentClassName: "max-w-[1180px]" },
+  { path: "/contests" },
+  { path: "/leaderboard", contentClassName: "max-w-[960px]" },
+  { path: "/resources", contentClassName: "max-w-[1120px]" },
+  { path: "/updates", contentClassName: "max-w-[1120px]" },
+  { path: "/premium", contentClassName: "max-w-[1120px]" },
+  { path: "/dashboard", contentClassName: "max-w-none" },
+  { path: "/profile", contentClassName: "max-w-none" },
+  { path: "/explore", contentClassName: "max-w-[1040px]" },
+  { path: "/support", contentClassName: "max-w-[960px]" },
+];
+
+const matchesRoute = (location: string, path: string) =>
+  location === path || (path !== "/" && location.startsWith(`${path}/`));
+
+function getAppShellConfig(location: string) {
+  return (
+    APP_ROUTE_CONFIG.find(route => matchesRoute(location, route.path)) ?? null
+  );
+}
 
 function RouteTracker() {
   const [location] = useLocation();
@@ -68,11 +105,18 @@ function CanonicalDomainRedirect() {
   return null;
 }
 
-function Router() {
+function AppRouteLoader() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <div className="mx-auto w-full py-4">
+      <PageSkeleton rows={6} />
+    </div>
+  );
+}
+
+function AppRoutes() {
+  return (
+    <Suspense fallback={<AppRouteLoader />}>
       <Switch>
-        <Route path="/" component={Home} />
         <Route path="/practice" component={Practice} />
         <Route path="/aptitude" component={Aptitude} />
         <Route path="/contests" component={Contests} />
@@ -83,9 +127,19 @@ function Router() {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/profile" component={Profile} />
         <Route path="/explore" component={Explore} />
+        <Route path="/support" component={Support} />
+      </Switch>
+    </Suspense>
+  );
+}
+
+function PublicRoutes() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        <Route path="/" component={Home} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
-        <Route path="/support" component={Support} />
         <Route path="/status" component={Status} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/admin" component={Admin} />
@@ -93,6 +147,25 @@ function Router() {
       </Switch>
     </Suspense>
   );
+}
+
+function Router() {
+  const [location] = useLocation();
+  const appShellConfig = getAppShellConfig(location);
+
+  if (appShellConfig) {
+    return (
+      <AppShell
+        contentClassName={appShellConfig.contentClassName}
+        shellClassName={appShellConfig.shellClassName}
+        allowDesktopSidebarToggle={appShellConfig.allowDesktopSidebarToggle}
+      >
+        <AppRoutes />
+      </AppShell>
+    );
+  }
+
+  return <PublicRoutes />;
 }
 
 function App() {

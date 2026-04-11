@@ -31,6 +31,45 @@ type RelativeMonthFilter =
   | "next_month"
   | "this_year";
 
+const INDIAN_REGION_OPTIONS = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry",
+] as const;
+
 type UpdateRecord = {
   id?: string;
   title: string;
@@ -109,6 +148,41 @@ const getStatusNote = (update: ExamUpdate, today: Date) => {
 
 const getScope = (update: ExamUpdate) =>
   update.state === "All India" ? "central" : "state";
+
+const normalizeStateValue = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[()]/g, " ")
+    .replace(/[/-]/g, " ")
+    .replace(/,/g, " ")
+    .replace(/\s+/g, " ");
+
+const STATE_FILTER_ALIASES: Record<string, string[]> = {
+  "Andaman and Nicobar Islands": ["andaman and nicobar islands"],
+  Chandigarh: ["chandigarh"],
+  "Dadra and Nagar Haveli and Daman and Diu": [
+    "dadra and nagar haveli and daman and diu",
+  ],
+  Delhi: ["delhi", "delhi ncr", "nct of delhi"],
+  "Jammu and Kashmir": ["jammu and kashmir"],
+  Ladakh: ["ladakh"],
+  Lakshadweep: ["lakshadweep"],
+  Puducherry: ["puducherry", "pondicherry"],
+};
+
+const matchesStateFilter = (update: ExamUpdate, selectedState: string) => {
+  if (selectedState === "all") return true;
+  if (update.state === "All India") return true;
+
+  const normalizedState = normalizeStateValue(update.state);
+  const aliases = STATE_FILTER_ALIASES[selectedState] ?? [
+    normalizeStateValue(selectedState),
+  ];
+
+  return aliases.some(alias => normalizedState.includes(alias));
+};
 
 const getMonthFilterLabel = (value: RelativeMonthFilter) => {
   switch (value) {
@@ -249,6 +323,7 @@ export default function Updates() {
   const [timelineFilter, setTimelineFilter] =
     useState<TimelineFilter>("all");
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
+  const [stateFilter, setStateFilter] = useState("all");
   const [qualificationFilter, setQualificationFilter] =
     useState<"all" | QualificationTier>("all");
   const [monthFilter, setMonthFilter] =
@@ -285,6 +360,16 @@ export default function Updates() {
   }, []);
 
   const updates = liveUpdates.length > 0 ? liveUpdates : examUpdates;
+  const stateOptions = useMemo(
+    () => [
+      { value: "all", label: "All states" },
+      ...INDIAN_REGION_OPTIONS.map(region => ({
+        value: region,
+        label: region,
+      })),
+    ],
+    []
+  );
 
   const filteredUpdates = useMemo(() => {
     return updates
@@ -301,6 +386,10 @@ export default function Updates() {
         }
 
         if (scopeFilter !== "all" && getScope(update) !== scopeFilter) {
+          return false;
+        }
+
+        if (!matchesStateFilter(update, stateFilter)) {
           return false;
         }
 
@@ -322,7 +411,15 @@ export default function Updates() {
           startOfDay(left.lastDate).getTime() -
           startOfDay(right.lastDate).getTime()
       );
-  }, [monthFilter, qualificationFilter, scopeFilter, timelineFilter, today, updates]);
+  }, [
+    monthFilter,
+    qualificationFilter,
+    scopeFilter,
+    stateFilter,
+    timelineFilter,
+    today,
+    updates,
+  ]);
 
   return (
     <AppShell contentClassName="max-w-[1120px]">
@@ -333,12 +430,16 @@ export default function Updates() {
             <span className="text-xs font-semibold uppercase tracking-[0.18em]">
               Updates
             </span>
-            {loading ? (
-              <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-2)]">
-                <Loader2 size={12} className="animate-spin" />
-                Syncing
-              </span>
-            ) : null}
+            <span
+              className={cn(
+                "inline-flex min-w-[88px] items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-2)] transition-opacity",
+                loading ? "opacity-100" : "opacity-0"
+              )}
+              aria-hidden={!loading}
+            >
+              <Loader2 size={12} className="animate-spin" />
+              Syncing
+            </span>
           </div>
           <h1 className="text-[2rem] tracking-[-0.05em] text-[var(--text-1)]">
             Exam updates
@@ -346,7 +447,7 @@ export default function Updates() {
         </div>
 
         <section className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-4">
-          <div className="grid gap-3 lg:grid-cols-[auto_auto_auto_1fr] lg:items-end">
+          <div className="grid gap-3 lg:grid-cols-[auto_auto_auto_auto_1fr] lg:items-end">
             <FilterSelect
               label="Scope"
               value={scopeFilter}
@@ -371,6 +472,13 @@ export default function Updates() {
                   label: option,
                 })),
               ]}
+            />
+
+            <FilterSelect
+              label="State"
+              value={stateFilter}
+              onChange={setStateFilter}
+              options={stateOptions}
             />
 
             <FilterSelect
@@ -419,6 +527,7 @@ export default function Updates() {
           {filteredUpdates.length} update
           {filteredUpdates.length === 1 ? "" : "s"}
           <span className="ml-2">• {scopeFilter === "all" ? "all scopes" : scopeFilter}</span>
+          <span className="ml-2">• {stateFilter === "all" ? "all states" : stateFilter}</span>
           <span className="ml-2">
             • {qualificationFilter === "all" ? "all eligibility" : qualificationFilter}
           </span>
@@ -461,6 +570,8 @@ export default function Updates() {
 
                     <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--text-3)]">
                       <span>{getScope(update) === "central" ? "Central" : "State"}</span>
+                      <span>•</span>
+                      <span>{update.state}</span>
                       <span>•</span>
                       <span>{update.qualification}</span>
                       <span>•</span>
@@ -505,6 +616,9 @@ export default function Updates() {
                       Scope
                     </TableHead>
                     <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
+                      State
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
                       Eligibility
                     </TableHead>
                     <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
@@ -536,6 +650,9 @@ export default function Updates() {
                         </TableCell>
                         <TableCell className="px-4 py-4 text-sm text-[var(--text-2)]">
                           {getScope(update) === "central" ? "Central" : "State"}
+                        </TableCell>
+                        <TableCell className="px-4 py-4 text-sm text-[var(--text-2)]">
+                          {update.state}
                         </TableCell>
                         <TableCell className="px-4 py-4 text-sm text-[var(--text-2)]">
                           {update.qualification}
