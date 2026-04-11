@@ -299,13 +299,13 @@ function FilterSelect({
 }) {
   return (
     <label className="space-y-1.5">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-3)]">
         {label}
       </span>
       <select
         value={value}
         onChange={event => onChange(event.target.value)}
-        className="h-9 min-w-[150px] rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 text-sm text-[var(--text-2)] outline-none transition focus:border-[var(--brand)]"
+        className="h-10 min-w-0 w-full rounded-[14px] border border-[var(--border)] bg-[var(--bg-card-strong)] px-3.5 text-[0.95rem] font-medium text-[var(--text-1)] shadow-[var(--shadow-sm)] outline-none transition focus:border-[var(--brand)] focus:bg-[var(--surface-2)]"
       >
         {options.map(option => (
           <option key={option.value} value={option.value}>
@@ -421,6 +421,22 @@ export default function Updates() {
     updates,
   ]);
 
+  const activeFilterCount = [
+    timelineFilter !== "all",
+    scopeFilter !== "all",
+    stateFilter !== "all",
+    qualificationFilter !== "all",
+    monthFilter !== "all",
+  ].filter(Boolean).length;
+
+  const resetFilters = () => {
+    setTimelineFilter("all");
+    setScopeFilter("all");
+    setStateFilter("all");
+    setQualificationFilter("all");
+    setMonthFilter("all");
+  };
+
   return (
     <AppShell contentClassName="max-w-[1120px]">
       <div className="space-y-5">
@@ -446,79 +462,108 @@ export default function Updates() {
           </h1>
         </div>
 
-        <section className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-1)] p-4">
-          <div className="grid gap-3 lg:grid-cols-[auto_auto_auto_auto_1fr] lg:items-end">
-            <FilterSelect
-              label="Scope"
-              value={scopeFilter}
-              onChange={value => setScopeFilter(value as ScopeFilter)}
-              options={[
-                { value: "all", label: "All" },
-                { value: "central", label: "Central" },
-                { value: "state", label: "State" },
-              ]}
-            />
-
-            <FilterSelect
-              label="Eligibility"
-              value={qualificationFilter}
-              onChange={value =>
-                setQualificationFilter(value as "all" | QualificationTier)
-              }
-              options={[
-                { value: "all", label: "All" },
-                ...QUALIFICATION_TIERS.map(option => ({
-                  value: option,
-                  label: option,
-                })),
-              ]}
-            />
-
-            <FilterSelect
-              label="State"
-              value={stateFilter}
-              onChange={setStateFilter}
-              options={stateOptions}
-            />
-
-            <FilterSelect
-              label="Month"
-              value={monthFilter}
-              onChange={value => setMonthFilter(value as RelativeMonthFilter)}
-              options={[
-                { value: "all", label: "All months" },
-                { value: "previous_month", label: "Previous month" },
-                { value: "this_month", label: "This month" },
-                { value: "next_month", label: "Next month" },
-                { value: "this_year", label: "This year" },
-              ]}
-            />
-
-            <div className="space-y-1.5">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
-                Timeline
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {TIMELINE_FILTERS.map(filter => {
-                  const active = timelineFilter === filter.id;
-
-                  return (
-                    <button
-                      key={filter.id}
-                      type="button"
-                      onClick={() => setTimelineFilter(filter.id)}
-                      className={cn(
-                        "inline-flex h-9 items-center justify-center rounded-full border px-4 text-sm font-medium transition",
-                        active
-                          ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)]"
-                          : "border-[var(--border)] bg-[var(--bg)] text-[var(--text-2)] hover:border-[var(--border-strong)] hover:text-[var(--text-1)]"
-                      )}
-                    >
-                      {filter.label}
-                    </button>
-                  );
-                })}
+        <section className="rounded-[20px] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] px-4 py-3.5 shadow-[var(--shadow-sm)]">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--text-3)]">
+                    Refine updates
+                  </p>
+                  <span className="inline-flex h-6 items-center rounded-full border border-[var(--border)] bg-[var(--bg-card-strong)] px-2.5 text-[11px] font-semibold text-[var(--text-2)]">
+                    {activeFilterCount} active
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-[var(--text-2)]">
+                  Filter by scope, eligibility, state, month, or timeline.
+                </p>
               </div>
+
+              <div className="space-y-1.5 lg:min-w-[320px]">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-3)]">
+                    Timeline
+                  </span>
+                  {activeFilterCount > 0 ? (
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="text-xs font-semibold text-[var(--brand)] transition hover:text-[var(--brand-light)]"
+                    >
+                      Reset
+                    </button>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {TIMELINE_FILTERS.map(filter => {
+                    const active = timelineFilter === filter.id;
+
+                    return (
+                      <button
+                        key={filter.id}
+                        type="button"
+                        onClick={() => setTimelineFilter(filter.id)}
+                        className={cn(
+                          "inline-flex h-8 items-center justify-center rounded-full border px-3 text-[13px] font-semibold transition",
+                          active
+                            ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--text-on-brand)] shadow-[var(--shadow-sm)]"
+                            : "border-[var(--border)] bg-[var(--bg-card-strong)] text-[var(--text-2)] hover:border-[var(--border-strong)] hover:text-[var(--text-1)]"
+                        )}
+                      >
+                        {filter.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[0.9fr_1fr_1.35fr_0.95fr]">
+              <FilterSelect
+                label="Scope"
+                value={scopeFilter}
+                onChange={value => setScopeFilter(value as ScopeFilter)}
+                options={[
+                  { value: "all", label: "All" },
+                  { value: "central", label: "Central" },
+                  { value: "state", label: "State" },
+                ]}
+              />
+
+              <FilterSelect
+                label="Eligibility"
+                value={qualificationFilter}
+                onChange={value =>
+                  setQualificationFilter(value as "all" | QualificationTier)
+                }
+                options={[
+                  { value: "all", label: "All" },
+                  ...QUALIFICATION_TIERS.map(option => ({
+                    value: option,
+                    label: option,
+                  })),
+                ]}
+              />
+
+              <FilterSelect
+                label="State"
+                value={stateFilter}
+                onChange={setStateFilter}
+                options={stateOptions}
+              />
+
+              <FilterSelect
+                label="Month"
+                value={monthFilter}
+                onChange={value => setMonthFilter(value as RelativeMonthFilter)}
+                options={[
+                  { value: "all", label: "All months" },
+                  { value: "previous_month", label: "Previous month" },
+                  { value: "this_month", label: "This month" },
+                  { value: "next_month", label: "Next month" },
+                  { value: "this_year", label: "This year" },
+                ]}
+              />
             </div>
           </div>
         </section>
