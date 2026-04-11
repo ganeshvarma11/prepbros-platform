@@ -3,6 +3,7 @@ import { ArrowUpRight, Loader2, Search } from "lucide-react";
 
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
+import { loadPublicCache } from "@/lib/publicCache";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,9 @@ type ResourceRecord = {
 };
 
 type FilterTab = "All" | "UPSC" | "SSC" | "Books" | "PDFs" | "Channels";
+
+const RESOURCES_CACHE_KEY = "resources:active";
+const RESOURCES_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const FILTER_TABS: FilterTab[] = [
   "All",
@@ -133,6 +137,26 @@ const matchesTab = (resource: ResourceRecord, tab: FilterTab) => {
   return isChannelResource(resource);
 };
 
+const fetchLiveResources = async () => {
+  return loadPublicCache({
+    key: RESOURCES_CACHE_KEY,
+    ttlMs: RESOURCES_CACHE_TTL_MS,
+    loader: async () => {
+      const { data, error } = await supabase
+        .from("resources")
+        .select("id, title, description, type, url, exam, category")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return (data as ResourceRecord[]) || [];
+    },
+  });
+};
+
 export default function Resources() {
   const [dbResources, setDbResources] = useState<ResourceRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,15 +164,24 @@ export default function Resources() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    supabase
-      .from("resources")
-      .select("*")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setDbResources((data as ResourceRecord[]) || []);
+    let cancelled = false;
+
+    fetchLiveResources()
+      .then(data => {
+        if (cancelled) return;
+        setDbResources(data);
+      })
+      .catch(() => {
+        if (cancelled) return;
+      })
+      .finally(() => {
+        if (cancelled) return;
         setLoading(false);
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const resources = dbResources.length > 0 ? dbResources : FALLBACK_RESOURCES;

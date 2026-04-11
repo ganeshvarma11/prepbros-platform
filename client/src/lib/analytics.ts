@@ -13,13 +13,28 @@ declare global {
 const GA_MEASUREMENT_ID =
   import.meta.env.VITE_GA_MEASUREMENT_ID || "G-GPQE4HY4J9";
 const SESSION_STORAGE_KEY = "prepbros:analytics-session-id";
+const PENDING_EVENTS_STORAGE_KEY = "prepbros:analytics-pending-events";
 const MIN_ENGAGED_MS = 5_000;
+const MAX_PENDING_EVENTS = 25;
+const ANALYTICS_FLUSH_INTERVAL_MS = 5_000;
 
 let analyticsBooted = false;
 let gaBooted = false;
 let lastVisibleAt = 0;
 let activePath = "/";
 let cachedUserId: string | null | undefined;
+let pendingEvents: ProductEventInsert[] = [];
+let analyticsFlushTimer: number | null = null;
+let flushInFlight: Promise<void> | null = null;
+
+type ProductEventInsert = {
+  event_name: string;
+  path: string;
+  session_id: string;
+  user_id: string | null;
+  referrer: string | null;
+  properties: Record<string, unknown>;
+};
 
 function setupGoogleAnalytics() {
   if (gaBooted || typeof window === "undefined" || !GA_MEASUREMENT_ID) return;
@@ -97,6 +112,81 @@ function sanitizeProperties(data?: Record<string, unknown>) {
   );
 }
 
+function canUseSessionStorage() {
+  return typeof window !== "undefined" && typeof window.sessionStorage !== "undefined";
+}
+
+function persistPendingEvents() {
+  if (!canUseSessionStorage()) return;
+
+  try {
+    window.sessionStorage.setItem(
+      PENDING_EVENTS_STORAGE_KEY,
+      JSON.stringify(pendingEvents.slice(-MAX_PENDING_EVENTS))
+    );
+  } catch {
+    // Ignore analytics storage failures.
+  }
+}
+
+function restorePendingEvents() {
+  if (!canUseSessionStorage()) return;
+
+  try {
+    const raw = window.sessionStorage.getItem(PENDING_EVENTS_STORAGE_KEY);
+    if (!raw) return;
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return;
+
+    pendingEvents = parsed.slice(-MAX_PENDING_EVENTS);
+  } catch {
+    pendingEvents = [];
+  }
+}
+
+function scheduleAnalyticsFlush() {
+  if (typeof window === "undefined") return;
+  if (analyticsFlushTimer !== null) return;
+
+  analyticsFlushTimer = window.setTimeout(() => {
+    analyticsFlushTimer = null;
+    void flushPendingEvents();
+  }, ANALYTICS_FLUSH_INTERVAL_MS);
+}
+
+async function flushPendingEvents() {
+  if (flushInFlight) {
+    return flushInFlight;
+  }
+
+  if (pendingEvents.length === 0) {
+    return;
+  }
+
+  const batch = pendingEvents.slice(0, MAX_PENDING_EVENTS);
+
+  flushInFlight = Promise.resolve(
+    supabase.from("product_events").insert(batch)
+  )
+    .then(() => {
+      pendingEvents = pendingEvents.slice(batch.length);
+      persistPendingEvents();
+    })
+    .catch(() => {
+      // Analytics should never break the product experience.
+    })
+    .finally(() => {
+      flushInFlight = null;
+
+      if (pendingEvents.length > 0) {
+        scheduleAnalyticsFlush();
+      }
+    });
+
+  return flushInFlight;
+}
+
 async function resolveUserId() {
   if (cachedUserId !== undefined) return cachedUserId;
 
@@ -121,21 +211,26 @@ async function recordEvent(eventName: string, data?: Record<string, unknown>) {
   );
   const userId = await resolveUserId();
 
-  try {
-    await supabase.from("product_events").insert({
-      event_name: eventName,
+  pendingEvents.push({
+    event_name: eventName,
+    path,
+    session_id: getSessionId(),
+    user_id: userId,
+    referrer: document.referrer || null,
+    properties: {
+      ...properties,
       path,
-      session_id: getSessionId(),
-      user_id: userId,
-      referrer: document.referrer || null,
-      properties: {
-        ...properties,
-        path,
-      },
-    });
-  } catch {
-    // Analytics should never break the product experience.
+    },
+  });
+  pendingEvents = pendingEvents.slice(-MAX_PENDING_EVENTS);
+  persistPendingEvents();
+
+  if (pendingEvents.length >= 10) {
+    void flushPendingEvents();
+    return;
   }
+
+  scheduleAnalyticsFlush();
 }
 
 function trackEngagedTime(reason: "hidden" | "pagehide") {
@@ -160,6 +255,7 @@ export function setupAnalytics() {
   analyticsBooted = true;
   activePath = normalizePath(window.location.pathname);
   lastVisibleAt = Date.now();
+  restorePendingEvents();
 
   setupGoogleAnalytics();
   void resolveUserId();
@@ -167,6 +263,7 @@ export function setupAnalytics() {
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       trackEngagedTime("hidden");
+      void flushPendingEvents();
       return;
     }
 
@@ -175,6 +272,7 @@ export function setupAnalytics() {
 
   window.addEventListener("pagehide", () => {
     trackEngagedTime("pagehide");
+    void flushPendingEvents();
   });
 
   supabase.auth.onAuthStateChange((event, session) => {

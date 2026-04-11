@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildAnswerStatuses,
+  buildNextProfileStats,
   buildQuestionProgress,
   countCurrentStreak,
   getSolvedQuestionIdsFromAttempts,
@@ -83,5 +84,29 @@ describe("user progress", () => {
     expect(
       countCurrentStreak(gappedAttempts, new Date("2026-03-25T12:00:00.000Z"))
     ).toBe(0);
+  });
+
+  it("increments cached profile stats without re-reading full history", () => {
+    expect(
+      buildNextProfileStats(
+        {
+          totalAnswers: 9,
+          correctAnswers: 6,
+          streak: 3,
+          maxStreak: 4,
+          lastActive: "2026-03-24",
+        },
+        {
+          isCorrect: true,
+          answeredAt: "2026-03-25T10:00:00.000Z",
+        }
+      )
+    ).toEqual({
+      totalAnswers: 10,
+      correctAnswers: 7,
+      streak: 4,
+      maxStreak: 4,
+      lastActive: "2026-03-25",
+    });
   });
 });

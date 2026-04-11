@@ -11,6 +11,7 @@ import {
   examUpdates,
 } from "@/data/updates";
 import { supabase } from "@/lib/supabase";
+import { loadPublicCache } from "@/lib/publicCache";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -88,6 +89,9 @@ type UpdateRecord = {
   notice_url?: string | null;
   is_active?: boolean | null;
 };
+
+const UPDATES_CACHE_KEY = "updates:active";
+const UPDATES_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const TIMELINE_FILTERS: Array<{ id: TimelineFilter; label: string }> = [
   { id: "all", label: "All" },
@@ -278,6 +282,30 @@ const mapUpdateRecord = (record: UpdateRecord): ExamUpdate | null => {
   };
 };
 
+const fetchLiveUpdates = async () => {
+  return loadPublicCache({
+    key: UPDATES_CACHE_KEY,
+    ttlMs: UPDATES_CACHE_TTL_MS,
+    loader: async () => {
+      const { data, error } = await supabase
+        .from("updates")
+        .select(
+          "id, title, organization, exam_type, state, qualification, eligibility, application_start, last_date, exam_window, updated_at, summary, tags, apply_url, notice_url"
+        )
+        .eq("is_active", true)
+        .order("last_date", { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      return ((data || []) as UpdateRecord[])
+        .map(mapUpdateRecord)
+        .filter((update): update is ExamUpdate => Boolean(update));
+    },
+  });
+};
+
 const statusTone: Record<Exclude<UpdateStatus, "Closed">, string> = {
   Open: "border-[rgba(86,194,136,0.24)] bg-[var(--green-bg)] text-[var(--green)]",
   "Closing Soon":
@@ -333,24 +361,17 @@ export default function Updates() {
   useEffect(() => {
     let cancelled = false;
 
-    supabase
-      .from("updates")
-      .select("*")
-      .eq("is_active", true)
-      .order("last_date", { ascending: true })
-      .then(({ data, error }) => {
+    fetchLiveUpdates()
+      .then((mapped) => {
         if (cancelled) return;
 
-        if (error) {
-          setLoading(false);
-          return;
-        }
-
-        const mapped = ((data || []) as UpdateRecord[])
-          .map(mapUpdateRecord)
-          .filter((update): update is ExamUpdate => Boolean(update));
-
         setLiveUpdates(mapped);
+      })
+      .catch(() => {
+        if (cancelled) return;
+      })
+      .finally(() => {
+        if (cancelled) return;
         setLoading(false);
       });
 

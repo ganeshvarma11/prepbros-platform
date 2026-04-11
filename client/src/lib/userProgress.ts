@@ -24,6 +24,24 @@ type AnswerAttemptRow = {
   created_at?: string | null;
 };
 
+type ProfileStatsSnapshot = {
+  totalAnswers: number;
+  correctAnswers: number;
+  streak: number;
+  maxStreak: number;
+  lastActive: string | null;
+};
+
+type ProfileStatsRow = {
+  streak?: number | null;
+  max_streak?: number | null;
+  last_active?: string | null;
+};
+
+const profileStatsCache = new Map<string, ProfileStatsSnapshot>();
+const profileStatsLoads = new Map<string, Promise<ProfileStatsSnapshot | null>>();
+const saveAnswerQueues = new Map<string, Promise<void>>();
+
 const normalizeAnswerAttempt = (
   row: AnswerAttemptRow
 ): AnswerAttempt | null => {
@@ -49,6 +67,41 @@ const toLocalDateKey = (value: Date | string) => {
   if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString("en-CA");
 };
+
+export function buildNextProfileStats(
+  current: ProfileStatsSnapshot,
+  {
+    incrementCounts = true,
+    isCorrect,
+    answeredAt,
+  }: {
+    incrementCounts?: boolean;
+    isCorrect: boolean;
+    answeredAt: string;
+  }
+): ProfileStatsSnapshot {
+  const answerDay = toLocalDateKey(answeredAt);
+  const lastActive = current.lastActive;
+  let nextStreak = current.streak;
+  let nextMaxStreak = current.maxStreak;
+
+  if (answerDay && lastActive !== answerDay) {
+    const previousDay = new Date(`${answerDay}T00:00:00`);
+    previousDay.setDate(previousDay.getDate() - 1);
+    const yesterdayKey = toLocalDateKey(previousDay);
+
+    nextStreak = lastActive === yesterdayKey ? current.streak + 1 : 1;
+    nextMaxStreak = Math.max(nextStreak, current.maxStreak);
+  }
+
+  return {
+    totalAnswers: current.totalAnswers + (incrementCounts ? 1 : 0),
+    correctAnswers: current.correctAnswers + (incrementCounts && isCorrect ? 1 : 0),
+    streak: nextStreak,
+    maxStreak: nextMaxStreak,
+    lastActive: answerDay ?? lastActive,
+  };
+}
 
 export function buildQuestionProgress(
   attempts: AnswerAttempt[]
@@ -206,19 +259,45 @@ export async function saveAnswer(
   selectedOption: number,
   timeTaken: number = 0
 ) {
+  const normalizedQuestionId = toQuestionId(questionId);
+  const answeredAt = new Date().toISOString();
+  const hadCachedStats = profileStatsCache.has(userId);
+
   const { error } = await supabase.from("user_answers").insert({
     user_id: userId,
-    question_id: toQuestionId(questionId),
+    question_id: normalizedQuestionId,
     is_correct: isCorrect,
     selected_option: selectedOption,
     time_taken: timeTaken,
+    answered_at: answeredAt,
   });
-  if (error) console.error("Error saving answer:", error);
+  if (error) {
+    console.error("Error saving answer:", error);
+    return;
+  }
 
-  // Update profile stats
-  await updateProfileStats(userId);
-  // Update streak
-  await updateStreak(userId);
+  const existingQueue = saveAnswerQueues.get(userId) || Promise.resolve();
+  const nextQueue = existingQueue
+    .catch(() => {
+      // Keep the queue alive after background failures.
+    })
+    .then(async () => {
+      await updateProfileStatsAfterAnswer(userId, {
+        countsAlreadyIncludeAnswer: !hadCachedStats,
+        isCorrect,
+        answeredAt,
+      });
+    });
+
+  saveAnswerQueues.set(userId, nextQueue);
+
+  try {
+    await nextQueue;
+  } finally {
+    if (saveAnswerQueues.get(userId) === nextQueue) {
+      saveAnswerQueues.delete(userId);
+    }
+  }
 }
 
 // Toggle bookmark
@@ -286,63 +365,117 @@ export async function getAnswerStatuses(
   return buildAnswerStatuses(attempts);
 }
 
-// Update profile total_solved and accuracy
-async function updateProfileStats(userId: string) {
-  const { data } = await supabase
-    .from("user_answers")
-    .select("is_correct")
-    .eq("user_id", userId);
-
-  if (!data) return;
-
-  const total = data.length;
-  const correct = data.filter(a => a.is_correct).length;
-  const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-  await supabase
-    .from("profiles")
-    .update({
-      total_solved: total,
-      accuracy,
-    })
-    .eq("id", userId);
-}
-
-// Update streak based on last_active date
-async function updateStreak(userId: string) {
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("streak, max_streak, last_active")
-    .eq("id", userId)
-    .single();
-
-  if (!profile) return;
-
-  const today = new Date().toISOString().split("T")[0];
-  const lastActive = profile.last_active;
-
-  if (lastActive === today) return; // Already active today
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-  let newStreak = 1;
-  if (lastActive === yesterdayStr) {
-    // Consecutive day — increment streak
-    newStreak = (profile.streak || 0) + 1;
+async function loadProfileStatsSnapshot(
+  userId: string
+): Promise<ProfileStatsSnapshot | null> {
+  const cached = profileStatsCache.get(userId);
+  if (cached) {
+    return cached;
   }
 
-  const newMaxStreak = Math.max(newStreak, profile.max_streak || 0);
+  const inflight = profileStatsLoads.get(userId);
+  if (inflight) {
+    return inflight;
+  }
 
-  await supabase
+  const request = Promise.all([
+    supabase
+      .from("user_answers")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId),
+    supabase
+      .from("user_answers")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("is_correct", true),
+    supabase
+      .from("profiles")
+      .select("streak, max_streak, last_active")
+      .eq("id", userId)
+      .maybeSingle(),
+  ])
+    .then(([totalAnswersResult, correctAnswersResult, profileResult]) => {
+      if (totalAnswersResult.error) {
+        console.error("Error loading answer count:", totalAnswersResult.error);
+        return null;
+      }
+
+      if (correctAnswersResult.error) {
+        console.error(
+          "Error loading correct answer count:",
+          correctAnswersResult.error
+        );
+        return null;
+      }
+
+      if (profileResult.error) {
+        console.error("Error loading profile stats:", profileResult.error);
+        return null;
+      }
+
+      const profile = profileResult.data as ProfileStatsRow | null;
+      const snapshot: ProfileStatsSnapshot = {
+        totalAnswers: totalAnswersResult.count || 0,
+        correctAnswers: correctAnswersResult.count || 0,
+        streak: profile?.streak || 0,
+        maxStreak: profile?.max_streak || 0,
+        lastActive: profile?.last_active || null,
+      };
+
+      profileStatsCache.set(userId, snapshot);
+      return snapshot;
+    })
+    .finally(() => {
+      profileStatsLoads.delete(userId);
+    });
+
+  profileStatsLoads.set(userId, request);
+  return request;
+}
+
+async function updateProfileStatsAfterAnswer(
+  userId: string,
+  {
+    countsAlreadyIncludeAnswer,
+    isCorrect,
+    answeredAt,
+  }: {
+    countsAlreadyIncludeAnswer: boolean;
+    isCorrect: boolean;
+    answeredAt: string;
+  }
+) {
+  const currentStats = await loadProfileStatsSnapshot(userId);
+  if (!currentStats) return;
+
+  const nextStats = buildNextProfileStats(currentStats, {
+    incrementCounts: !countsAlreadyIncludeAnswer,
+    isCorrect,
+    answeredAt,
+  });
+  const accuracy =
+    nextStats.totalAnswers > 0
+      ? Math.round((nextStats.correctAnswers / nextStats.totalAnswers) * 100)
+      : 0;
+
+  const { error } = await supabase
     .from("profiles")
     .update({
-      streak: newStreak,
-      max_streak: newMaxStreak,
-      last_active: today,
+      total_solved: nextStats.totalAnswers,
+      accuracy,
+      streak: nextStats.streak,
+      max_streak: nextStats.maxStreak,
+      last_active: nextStats.lastActive,
     })
     .eq("id", userId);
+
+  if (error) {
+    console.error("Error updating profile stats:", error);
+    profileStatsCache.delete(userId);
+    return;
+  }
+
+  profileStatsCache.set(userId, nextStats);
 }
 
 // Get full user stats

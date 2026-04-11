@@ -11,6 +11,7 @@ import {
 import AppShell from "@/components/AppShell";
 import PageHeader from "@/components/PageHeader";
 import SectionHeader from "@/components/SectionHeader";
+import { loadPublicCache } from "@/lib/publicCache";
 import { supabase } from "@/lib/supabase";
 
 interface Contest {
@@ -24,6 +25,38 @@ interface Contest {
   winner?: string;
   yourRank?: number;
 }
+
+const CONTESTS_CACHE_KEY = "contests:all";
+const CONTESTS_CACHE_TTL_MS = 10 * 60 * 1000;
+
+const fetchContests = async () => {
+  return loadPublicCache({
+    key: CONTESTS_CACHE_KEY,
+    ttlMs: CONTESTS_CACHE_TTL_MS,
+    loader: async () => {
+      const { data, error } = await supabase
+        .from("contests")
+        .select("id, name, date, duration, topics, prize, status, winner, your_rank")
+        .order("date", { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      return ((data || []) as any[]).map((contest, index) => ({
+        id: contest.id ?? index + 1,
+        name: contest.name,
+        date: contest.date,
+        duration: contest.duration,
+        topics: contest.topics,
+        prize: contest.prize,
+        status: contest.status,
+        winner: contest.winner,
+        yourRank: contest.your_rank,
+      })) as Contest[];
+    },
+  });
+};
 
 export default function Contests() {
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
@@ -65,33 +98,28 @@ export default function Contests() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("contests")
-        .select("*")
-        .order("date", { ascending: true });
-      if (!error && data && data.length > 0) {
-        const normalized = data.map((contest: any, index: number) => ({
-          id: contest.id ?? index + 1,
-          name: contest.name,
-          date: contest.date,
-          duration: contest.duration,
-          topics: contest.topics,
-          prize: contest.prize,
-          status: contest.status,
-          winner: contest.winner,
-          yourRank: contest.your_rank,
-        })) as Contest[];
+      try {
+        const normalized = await fetchContests();
+        if (cancelled || normalized.length === 0) return;
         setLiveUpcoming(
           normalized.filter(contest => contest.status === "upcoming")
         );
         setLivePast(normalized.filter(contest => contest.status === "past"));
+      } finally {
+        if (cancelled) return;
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    load();
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const upcomingContests: Contest[] = [
