@@ -309,6 +309,7 @@ function LandingActionButton({
 }
 
 interface LandingAuthPanelProps {
+  loading: boolean;
   user: ReturnType<typeof useAuth>["user"];
   displayName: string;
   panelError: string;
@@ -320,6 +321,7 @@ interface LandingAuthPanelProps {
 }
 
 function LandingAuthPanel({
+  loading,
   user,
   displayName,
   panelError,
@@ -329,9 +331,36 @@ function LandingAuthPanel({
   onOpenLogin,
   onSignOut,
 }: LandingAuthPanelProps) {
+  const panelClassName =
+    "w-full max-w-[430px] min-h-[470px] rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:min-h-[490px] sm:p-7";
+
+  if (loading) {
+    return (
+      <div className={panelClassName}>
+        <div className="animate-pulse">
+          <div className="h-3 w-24 rounded-full bg-[var(--surface-2)]" />
+          <div className="mt-5 h-12 w-44 rounded-[18px] bg-[var(--surface-2)]" />
+          <div className="mt-4 h-4 w-full rounded-full bg-[var(--surface-2)]" />
+          <div className="mt-3 h-4 w-5/6 rounded-full bg-[var(--surface-2)]" />
+
+          <div className="mt-10 space-y-3">
+            <div className="h-12 rounded-[14px] bg-[var(--surface-2)]" />
+            <div className="h-12 rounded-[14px] bg-[var(--surface-2)]" />
+            <div className="h-12 rounded-[14px] bg-[var(--surface-2)]" />
+          </div>
+
+          <div className="mt-10 border-t border-[var(--border)] pt-6">
+            <div className="h-4 w-36 rounded-full bg-[var(--surface-2)]" />
+            <div className="mt-3 h-12 rounded-[14px] bg-[var(--surface-2)]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (user) {
     return (
-      <div className="w-full max-w-[430px] rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-7">
+      <div className={panelClassName}>
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
           Account
         </p>
@@ -363,7 +392,7 @@ function LandingAuthPanel({
   }
 
   return (
-    <div className="w-full max-w-[430px] rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-7">
+    <div className={panelClassName}>
       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
         PrepBros
       </p>
@@ -622,7 +651,12 @@ export default function Home() {
 
             <div className="flex items-center gap-2.5 sm:gap-3">
               <ThemeToggle className="shrink-0" />
-              {user ? (
+              {loading ? (
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <span className="inline-flex h-[42px] w-[92px] rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] sm:w-[104px]" />
+                  <span className="inline-flex h-[42px] w-[108px] rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] sm:w-[118px]" />
+                </div>
+              ) : user ? (
                 <>
                   <Link href="/practice">
                     <span className="inline-flex cursor-pointer items-center justify-center rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] sm:px-5">
@@ -716,6 +750,7 @@ export default function Home() {
               className="w-full lg:justify-self-start lg:border-l lg:border-[var(--border)] lg:pl-8"
             >
               <LandingAuthPanel
+                loading={loading}
                 user={user}
                 displayName={displayName}
                 panelError={panelError}
@@ -809,7 +844,7 @@ export default function Home() {
               </p>
             </div>
 
-            <Carousel className="mt-7" opts={{ align: "start", dragFree: true }}>
+            <Carousel className="mt-7 min-h-[292px]" opts={{ align: "start", dragFree: true }}>
               <CarouselContent>
                 {STUDY_TRACKS.map(track => (
                   <CarouselItem
@@ -875,7 +910,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <Carousel className="mt-7" opts={{ align: "start", dragFree: true }}>
+              <Carousel className="mt-7 min-h-[252px]" opts={{ align: "start", dragFree: true }}>
                 <CarouselContent>
                   {PRACTICE_SET_CARDS.map(setCard => (
                     <CarouselItem key={setCard.title} className="md:basis-1/2">
@@ -924,7 +959,7 @@ export default function Home() {
                 What students feel.
               </h3>
 
-              <Carousel className="mt-7" opts={{ align: "start", loop: true }}>
+              <Carousel className="mt-7 min-h-[214px]" opts={{ align: "start", loop: true }}>
                 <CarouselContent>
                   {TESTIMONIALS.map(item => (
                     <CarouselItem key={item.name}>

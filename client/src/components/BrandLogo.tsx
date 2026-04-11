@@ -30,6 +30,10 @@ function BrandLogoInner({
         <img
           src={BRAND_LOGO_SRC}
           alt="PrepBros"
+          width={480}
+          height={140}
+          loading="eager"
+          fetchPriority="high"
           className={cn("block h-[1em] w-auto max-w-none", markClassName)}
         />
       </div>
