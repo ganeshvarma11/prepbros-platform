@@ -2,19 +2,55 @@ import { supabase } from "@/lib/supabase";
 
 declare global {
   interface Window {
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
     umami?: {
       track: (eventName: string, data?: Record<string, unknown>) => void;
     };
   }
 }
 
+const GA_MEASUREMENT_ID =
+  import.meta.env.VITE_GA_MEASUREMENT_ID || "G-GPQE4HY4J9";
 const SESSION_STORAGE_KEY = "prepbros:analytics-session-id";
 const MIN_ENGAGED_MS = 5_000;
 
 let analyticsBooted = false;
+let gaBooted = false;
 let lastVisibleAt = 0;
 let activePath = "/";
 let cachedUserId: string | null | undefined;
+
+function setupGoogleAnalytics() {
+  if (gaBooted || typeof window === "undefined" || !GA_MEASUREMENT_ID) return;
+
+  gaBooted = true;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag =
+    window.gtag ||
+    function gtag(...args: unknown[]) {
+      window.dataLayer?.push(args);
+    };
+
+  window.gtag("js", new Date());
+  window.gtag("config", GA_MEASUREMENT_ID, {
+    send_page_view: false,
+    anonymize_ip: true,
+  });
+
+  const existingScript = document.querySelector<HTMLScriptElement>(
+    `script[src*="googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"]`
+  );
+
+  if (existingScript) return;
+
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(
+    GA_MEASUREMENT_ID
+  )}`;
+  document.head.appendChild(script);
+}
 
 function buildSessionId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -125,6 +161,7 @@ export function setupAnalytics() {
   activePath = normalizePath(window.location.pathname);
   lastVisibleAt = Date.now();
 
+  setupGoogleAnalytics();
   void resolveUserId();
 
   document.addEventListener("visibilitychange", () => {
@@ -157,6 +194,28 @@ export function trackEvent(eventName: string, data?: Record<string, unknown>) {
   if (typeof window === "undefined") return;
 
   const properties = sanitizeProperties(data);
+  const path = normalizePath(
+    typeof properties.path === "string" ? properties.path : activePath
+  );
+
+  try {
+    setupGoogleAnalytics();
+
+    if (eventName === "page_view") {
+      window.gtag?.("event", "page_view", {
+        page_path: path,
+        page_location: `${window.location.origin}${path}`,
+        page_title: document.title,
+      });
+    } else {
+      window.gtag?.("event", eventName, {
+        ...properties,
+        path,
+      });
+    }
+  } catch {
+    // Analytics should never break the product experience.
+  }
 
   try {
     window.umami?.track?.(eventName, properties);
