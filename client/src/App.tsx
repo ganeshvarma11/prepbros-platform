@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { Route, Switch } from "wouter";
 import { useLocation } from "wouter";
 
@@ -13,7 +14,7 @@ import {
 } from "@/lib/siteConfig";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { trackPage } from "./lib/analytics";
+import { setupAnalytics, trackPage } from "./lib/analytics";
 
 const Home = lazy(() => import("./pages/Home"));
 const Practice = lazy(() => import("./pages/Practice"));
@@ -36,6 +37,10 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 function RouteTracker() {
   const [location] = useLocation();
+
+  useEffect(() => {
+    setupAnalytics();
+  }, []);
 
   useEffect(() => {
     trackPage(location);
@@ -99,6 +104,7 @@ function App() {
             <RouteTracker />
             <SeoManager />
             <Router />
+            <Analytics />
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>

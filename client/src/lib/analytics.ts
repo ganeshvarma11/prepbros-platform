@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/supabase";
+
 declare global {
   interface Window {
     umami?: {
@@ -6,15 +8,167 @@ declare global {
   }
 }
 
-export function trackEvent(eventName: string, data?: Record<string, unknown>) {
-  if (typeof window === "undefined") return;
+const SESSION_STORAGE_KEY = "prepbros:analytics-session-id";
+const MIN_ENGAGED_MS = 5_000;
+
+let analyticsBooted = false;
+let lastVisibleAt = 0;
+let activePath = "/";
+let cachedUserId: string | null | undefined;
+
+function buildSessionId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function getSessionId() {
+  if (typeof window === "undefined") return "server";
+
   try {
-    window.umami?.track?.(eventName, data);
+    const existing = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (existing) return existing;
+
+    const sessionId = buildSessionId();
+    window.sessionStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    return sessionId;
+  } catch {
+    return buildSessionId();
+  }
+}
+
+function normalizePath(path?: string) {
+  if (typeof window === "undefined") return path || "/";
+
+  const rawPath = path || window.location.pathname;
+
+  try {
+    const url = new URL(rawPath, window.location.origin);
+    return url.pathname || "/";
+  } catch {
+    const cleanedPath = rawPath.split("?")[0]?.split("#")[0];
+    return cleanedPath || "/";
+  }
+}
+
+function sanitizeProperties(data?: Record<string, unknown>) {
+  if (!data) return {};
+
+  return Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== undefined)
+  );
+}
+
+async function resolveUserId() {
+  if (cachedUserId !== undefined) return cachedUserId;
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    cachedUserId = session?.user?.id ?? null;
+  } catch {
+    cachedUserId = null;
+  }
+
+  return cachedUserId;
+}
+
+async function recordEvent(eventName: string, data?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+
+  const properties = sanitizeProperties(data);
+  const path = normalizePath(
+    typeof properties.path === "string" ? properties.path : activePath
+  );
+  const userId = await resolveUserId();
+
+  try {
+    await supabase.from("product_events").insert({
+      event_name: eventName,
+      path,
+      session_id: getSessionId(),
+      user_id: userId,
+      referrer: document.referrer || null,
+      properties: {
+        ...properties,
+        path,
+      },
+    });
   } catch {
     // Analytics should never break the product experience.
   }
 }
 
+function trackEngagedTime(reason: "hidden" | "pagehide") {
+  if (typeof document === "undefined") return;
+  if (!lastVisibleAt) return;
+
+  const durationMs = Date.now() - lastVisibleAt;
+  lastVisibleAt = Date.now();
+
+  if (durationMs < MIN_ENGAGED_MS) return;
+
+  trackEvent("session_engaged", {
+    path: activePath,
+    engaged_seconds: Math.round(durationMs / 1000),
+    reason,
+  });
+}
+
+export function setupAnalytics() {
+  if (analyticsBooted || typeof window === "undefined") return;
+
+  analyticsBooted = true;
+  activePath = normalizePath(window.location.pathname);
+  lastVisibleAt = Date.now();
+
+  void resolveUserId();
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      trackEngagedTime("hidden");
+      return;
+    }
+
+    lastVisibleAt = Date.now();
+  });
+
+  window.addEventListener("pagehide", () => {
+    trackEngagedTime("pagehide");
+  });
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    cachedUserId = session?.user?.id ?? null;
+
+    if (event === "SIGNED_IN") {
+      trackEvent("auth_session_signed_in", { path: activePath });
+    }
+
+    if (event === "SIGNED_OUT") {
+      trackEvent("auth_session_signed_out", { path: activePath });
+    }
+  });
+}
+
+export function trackEvent(eventName: string, data?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+
+  const properties = sanitizeProperties(data);
+
+  try {
+    window.umami?.track?.(eventName, properties);
+  } catch {
+    // Analytics should never break the product experience.
+  }
+
+  void recordEvent(eventName, properties);
+}
+
 export function trackPage(path: string) {
-  trackEvent("page_view", { path });
+  activePath = normalizePath(path);
+  lastVisibleAt = Date.now();
+  trackEvent("page_view", { path: activePath });
 }
