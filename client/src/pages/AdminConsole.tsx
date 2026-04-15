@@ -255,6 +255,7 @@ export default function AdminConsole(props: any) {
     adminTabs,
     adminTabMeta,
     questionStats,
+    questionSummaryCards,
     resourceStats,
     updateStats,
     supportStats,
@@ -915,11 +916,17 @@ export default function AdminConsole(props: any) {
           {activeTab === "questions" ? (
             <>
               <SectionCard title="Question Operations" description="Table-first inventory for cleanup, bulk actions, imports, and one-off editing." actions={<><SmallButton icon={Upload} onClick={() => setShowQuestionImport((current: boolean) => !current)}>{showQuestionImport ? "Hide import" : "Open import"}</SmallButton><SmallButton icon={Plus} tone="primary" onClick={openNewQuestionForm}>Add question</SmallButton></>}>
-                <div className="grid gap-4 md:grid-cols-4">
-                  <MetricCard label="Total rows" value={questionStats.total} hint="All questions in the bank." icon={Database} tone="slate" />
-                  <MetricCard label="Active rows" value={questionStats.active} hint="Currently visible to operators." icon={CheckCircle2} tone="green" />
-                  <MetricCard label="PYQs" value={questionStats.pyq} hint="Past-year question coverage." icon={ShieldCheck} tone="blue" />
-                  <MetricCard label="UPSC" value={questionStats.upsc} hint="UPSC-tagged rows." icon={BookOpen} tone="orange" />
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+                  {questionSummaryCards.map((card: any) => (
+                    <MetricCard
+                      key={card.label}
+                      label={card.label}
+                      value={card.value}
+                      hint={card.hint}
+                      icon={card.icon}
+                      tone={card.tone}
+                    />
+                  ))}
                 </div>
               </SectionCard>
 

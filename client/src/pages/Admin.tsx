@@ -310,6 +310,8 @@ type AnalyticsOverviewRow = {
   avg_engaged_seconds: number | null;
 };
 
+type QuestionExamCounts = Record<Exam, number>;
+
 type AnalyticsDailyOverviewRow = AnalyticsOverviewRow & {
   day: string;
 };
@@ -394,6 +396,34 @@ const EMPTY_U: UpdateForm = {
 
 function toId(value: string | number | null | undefined) {
   return String(value ?? "");
+}
+
+function createEmptyQuestionExamCounts(): QuestionExamCounts {
+  return QUESTION_EXAMS.reduce((counts, exam) => {
+    counts[exam] = 0;
+    return counts;
+  }, {} as QuestionExamCounts);
+}
+
+function summarizeQuestionBank(questions: QuestionRecord[]) {
+  const examCounts = createEmptyQuestionExamCounts();
+  let active = 0;
+  let pyq = 0;
+
+  questions.forEach((question) => {
+    if (question.is_active) active += 1;
+    if (question.type === "PYQ") pyq += 1;
+    examCounts[question.exam] += 1;
+  });
+
+  return {
+    total: questions.length,
+    active,
+    inactive: questions.length - active,
+    pyq,
+    upsc: examCounts.UPSC,
+    examCounts,
+  };
 }
 
 function normalizeKey(key: string) {
@@ -1504,19 +1534,76 @@ function Admin() {
     }
   }, [filteredSupportRequests, selectedSupportId]);
 
-  const questionStats = useMemo(() => {
-    const active = dbQuestions.filter(question => question.is_active).length;
-    const pyq = dbQuestions.filter(question => question.type === "PYQ").length;
-    const upsc = dbQuestions.filter(question => question.exam === "UPSC").length;
+  const questionStats = useMemo(() => summarizeQuestionBank(dbQuestions), [dbQuestions]);
 
-    return {
-      total: dbQuestions.length,
-      active,
-      inactive: dbQuestions.length - active,
-      pyq,
-      upsc,
-    };
-  }, [dbQuestions]);
+  const questionSummaryCards = useMemo(
+    () => [
+      {
+        label: "Total Questions",
+        value: questionStats.total,
+        hint: "Full bank size across all supported exams.",
+        icon: Database,
+        tone: "slate" as const,
+      },
+      {
+        label: "Active Questions",
+        value: questionStats.active,
+        hint: "Currently enabled in the question bank.",
+        icon: CheckCircle2,
+        tone: "green" as const,
+      },
+      {
+        label: "PYQs",
+        value: questionStats.pyq,
+        hint: "Previous-year questions across the full bank.",
+        icon: ShieldCheck,
+        tone: "blue" as const,
+      },
+      {
+        label: "UPSC Rows",
+        value: questionStats.examCounts.UPSC,
+        hint: "UPSC-tagged rows in dbQuestions.",
+        icon: BookOpen,
+        tone: "orange" as const,
+      },
+      {
+        label: "TSPSC Rows",
+        value: questionStats.examCounts.TSPSC,
+        hint: "TSPSC-tagged rows in dbQuestions.",
+        icon: BookOpen,
+        tone: "rose" as const,
+      },
+      {
+        label: "APPSC Rows",
+        value: questionStats.examCounts.APPSC,
+        hint: "APPSC-tagged rows in dbQuestions.",
+        icon: BookOpen,
+        tone: "green" as const,
+      },
+      {
+        label: "SSC Rows",
+        value: questionStats.examCounts.SSC,
+        hint: "SSC-tagged rows in dbQuestions.",
+        icon: BookOpen,
+        tone: "blue" as const,
+      },
+      {
+        label: "RRB Rows",
+        value: questionStats.examCounts.RRB,
+        hint: "RRB-tagged rows in dbQuestions.",
+        icon: BookOpen,
+        tone: "slate" as const,
+      },
+      {
+        label: "IBPS Rows",
+        value: questionStats.examCounts.IBPS,
+        hint: "IBPS-tagged rows in dbQuestions.",
+        icon: BookOpen,
+        tone: "orange" as const,
+      },
+    ],
+    [questionStats]
+  );
 
   const resourceStats = useMemo(() => {
     const active = dbResources.filter(resource => resource.is_active !== false).length;
@@ -2547,6 +2634,7 @@ function Admin() {
         adminTabs={ADMIN_TABS}
         adminTabMeta={ADMIN_TAB_META}
         questionStats={questionStats}
+        questionSummaryCards={questionSummaryCards}
         resourceStats={resourceStats}
         updateStats={updateStats}
         supportStats={supportStats}
