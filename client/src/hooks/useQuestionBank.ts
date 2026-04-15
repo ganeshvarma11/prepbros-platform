@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
 import { questions as fallbackQuestions, type Question } from "@/data/questions";
-import { mergeQuestionBanks } from "@/lib/questionIdentity";
 import { fetchQuestions } from "@/lib/questionsDB";
 
 export function useQuestionBank() {
@@ -20,7 +19,8 @@ export function useQuestionBank() {
         if (cancelled) return;
 
         if (records.length > 0) {
-          setQuestions(mergeQuestionBanks(records));
+          // Keep live DB questions as the single source of truth when available.
+          setQuestions(records);
           setHasLiveData(true);
         } else {
           setQuestions(fallbackQuestions);
