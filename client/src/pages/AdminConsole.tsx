@@ -305,7 +305,6 @@ export default function AdminConsole(props: any) {
     setQuestionImportInput,
     questionImportPreview,
     importQuestions,
-    replaceFilteredQuestionsWithImport,
     clearQuestionImportState,
     questionImportSource,
     bulkImportTemplate,
@@ -996,12 +995,11 @@ export default function AdminConsole(props: any) {
 
                 <div className="space-y-6">
                   {showQuestionImport ? (
-                    <SectionCard title="Bulk Import" description="Paste from Sheets or upload CSV, TSV, TXT, or JSON. Replace filtered is intentionally high-friction." actions={<SmallButton icon={FileSpreadsheet} onClick={() => questionFileInputRef.current?.click()}>Upload file</SmallButton>}>
+                    <SectionCard title="Bulk Import" description="Paste from Sheets or upload CSV, TSV, TXT, or JSON to append new rows." actions={<SmallButton icon={FileSpreadsheet} onClick={() => questionFileInputRef.current?.click()}>Upload file</SmallButton>}>
                       <input ref={questionFileInputRef} type="file" accept=".csv,.tsv,.txt,.json" className="hidden" onChange={handleQuestionFileUpload} />
                       <textarea value={questionImportInput} onChange={event => setQuestionImportInput(event.target.value)} rows={14} placeholder="Paste JSON, CSV, or tab-separated rows here..." className={cn(adminTextAreaClass, "font-mono text-[13px]")} />
                       <div className="mt-4 flex flex-wrap gap-2">
                         <SmallButton icon={Upload} tone="primary" onClick={() => void importQuestions()} disabled={Boolean(questionImportPreview.error) || questionImportPreview.rows.length === 0 || loadingTarget !== null}>{loadingTarget === "import-questions" ? "Importing..." : "Import rows"}</SmallButton>
-                        <SmallButton icon={RefreshCcw} tone="danger" onClick={() => void replaceFilteredQuestionsWithImport()} disabled={Boolean(questionImportPreview.error) || questionImportPreview.rows.length === 0 || filteredQuestions.length === 0 || loadingTarget !== null}>{loadingTarget === "replace-filtered-questions" ? "Replacing..." : `Replace filtered (${filteredQuestions.length})`}</SmallButton>
                         <SmallButton onClick={() => setQuestionImportInput(bulkImportTemplate)}>Fill template</SmallButton>
                         <SmallButton onClick={clearQuestionImportState}>Clear</SmallButton>
                       </div>

@@ -1929,56 +1929,6 @@ function Admin() {
     }
   };
 
-  const replaceFilteredQuestionsWithImport = async () => {
-    if (questionImportPreview.error) {
-      showToast(questionImportPreview.error, false);
-      return;
-    }
-
-    if (questionImportPreview.rows.length === 0) {
-      showToast("Paste or upload questions first.", false);
-      return;
-    }
-
-    if (filteredQuestions.length === 0) {
-      showToast("Adjust filters first so there are questions to replace.", false);
-      return;
-    }
-
-    const filteredIds = filteredQuestions.map(question => toId(question.id));
-    const confirmation = window.confirm(
-      `Replace ${filteredQuestions.length} filtered question${filteredQuestions.length === 1 ? "" : "s"} with ${questionImportPreview.rows.length} imported row${questionImportPreview.rows.length === 1 ? "" : "s"}?\n\nThis will permanently delete the currently filtered rows before importing the new batch.`
-    );
-
-    if (!confirmation) return;
-
-    setBusy("replace-filtered-questions");
-
-    try {
-      for (const batch of chunkItems(filteredIds, 200)) {
-        const { error } = await supabase.from("questions_db").delete().in("id", batch);
-        if (error) throw error;
-      }
-
-      for (const batch of chunkQuestions(questionImportPreview.rows)) {
-        const { error } = await supabase.from("questions_db").insert(batch);
-        if (error) throw error;
-      }
-
-      await loadQuestions();
-      clearQuestionImportState();
-      setSelectedQuestionIds([]);
-      showToast(
-        `Replaced ${filteredQuestions.length} filtered question${filteredQuestions.length === 1 ? "" : "s"} with ${questionImportPreview.rows.length} imported row${questionImportPreview.rows.length === 1 ? "" : "s"}.`
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not replace filtered questions.";
-      showToast(message, false);
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const importResources = async () => {
     if (resourceImportPreview.error) {
       showToast(resourceImportPreview.error, false);
@@ -2647,7 +2597,6 @@ function Admin() {
         setQuestionImportInput={setQuestionImportInput}
         questionImportPreview={questionImportPreview}
         importQuestions={importQuestions}
-        replaceFilteredQuestionsWithImport={replaceFilteredQuestionsWithImport}
         clearQuestionImportState={clearQuestionImportState}
         questionImportSource={questionImportSource}
         bulkImportTemplate={BULK_IMPORT_TEMPLATE}
@@ -3393,7 +3342,7 @@ function Admin() {
                             Bulk question import
                           </p>
                           <p className="mt-1 text-sm text-orange-700/80 dark:text-orange-200/70">
-                            Paste from Google Sheets, or upload a CSV, TSV, TXT, or JSON file.
+                            Paste from Google Sheets, or upload a CSV, TSV, TXT, or JSON file to append new rows.
                           </p>
                         </div>
                         <input
@@ -3428,21 +3377,6 @@ function Admin() {
                         >
                           {loadingTarget === "import-questions" ? "Importing..." : "Import rows"}
                         </SmallButton>
-                        <SmallButton
-                          icon={RefreshCcw}
-                          tone="danger"
-                          onClick={() => void replaceFilteredQuestionsWithImport()}
-                          disabled={
-                            Boolean(questionImportPreview.error) ||
-                            questionImportPreview.rows.length === 0 ||
-                            filteredQuestions.length === 0 ||
-                            loadingTarget !== null
-                          }
-                        >
-                          {loadingTarget === "replace-filtered-questions"
-                            ? "Replacing..."
-                            : `Replace filtered (${filteredQuestions.length})`}
-                        </SmallButton>
                         <SmallButton onClick={() => setQuestionImportInput(BULK_IMPORT_TEMPLATE)}>
                           Fill template
                         </SmallButton>
@@ -3466,7 +3400,6 @@ function Admin() {
                             </p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
                               Current filters match {filteredQuestions.length} existing question{filteredQuestions.length === 1 ? "" : "s"}.
-                              Use "Replace filtered" to swap that exact slice in one step.
                             </p>
                             {questionImportPreview.rows.slice(0, 2).map((row, index) => (
                               <div key={`${row.question}-${index}`} className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
