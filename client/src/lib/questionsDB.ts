@@ -4,6 +4,7 @@ import { loadPublicCache } from "./publicCache";
 
 const QUESTIONS_CACHE_KEY = "questions-db:active";
 const QUESTIONS_CACHE_TTL_MS = 15 * 60 * 1000;
+const SUPABASE_PAGE_SIZE = 1000;
 
 // Convert DB row to Question format matching existing interface
 export function dbRowToQuestion(row: any): Question {
@@ -30,19 +31,32 @@ export async function fetchQuestions(): Promise<Question[]> {
       key: QUESTIONS_CACHE_KEY,
       ttlMs: QUESTIONS_CACHE_TTL_MS,
       loader: async () => {
-        const { data, error } = await supabase
-          .from("questions_db")
-          .select(
-            "id, question, option_a, option_b, option_c, option_d, correct_option, explanation, exam, topic, subtopic, difficulty, type, year, tags, created_at"
-          )
-          .eq("is_active", true)
-          .order("created_at", { ascending: true });
+        const rows: any[] = [];
 
-        if (error) {
-          throw error;
+        for (let from = 0; ; from += SUPABASE_PAGE_SIZE) {
+          const to = from + SUPABASE_PAGE_SIZE - 1;
+          const { data, error } = await supabase
+            .from("questions_db")
+            .select(
+              "id, question, option_a, option_b, option_c, option_d, correct_option, explanation, exam, topic, subtopic, difficulty, type, year, tags, created_at"
+            )
+            .eq("is_active", true)
+            .order("created_at", { ascending: true })
+            .range(from, to);
+
+          if (error) {
+            throw error;
+          }
+
+          const batch = data || [];
+          rows.push(...batch);
+
+          if (batch.length < SUPABASE_PAGE_SIZE) {
+            break;
+          }
         }
 
-        return (data || []).map(dbRowToQuestion);
+        return rows.map(dbRowToQuestion);
       },
     });
   } catch (error) {

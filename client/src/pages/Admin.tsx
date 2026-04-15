@@ -88,6 +88,7 @@ const CONTEST_STATUSES = ["upcoming", "past"] as const;
 const STATUS_FILTERS = ["All", "Active", "Inactive"] as const;
 const UPDATE_TIMELINE_FILTERS = ["All", "Open", "Upcoming", "Closing Soon"] as const;
 const ADMIN_TABS = ["analytics", "questions", "resources", "updates", "contests", "support"] as const;
+const SUPABASE_PAGE_SIZE = 1000;
 
 const ADMIN_TAB_META: Record<
   (typeof ADMIN_TABS)[number],
@@ -1054,13 +1055,27 @@ function Admin() {
   };
 
   const loadQuestions = async () => {
-    const { data, error } = await supabase
-      .from("questions_db")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const rows: QuestionRecord[] = [];
 
-    if (error) throw error;
-    setDbQuestions((data || []) as QuestionRecord[]);
+    for (let from = 0; ; from += SUPABASE_PAGE_SIZE) {
+      const to = from + SUPABASE_PAGE_SIZE - 1;
+      const { data, error } = await supabase
+        .from("questions_db")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+
+      const batch = (data || []) as QuestionRecord[];
+      rows.push(...batch);
+
+      if (batch.length < SUPABASE_PAGE_SIZE) {
+        break;
+      }
+    }
+
+    setDbQuestions(rows);
   };
 
   const loadResources = async () => {
