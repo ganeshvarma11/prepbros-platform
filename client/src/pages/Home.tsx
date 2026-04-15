@@ -379,7 +379,7 @@ function LandingAuthPanel({
           {displayName}, your daily practice flow is ready when you are.
         </p>
 
-        <div className="mt-8 space-y-3">
+        <div className="mt-8 space-y-4">
           <Link href="/practice">
             <span className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-[14px] border border-[var(--brand)] bg-[var(--brand)] px-5 text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-on-brand)] shadow-[var(--shadow-sm)] transition duration-200 hover:bg-[var(--brand-light)]">
               Go to practice
