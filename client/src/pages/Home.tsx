@@ -338,12 +338,13 @@ function LandingAuthPanel({
   onOpenLogin,
   onSignOut,
 }: LandingAuthPanelProps) {
-  const panelClassName =
-    "w-full max-w-[430px] min-h-[470px] rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:min-h-[490px] sm:p-7";
+  const basePanelClassName =
+    "w-full max-w-[430px] rounded-[24px] border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:p-7";
+  const tallPanelClassName = `${basePanelClassName} min-h-[470px] sm:min-h-[490px]`;
 
   if (loading) {
     return (
-      <div className={panelClassName}>
+      <div className={tallPanelClassName}>
         <div className="animate-pulse">
           <div className="h-3 w-24 rounded-full bg-[var(--surface-2)]" />
           <div className="mt-5 h-12 w-44 rounded-[18px] bg-[var(--surface-2)]" />
@@ -367,7 +368,7 @@ function LandingAuthPanel({
 
   if (user) {
     return (
-      <div className={panelClassName}>
+      <div className={basePanelClassName}>
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
           Account
         </p>
@@ -399,7 +400,7 @@ function LandingAuthPanel({
   }
 
   return (
-    <div className={panelClassName}>
+    <div className={tallPanelClassName}>
       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--text-faint)]">
         PrepBros
       </p>
