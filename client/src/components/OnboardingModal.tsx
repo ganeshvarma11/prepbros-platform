@@ -3,18 +3,11 @@ import { ArrowRight, CheckCircle2, Target, X } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
 import { trackEvent } from "@/lib/analytics";
-
-const EXAM_OPTIONS = [
-  "UPSC CSE 2026",
-  "UPSC CSE 2027",
-  "TSPSC Group 1 2025",
-  "TSPSC Group 2 2025",
-  "APPSC Group 1 2025",
-  "SSC CGL 2025",
-  "SSC CHSL 2025",
-  "RRB NTPC 2025",
-  "IBPS PO 2025",
-];
+import {
+  DEFAULT_TARGET_EXAM,
+  normalizeTargetExam,
+  TARGET_EXAM_OPTIONS,
+} from "@/lib/targetExam";
 
 const GOAL_OPTIONS = ["10 questions/day", "20 questions/day", "30 questions/day"];
 
@@ -29,17 +22,17 @@ interface OnboardingModalProps {
 export default function OnboardingModal({
   isOpen,
   userId,
-  defaultExam = "UPSC CSE 2026",
+  defaultExam = DEFAULT_TARGET_EXAM,
   onClose,
   onComplete,
 }: OnboardingModalProps) {
-  const [targetExam, setTargetExam] = useState(defaultExam);
+  const [targetExam, setTargetExam] = useState(normalizeTargetExam(defaultExam));
   const [dailyGoal, setDailyGoal] = useState(GOAL_OPTIONS[0]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
-    setTargetExam(defaultExam);
+    setTargetExam(normalizeTargetExam(defaultExam));
     setDailyGoal(GOAL_OPTIONS[0]);
     setSaving(false);
   }, [defaultExam, isOpen]);
@@ -130,8 +123,10 @@ export default function OnboardingModal({
                   onChange={(event) => setTargetExam(event.target.value)}
                   className="w-full"
                 >
-                  {EXAM_OPTIONS.map((exam) => (
-                    <option key={exam}>{exam}</option>
+                  {TARGET_EXAM_OPTIONS.map((exam) => (
+                    <option key={exam} value={exam}>
+                      {exam}
+                    </option>
                   ))}
                 </select>
               </div>

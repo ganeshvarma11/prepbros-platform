@@ -18,6 +18,11 @@ import BrandLogo from "@/components/BrandLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
 import { getPolicyUrl } from "@/lib/siteConfig";
+import {
+  DEFAULT_TARGET_EXAM,
+  normalizeTargetExam,
+  TARGET_EXAM_OPTIONS,
+} from "@/lib/targetExam";
 import { cn } from "@/lib/utils";
 
 interface AuthModalProps {
@@ -25,18 +30,6 @@ interface AuthModalProps {
   onClose: () => void;
   defaultTab?: "login" | "signup";
 }
-
-const EXAM_OPTIONS = [
-  "UPSC CSE 2026",
-  "UPSC CSE 2027",
-  "TSPSC Group 1 2025",
-  "TSPSC Group 2 2025",
-  "APPSC Group 1 2025",
-  "SSC CGL 2025",
-  "SSC CHSL 2025",
-  "RRB NTPC 2025",
-  "IBPS PO 2025",
-];
 
 const loginSchema = z.object({
   email: z.email({ message: "Enter a valid email address." }),
@@ -78,7 +71,7 @@ export default function AuthModal({
       fullName: "",
       email: "",
       password: "",
-      targetExam: "UPSC CSE 2026",
+      targetExam: DEFAULT_TARGET_EXAM,
     },
   });
 
@@ -94,7 +87,7 @@ export default function AuthModal({
       fullName: "",
       email: "",
       password: "",
-      targetExam: "UPSC CSE 2026",
+      targetExam: DEFAULT_TARGET_EXAM,
     });
   }, [defaultTab, isOpen, loginForm.reset, signupForm.reset]);
 
@@ -180,24 +173,24 @@ export default function AuthModal({
         </button>
 
         <div className="grid md:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative hidden overflow-hidden border-r border-[var(--border)] bg-[linear-gradient(180deg,#101722_0%,#0d1218_100%)] px-6 py-8 text-[var(--text-primary)] md:block md:px-8 md:py-10">
+          <div className="relative hidden overflow-hidden border-r border-white/10 bg-[linear-gradient(180deg,#101722_0%,#0d1218_100%)] px-6 py-8 text-white md:block md:px-8 md:py-10">
             <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:120px_120px]" />
             <div className="absolute -right-16 top-16 h-40 w-40 rounded-full bg-[var(--brand-glow)] blur-3xl" />
             <div className="relative">
               <BrandLogo
-                textClassName="text-[var(--text-primary)]"
-                className="[&_p:last-child]:text-[var(--text-secondary)]"
+                textClassName="text-white"
+                className="[&_p:last-child]:text-white/72"
               />
 
               <div className="mt-10 space-y-4">
-                <p className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--brand-subtle)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand)]">
+                <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,140,50,0.14)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-light)]">
                   <Sparkles size={14} />
                   Built for serious aspirants
                 </p>
-                <h2 className="max-w-md text-4xl font-semibold tracking-[-0.06em] text-[var(--text-primary)]">
+                <h2 className="max-w-md text-4xl font-semibold tracking-[-0.06em] text-white">
                   Practice with the kind of interface users actually trust.
                 </h2>
-                <p className="max-w-md text-sm text-[var(--text-secondary)] md:text-base">
+                <p className="max-w-md text-sm text-white/72 md:text-base">
                   Your account keeps solved questions, streaks, bookmarks, and
                   weak-topic review in one place so progress feels tangible
                   after every session.
@@ -212,13 +205,13 @@ export default function AuthModal({
                 ].map(item => (
                   <div
                     key={item}
-                    className="flex items-start gap-3 rounded-[16px] border border-[var(--border)] bg-[var(--surface-1)] p-4 shadow-[var(--shadow-sm)]"
+                    className="flex items-start gap-3 rounded-[16px] border border-white/10 bg-white/95 p-4 shadow-[var(--shadow-sm)]"
                   >
                     <ShieldCheck
                       size={18}
                       className="mt-0.5 text-[var(--brand)]"
                     />
-                    <p className="text-sm text-[var(--text-secondary)]">
+                    <p className="text-sm text-slate-600">
                       {item}
                     </p>
                   </div>
@@ -523,7 +516,9 @@ export default function AuthModal({
                       </label>
                       <select
                         id="auth-signup-exam"
-                        {...signupForm.register("targetExam")}
+                        {...signupForm.register("targetExam", {
+                          setValueAs: value => normalizeTargetExam(value),
+                        })}
                         className={cn(
                           fieldClasses,
                           "appearance-none",
@@ -534,8 +529,10 @@ export default function AuthModal({
                           signupForm.formState.errors.targetExam
                         )}
                       >
-                        {EXAM_OPTIONS.map(exam => (
-                          <option key={exam}>{exam}</option>
+                        {TARGET_EXAM_OPTIONS.map(exam => (
+                          <option key={exam} value={exam}>
+                            {exam}
+                          </option>
                         ))}
                       </select>
                       {fieldError(

@@ -21,6 +21,7 @@ import {
   getAnswerAttempts,
 } from "@/lib/userProgress";
 import { supabase } from "@/lib/supabase";
+import { DEFAULT_TARGET_EXAM, normalizeTargetExam } from "@/lib/targetExam";
 
 type AnswerRow = {
   question_id: QuestionId;
@@ -249,8 +250,9 @@ export default function Dashboard() {
   const accuracy =
     totalAttempts > 0 ? Math.round((totalSolved / totalAttempts) * 100) : 0;
   const streak = countCurrentStreak(sortedAnswers);
-  const targetExam =
-    profile?.target_exam || user?.user_metadata?.target_exam || "UPSC CSE 2026";
+  const targetExam = normalizeTargetExam(
+    profile?.target_exam || user?.user_metadata?.target_exam || DEFAULT_TARGET_EXAM
+  );
   const displayName =
     user?.user_metadata?.full_name?.split(" ")[0] ||
     profile?.full_name?.split(" ")[0] ||

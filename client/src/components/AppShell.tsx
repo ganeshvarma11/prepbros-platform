@@ -32,6 +32,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSwipeable } from "@/hooks/useSwipeable";
 import { preloadRoute } from "@/lib/routePreload";
+import { DEFAULT_TARGET_EXAM, normalizeTargetExam } from "@/lib/targetExam";
 import { cn } from "@/lib/utils";
 
 type AppShellProps = {
@@ -212,7 +213,9 @@ function SidebarBody({
     user?.user_metadata?.full_name ||
     user?.email?.split("@")[0] ||
     "PrepBros User";
-  const targetExam = user?.user_metadata?.target_exam || "UPSC CSE 2026";
+  const targetExam = normalizeTargetExam(
+    user?.user_metadata?.target_exam || DEFAULT_TARGET_EXAM
+  );
   const avatarUrl =
     user?.user_metadata?.avatar_url ||
     user?.user_metadata?.picture ||

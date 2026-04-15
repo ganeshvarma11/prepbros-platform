@@ -47,18 +47,11 @@ import {
   getAnswerAttempts,
 } from "@/lib/userProgress";
 import { supabase } from "@/lib/supabase";
-
-const EXAM_OPTIONS = [
-  "UPSC CSE 2026",
-  "UPSC CSE 2027",
-  "TSPSC Group 1 2025",
-  "TSPSC Group 2 2025",
-  "APPSC Group 1 2025",
-  "SSC CGL 2025",
-  "SSC CHSL 2025",
-  "RRB NTPC 2025",
-  "IBPS PO 2025",
-];
+import {
+  DEFAULT_TARGET_EXAM,
+  normalizeTargetExam,
+  TARGET_EXAM_OPTIONS,
+} from "@/lib/targetExam";
 
 const PREP_LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced"];
 const PROFILE_MEDIA_BUCKET = "profile-media";
@@ -109,7 +102,7 @@ type CropState = {
 const defaultSettings: EditableSettings = {
   fullName: "",
   username: "",
-  targetExam: "UPSC CSE 2026",
+  targetExam: DEFAULT_TARGET_EXAM,
   location: "",
   state: "",
   bio: "",
@@ -146,7 +139,7 @@ const sanitizeSettings = (settings: EditableSettings): EditableSettings => ({
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9_-]/g, "") || "prepbros-user",
-  targetExam: settings.targetExam || "UPSC CSE 2026",
+  targetExam: normalizeTargetExam(settings.targetExam),
   location: settings.location.trim(),
   state: settings.state.trim(),
   bio: settings.bio.trim(),
@@ -173,8 +166,8 @@ const buildSettings = (
         user?.email?.split("@")[0] ||
         "prepbros-user"
     ),
-    targetExam: String(
-      profile?.target_exam || metadata.target_exam || "UPSC CSE 2026"
+    targetExam: normalizeTargetExam(
+      String(profile?.target_exam || metadata.target_exam || DEFAULT_TARGET_EXAM)
     ),
     location: String(metadata.location || ""),
     state: String(profile?.state || metadata.state || ""),
@@ -1472,7 +1465,7 @@ export default function Profile() {
                         }
                         className={`${fieldClassName} w-full appearance-none`}
                       >
-                        {EXAM_OPTIONS.map(exam => (
+                        {TARGET_EXAM_OPTIONS.map(exam => (
                           <option
                             key={exam}
                             value={exam}
