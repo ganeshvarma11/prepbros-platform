@@ -43,12 +43,14 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { chunkQuestions, parseBulkQuestionInput, type ImportedQuestionPayload } from "@/lib/questionImport";
+import { clearPublicCache } from "@/lib/publicCache";
 import { buildMailtoLink } from "@/lib/siteConfig";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import AdminConsole from "@/pages/AdminConsole";
 
 const ADMIN_EMAIL = "rakeshmeesa631@gmail.com";
+const RESOURCES_PUBLIC_CACHE_KEY = "resources:active";
 
 const QUESTION_EXAMS: Exam[] = ["UPSC", "SSC", "TSPSC", "APPSC", "RRB", "IBPS"];
 const FILTER_EXAMS = ["All", ...QUESTION_EXAMS] as const;
@@ -1877,6 +1879,7 @@ function Admin() {
       const { error } = await query;
       if (error) throw error;
 
+      clearPublicCache(RESOURCES_PUBLIC_CACHE_KEY);
       await loadResources();
       resetResourceForm();
       showToast(editingResourceId ? "Resource updated." : "Resource saved.");
@@ -2035,6 +2038,7 @@ function Admin() {
         if (error) throw error;
       }
 
+      clearPublicCache(RESOURCES_PUBLIC_CACHE_KEY);
       await loadResources();
       setResourceImportInput("");
       setResourceImportSource("");
@@ -2148,6 +2152,7 @@ function Admin() {
         if (error) throw error;
       }
 
+      clearPublicCache(RESOURCES_PUBLIC_CACHE_KEY);
       await loadResources();
       setSelectedResourceIds(current => current.filter(id => !ids.includes(id)));
       showToast(isActive ? "Selected resources activated." : "Selected resources deactivated.");
@@ -2177,6 +2182,7 @@ function Admin() {
         if (error) throw error;
       }
 
+      clearPublicCache(RESOURCES_PUBLIC_CACHE_KEY);
       await loadResources();
       setSelectedResourceIds(current => current.filter(id => !ids.includes(id)));
       showToast(`${ids.length} resource${ids.length === 1 ? "" : "s"} deleted.`);
