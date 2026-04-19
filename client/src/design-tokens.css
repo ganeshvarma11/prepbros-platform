@@ -126,9 +126,9 @@ html.light {
   --border: rgba(31, 41, 55, 0.11);
   --border-strong: rgba(31, 41, 55, 0.16);
 
-  --text-1: #172033;
-  --text-2: #44546a;
-  --text-3: #66758a;
+  --text-1: #101114;
+  --text-2: rgba(16, 17, 20, 0.72);
+  --text-3: rgba(16, 17, 20, 0.52);
   --text-on-brand: #111315;
 
   --brand: #ff8c32;
@@ -771,6 +771,68 @@ html.light .badge-amber {
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45);
 }
 
+.dashboard-range-switch {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: min(100%, 410px);
+  gap: 4px;
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  border-radius: 14px;
+  background: rgba(245, 248, 252, 0.86);
+  padding: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+.dashboard-range-switch button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.1;
+  padding: 8px 10px;
+  transition:
+    background var(--t-fast),
+    color var(--t-fast),
+    box-shadow var(--t-fast);
+}
+
+.dashboard-range-switch button:hover {
+  color: var(--text-1);
+}
+
+.dashboard-range-switch button.is-active {
+  background: #ffffff;
+  color: var(--text-1);
+  box-shadow:
+    0 10px 24px -18px rgba(27, 39, 64, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.dashboard-activity-chart {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(64px, 1fr);
+  align-items: end;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 2px 8px;
+}
+
+.dashboard-activity-chart.is-dense {
+  grid-auto-columns: minmax(34px, 1fr);
+  gap: 8px;
+}
+
+.dashboard-activity-label {
+  min-height: 18px;
+  white-space: nowrap;
+}
+
 .dashboard-chip {
   border: 1px solid rgba(31, 41, 55, 0.08);
   background: rgba(245, 248, 252, 0.98);
@@ -905,6 +967,17 @@ html.dark .dashboard-stat-card {
 html.dark .dashboard-chip {
   border-color: rgba(255, 255, 255, 0.08);
   background: rgba(16, 23, 34, 0.74);
+}
+
+html.dark .dashboard-range-switch {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(16, 23, 34, 0.74);
+  box-shadow: none;
+}
+
+html.dark .dashboard-range-switch button.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
 }
 
 html.dark .dashboard-progress-track {

@@ -42,8 +42,55 @@ type TopicPerformance = {
   accuracy: number;
 };
 
+type ActivityRange = "daily" | "monthly" | "sixMonth" | "yearly";
+
+type ActivityBucket = {
+  key: string;
+  label: string;
+  title: string;
+  count: number;
+  isCurrent: boolean;
+};
+
+const ACTIVITY_RANGES: {
+  id: ActivityRange;
+  label: string;
+  title: string;
+  detail: string;
+}[] = [
+  {
+    id: "daily",
+    label: "Daily",
+    title: "Daily practice pattern",
+    detail: "Last 7 days",
+  },
+  {
+    id: "monthly",
+    label: "Monthly",
+    title: "Monthly practice pattern",
+    detail: "Last 30 days",
+  },
+  {
+    id: "sixMonth",
+    label: "6 months",
+    title: "6-month practice pattern",
+    detail: "Month by month",
+  },
+  {
+    id: "yearly",
+    label: "Yearly",
+    title: "Yearly practice pattern",
+    detail: "Last 12 months",
+  },
+];
+
 const toDateKey = (value: Date | string) =>
   new Date(value).toLocaleDateString("en-CA");
+
+const toMonthKey = (value: Date | string) => {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+};
 
 const clampPercent = (value: number) =>
   Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
@@ -68,6 +115,15 @@ const formatLongDate = (value: Date) =>
 
 const formatShortDay = (value: Date) =>
   new Intl.DateTimeFormat("en-IN", { weekday: "short" }).format(value);
+
+const formatShortMonth = (value: Date) =>
+  new Intl.DateTimeFormat("en-IN", { month: "short" }).format(value);
+
+const formatLongMonth = (value: Date) =>
+  new Intl.DateTimeFormat("en-IN", {
+    month: "long",
+    year: "numeric",
+  }).format(value);
 
 const buildPracticeHref = ({
   topic,
@@ -137,6 +193,7 @@ export default function Dashboard() {
   const [dailyGoalOverride, setDailyGoalOverride] = useState<number | null>(
     null
   );
+  const [activityRange, setActivityRange] = useState<ActivityRange>("daily");
   const { questions, syncing: questionsSyncing } = useQuestionBank();
   const loadDashboardData = useCallback(
     async (mode: "initial" | "refresh" = "initial") => {
@@ -408,8 +465,8 @@ export default function Dashboard() {
     [questionLookup, sortedAnswers]
   );
 
-  const weeklyActivity = useMemo(() => {
-    const counts = resolvedAnswers.reduce<Record<string, number>>(
+  const activityOverview = useMemo(() => {
+    const dailyCounts = resolvedAnswers.reduce<Record<string, number>>(
       (acc, item) => {
         const key = toDateKey(item.answered_at);
         acc[key] = (acc[key] || 0) + 1;
@@ -417,27 +474,69 @@ export default function Dashboard() {
       },
       {}
     );
+    const monthlyCounts = resolvedAnswers.reduce<Record<string, number>>(
+      (acc, item) => {
+        const key = toMonthKey(item.answered_at);
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentMonthKey = toMonthKey(today);
 
-    const days = Array.from({ length: 7 }, (_, index) => {
-      const date = new Date();
-      date.setHours(0, 0, 0, 0);
-      date.setDate(date.getDate() - (6 - index));
-      const key = toDateKey(date);
+    const buildDayBuckets = (length: number): ActivityBucket[] =>
+      Array.from({ length }, (_, index) => {
+        const date = new Date(today);
+        date.setDate(today.getDate() - (length - 1 - index));
+        const key = toDateKey(date);
+        const isDailyRange = length === 7;
 
-      return {
-        key,
-        label: formatShortDay(date),
-        title: formatLongDate(date),
-        count: counts[key] || 0,
-      };
-    });
+        return {
+          key,
+          label: isDailyRange ? formatShortDay(date) : String(date.getDate()),
+          title: formatLongDate(date),
+          count: dailyCounts[key] || 0,
+          isCurrent: key === todayKey,
+        };
+      });
+
+    const buildMonthBuckets = (length: number): ActivityBucket[] =>
+      Array.from({ length }, (_, index) => {
+        const date = new Date(today.getFullYear(), today.getMonth(), 1);
+        date.setMonth(date.getMonth() - (length - 1 - index));
+        const key = toMonthKey(date);
+
+        return {
+          key,
+          label: formatShortMonth(date),
+          title: formatLongMonth(date),
+          count: monthlyCounts[key] || 0,
+          isCurrent: key === currentMonthKey,
+        };
+      });
+
+    const activeMeta =
+      ACTIVITY_RANGES.find(item => item.id === activityRange) ??
+      ACTIVITY_RANGES[0];
+    const buckets =
+      activityRange === "monthly"
+        ? buildDayBuckets(30)
+        : activityRange === "sixMonth"
+          ? buildMonthBuckets(6)
+          : activityRange === "yearly"
+            ? buildMonthBuckets(12)
+            : buildDayBuckets(7);
+    const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
 
     return {
-      days,
-      total: days.reduce((sum, day) => sum + day.count, 0),
-      maxCount: Math.max(1, ...days.map(day => day.count)),
+      ...activeMeta,
+      buckets,
+      total,
+      maxCount: Math.max(1, ...buckets.map(bucket => bucket.count)),
     };
-  }, [resolvedAnswers]);
+  }, [activityRange, resolvedAnswers, todayKey]);
 
   const strongestTopic = useMemo(() => {
     const ranked = topicPerformance
@@ -767,43 +866,71 @@ export default function Dashboard() {
               </div>
 
               <div className="card dashboard-panel">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <p className="section-label">Activity</p>
                     <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-                      Weekly practice pattern
+                      {activityOverview.title}
+                    </p>
+                    <p className="dashboard-detail-text mt-1 text-sm">
+                      {activityOverview.detail}
                     </p>
                   </div>
-                  <p className="dashboard-detail-text text-sm">
-                    {weeklyActivity.total > 0
-                      ? `${weeklyActivity.total} attempts in the last 7 days`
-                      : "Your weekly rhythm will appear after your next session"}
-                  </p>
+
+                  <div className="flex flex-col gap-3 sm:items-end">
+                    <div
+                      className="dashboard-range-switch"
+                      aria-label="Activity range"
+                    >
+                      {ACTIVITY_RANGES.map(item => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setActivityRange(item.id)}
+                          className={
+                            item.id === activityRange ? "is-active" : undefined
+                          }
+                          aria-pressed={item.id === activityRange}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="dashboard-detail-text text-sm">
+                      {activityOverview.total > 0
+                        ? `${activityOverview.total} attempt${activityOverview.total === 1 ? "" : "s"} in this range`
+                        : "Your rhythm will appear after your next session"}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-5 flex h-[176px] items-end gap-3">
-                  {weeklyActivity.days.map(day => {
+                <div
+                  className={`dashboard-activity-chart mt-5 ${
+                    activityRange === "monthly" ? "is-dense" : ""
+                  }`}
+                >
+                  {activityOverview.buckets.map(day => {
                     const height =
                       day.count === 0
                         ? 14
                         : Math.max(
                             24,
                             Math.round(
-                              (day.count / weeklyActivity.maxCount) * 100
+                              (day.count / activityOverview.maxCount) * 100
                             )
                           );
 
                     return (
                       <div
                         key={day.key}
-                        className="flex flex-1 flex-col items-center gap-2.5"
+                        className="flex min-w-0 flex-col items-center gap-2.5"
                       >
                         <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
                           {day.count}
                         </span>
                         <div
                           className={`dashboard-day-tile relative flex h-[124px] w-full items-end rounded-[16px] border px-2 pb-2 ${
-                            day.key === todayKey
+                            day.isCurrent
                               ? "is-active border-[var(--brand-muted)]"
                               : "border-[var(--border-soft)]"
                           }`}
@@ -818,8 +945,8 @@ export default function Dashboard() {
                           />
                         </div>
                         <span
-                          className={`text-xs ${
-                            day.key === todayKey
+                          className={`dashboard-activity-label text-xs ${
+                            day.isCurrent
                               ? "font-semibold text-[var(--text-primary)]"
                               : "text-[var(--text-secondary)]"
                           }`}
