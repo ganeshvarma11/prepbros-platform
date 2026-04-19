@@ -50,16 +50,15 @@ type ActivityBucket = {
   title: string;
   count: number;
   isCurrent: boolean;
+  date: Date;
+  weekdayIndex: number;
+  intensity: number;
 };
 
-type ActivityGraphPoint = {
+type ActivityWeek = {
   key: string;
-  x: number;
-  y: number;
-  count: number;
-  title: string;
-  label: string;
-  isCurrent: boolean;
+  monthLabel: string;
+  days: Array<ActivityBucket | null>;
 };
 
 const ACTIVITY_RANGES: {
@@ -84,7 +83,7 @@ const ACTIVITY_RANGES: {
     id: "sixMonth",
     label: "6 months",
     title: "6-month practice pattern",
-    detail: "Month by month",
+    detail: "Last 6 months",
   },
   {
     id: "yearly",
@@ -97,16 +96,8 @@ const ACTIVITY_RANGES: {
 const toDateKey = (value: Date | string) =>
   new Date(value).toLocaleDateString("en-CA");
 
-const toMonthKey = (value: Date | string) => {
-  const date = new Date(value);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-};
-
 const clampPercent = (value: number) =>
   Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
-
-const formatSignedPercent = (value: number) =>
-  `${value > 0 ? "+" : ""}${Math.round(value)}%`;
 
 const formatCount = (value: number) =>
   new Intl.NumberFormat("en-IN").format(value);
@@ -131,12 +122,6 @@ const formatShortDay = (value: Date) =>
 
 const formatShortMonth = (value: Date) =>
   new Intl.DateTimeFormat("en-IN", { month: "short" }).format(value);
-
-const formatLongMonth = (value: Date) =>
-  new Intl.DateTimeFormat("en-IN", {
-    month: "long",
-    year: "numeric",
-  }).format(value);
 
 const buildPracticeHref = ({
   topic,
@@ -487,146 +472,97 @@ export default function Dashboard() {
       },
       {}
     );
-    const monthlyCounts = resolvedAnswers.reduce<Record<string, number>>(
-      (acc, item) => {
-        const key = toMonthKey(item.answered_at);
-        acc[key] = (acc[key] || 0) + 1;
-        return acc;
-      },
-      {}
-    );
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const currentMonthKey = toMonthKey(today);
-
-    const buildDayBuckets = (length: number): ActivityBucket[] =>
-      Array.from({ length }, (_, index) => {
-        const date = new Date(today);
-        date.setDate(today.getDate() - (length - 1 - index));
-        const key = toDateKey(date);
-        const isDailyRange = length === 7;
-
-        return {
-          key,
-          label: isDailyRange ? formatShortDay(date) : String(date.getDate()),
-          title: formatLongDate(date),
-          count: dailyCounts[key] || 0,
-          isCurrent: key === todayKey,
-        };
-      });
-
-    const buildMonthBuckets = (length: number): ActivityBucket[] =>
-      Array.from({ length }, (_, index) => {
-        const date = new Date(today.getFullYear(), today.getMonth(), 1);
-        date.setMonth(date.getMonth() - (length - 1 - index));
-        const key = toMonthKey(date);
-
-        return {
-          key,
-          label: formatShortMonth(date),
-          title: formatLongMonth(date),
-          count: monthlyCounts[key] || 0,
-          isCurrent: key === currentMonthKey,
-        };
-      });
 
     const activeMeta =
       ACTIVITY_RANGES.find(item => item.id === activityRange) ??
       ACTIVITY_RANGES[0];
-    const buckets =
-      activityRange === "monthly"
-        ? buildDayBuckets(30)
+    const dayCount =
+      activityRange === "yearly"
+        ? 365
         : activityRange === "sixMonth"
-          ? buildMonthBuckets(6)
-          : activityRange === "yearly"
-            ? buildMonthBuckets(12)
-            : buildDayBuckets(7);
+          ? 183
+          : activityRange === "monthly"
+            ? 30
+            : 7;
+    const rawBuckets = Array.from({ length: dayCount }, (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (dayCount - 1 - index));
+      const key = toDateKey(date);
+
+      return {
+        key,
+        label:
+          activityRange === "daily"
+            ? formatShortDay(date)
+            : String(date.getDate()),
+        title: formatLongDate(date),
+        count: dailyCounts[key] || 0,
+        isCurrent: key === todayKey,
+        date,
+        weekdayIndex: (date.getDay() + 6) % 7,
+      };
+    });
+    const maxCount = Math.max(1, ...rawBuckets.map(bucket => bucket.count));
+    const buckets: ActivityBucket[] = rawBuckets.map(bucket => {
+      const ratio = bucket.count / maxCount;
+      const intensity =
+        bucket.count === 0 ? 0 : ratio >= 0.75 ? 4 : ratio >= 0.5 ? 3 : ratio >= 0.25 ? 2 : 1;
+
+      return {
+        ...bucket,
+        intensity,
+      };
+    });
     const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
-    const maxCount = Math.max(1, ...buckets.map(bucket => bucket.count));
     const average = buckets.length > 0 ? total / buckets.length : 0;
     const activeBuckets = buckets.filter(bucket => bucket.count > 0).length;
     const bestBucket = buckets.reduce<ActivityBucket | null>((best, bucket) => {
       if (!best || bucket.count > best.count) return bucket;
       return best;
     }, null);
-    const midpoint = Math.max(1, Math.floor(buckets.length / 2));
-    const firstHalfTotal = buckets
-      .slice(0, midpoint)
-      .reduce((sum, bucket) => sum + bucket.count, 0);
-    const secondHalfTotal = buckets
-      .slice(midpoint)
-      .reduce((sum, bucket) => sum + bucket.count, 0);
-    const trendPercent =
-      firstHalfTotal > 0
-        ? ((secondHalfTotal - firstHalfTotal) / firstHalfTotal) * 100
-        : secondHalfTotal > 0
-          ? 100
-          : 0;
-    const graphWidth = 620;
-    const graphHeight = 188;
-    const graphPaddingX = 18;
-    const graphPaddingTop = 20;
-    const graphPaddingBottom = 30;
-    const plotHeight = graphHeight - graphPaddingTop - graphPaddingBottom;
-    const graphPoints: ActivityGraphPoint[] = buckets.map((bucket, index) => {
-      const x =
-        buckets.length === 1
-          ? graphWidth / 2
-          : graphPaddingX +
-            (index / (buckets.length - 1)) *
-              (graphWidth - graphPaddingX * 2);
-      const y =
-        graphPaddingTop +
-        plotHeight -
-        (bucket.count / maxCount) * plotHeight;
+    const currentStreak = [...buckets]
+      .reverse()
+      .findIndex(bucket => bucket.count === 0);
+    const streakDays =
+      currentStreak === -1 ? buckets.length : Math.max(0, currentStreak);
+    const paddedDays: Array<ActivityBucket | null> = [
+      ...Array.from({ length: buckets[0]?.weekdayIndex ?? 0 }, () => null),
+      ...buckets,
+    ];
+    const weeks: ActivityWeek[] = [];
+    let previousMonth = -1;
 
-      return {
-        key: bucket.key,
-        x,
-        y,
-        count: bucket.count,
-        title: bucket.title,
-        label: bucket.label,
-        isCurrent: bucket.isCurrent,
-      };
-    });
-    const graphLinePath =
-      graphPoints.length > 0
-        ? graphPoints
-            .map((point, index) =>
-              `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`
-            )
-            .join(" ")
-        : "";
-    const graphAreaPath =
-      graphPoints.length > 0
-        ? `${graphLinePath} L ${graphPoints[graphPoints.length - 1].x.toFixed(2)} ${graphHeight - graphPaddingBottom} L ${graphPoints[0].x.toFixed(2)} ${graphHeight - graphPaddingBottom} Z`
-        : "";
-    const averageY =
-      graphPaddingTop + plotHeight - (average / maxCount) * plotHeight;
-    const highlightPoint =
-      graphPoints.find(point => point.isCurrent) ??
-      graphPoints.reduce<ActivityGraphPoint | null>((best, point) => {
-        if (!best || point.count > best.count) return point;
-        return best;
-      }, null);
+    for (let index = 0; index < paddedDays.length; index += 7) {
+      const days = paddedDays.slice(index, index + 7);
+      while (days.length < 7) days.push(null);
+
+      const firstDay = days.find(Boolean) ?? null;
+      const month = firstDay?.date.getMonth() ?? previousMonth;
+      const monthLabel =
+        firstDay && (weeks.length === 0 || month !== previousMonth)
+          ? formatShortMonth(firstDay.date)
+          : "";
+
+      if (firstDay) previousMonth = month;
+      weeks.push({
+        key: `${activeMeta.id}-${index}`,
+        monthLabel,
+        days,
+      });
+    }
 
     return {
       ...activeMeta,
       buckets,
+      weeks,
       total,
       maxCount,
       average,
       activeBuckets,
       bestBucket,
-      trendPercent,
-      graphWidth,
-      graphHeight,
-      graphLinePath,
-      graphAreaPath,
-      graphPoints,
-      averageY,
-      highlightPoint,
+      streakDays,
     };
   }, [activityRange, resolvedAnswers, todayKey]);
 
@@ -967,7 +903,7 @@ export default function Dashboard() {
                     <p className="dashboard-detail-text mt-1 text-sm">
                       {activityOverview.total > 0
                         ? `${activityOverview.detail} with ${formatCount(activityOverview.total)} attempt${activityOverview.total === 1 ? "" : "s"}.`
-                        : `${activityOverview.detail}. Your progress graph will build as you practice.`}
+                        : `${activityOverview.detail}. Your heatmap will fill in as you practice.`}
                     </p>
                   </div>
 
@@ -992,7 +928,7 @@ export default function Dashboard() {
                     </div>
                     <p className="dashboard-detail-text text-sm font-semibold">
                       {activityOverview.total > 0
-                        ? `${formatSignedPercent(activityOverview.trendPercent)} vs earlier pace`
+                        ? `${activityOverview.streakDays} day${activityOverview.streakDays === 1 ? "" : "s"} current streak`
                         : "Ready for your first session"}
                     </p>
                   </div>
@@ -1007,197 +943,100 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="dashboard-activity-summary-label">
-                      Active{" "}
-                      {activityRange === "daily" || activityRange === "monthly"
-                        ? "days"
-                        : "months"}
+                      Active days
                     </p>
                     <p className="dashboard-activity-summary-value">
                       {formatCount(activityOverview.activeBuckets)}
                     </p>
                   </div>
                   <div>
-                    <p className="dashboard-activity-summary-label">Average</p>
+                    <p className="dashboard-activity-summary-label">Streak</p>
                     <p className="dashboard-activity-summary-value">
-                      {activityOverview.average.toFixed(
-                        activityOverview.average >= 10 ? 0 : 1
-                      )}
+                      {formatCount(activityOverview.streakDays)}
                     </p>
                   </div>
                   <div>
-                    <p className="dashboard-activity-summary-label">Best</p>
+                    <p className="dashboard-activity-summary-label">Best day</p>
                     <p className="dashboard-activity-summary-value">
                       {formatCount(activityOverview.bestBucket?.count || 0)}
                     </p>
                   </div>
                 </div>
 
-                <div className="dashboard-activity-graph mt-5">
-                  <div className="dashboard-activity-graph-header">
+                <div className="dashboard-heatmap mt-5">
+                  <div className="dashboard-heatmap-header">
                     <div>
-                      <p className="dashboard-activity-kicker">
-                        Practice trend
-                      </p>
+                      <p className="dashboard-activity-kicker">Activity map</p>
                       <p className="dashboard-detail-text mt-1 text-sm">
                         {activityOverview.bestBucket &&
                         activityOverview.bestBucket.count > 0
                           ? `Peak: ${activityOverview.bestBucket.title} with ${formatCount(activityOverview.bestBucket.count)} attempt${activityOverview.bestBucket.count === 1 ? "" : "s"}.`
-                          : "Start a set to see your strongest practice window."}
+                          : "Each square is one day. Darker squares mean more practice."}
                       </p>
                     </div>
-                    <span className="dashboard-activity-pill">
-                      Avg {activityOverview.average.toFixed(1)}
-                    </span>
+                    <div className="dashboard-heatmap-legend" aria-hidden="true">
+                      <span>Less</span>
+                      {[0, 1, 2, 3, 4].map(level => (
+                        <span
+                          key={level}
+                          className={`dashboard-heatmap-cell level-${level}`}
+                        />
+                      ))}
+                      <span>More</span>
+                    </div>
                   </div>
 
-                  <svg
-                    className="dashboard-activity-svg"
-                    viewBox={`0 0 ${activityOverview.graphWidth} ${activityOverview.graphHeight}`}
-                    role="img"
-                    aria-label={`${activityOverview.title}: ${activityOverview.total} attempts`}
-                    preserveAspectRatio="none"
-                  >
-                    <defs>
-                      <linearGradient
-                        id="dashboardActivityLine"
-                        x1="0"
-                        x2="1"
-                        y1="0"
-                        y2="0"
+                  <div className="dashboard-heatmap-scroll">
+                    <div
+                      className="dashboard-heatmap-months"
+                      aria-hidden="true"
+                      style={{
+                        gridTemplateColumns: `34px repeat(${activityOverview.weeks.length}, 14px)`,
+                      }}
+                    >
+                      <span />
+                      {activityOverview.weeks.map(week => (
+                        <span key={week.key}>{week.monthLabel}</span>
+                      ))}
+                    </div>
+                    <div className="dashboard-heatmap-body">
+                      <div
+                        className="dashboard-heatmap-weekdays"
+                        aria-hidden="true"
                       >
-                        <stop offset="0%" stopColor="var(--accent)" />
-                        <stop offset="58%" stopColor="var(--brand)" />
-                        <stop offset="100%" stopColor="#ffb15f" />
-                      </linearGradient>
-                      <linearGradient
-                        id="dashboardActivityArea"
-                        x1="0"
-                        x2="0"
-                        y1="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="var(--brand)"
-                          stopOpacity="0.22"
-                        />
-                        <stop
-                          offset="62%"
-                          stopColor="var(--accent)"
-                          stopOpacity="0.08"
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="var(--accent)"
-                          stopOpacity="0"
-                        />
-                      </linearGradient>
-                    </defs>
-                    {[46, 92, 138].map(y => (
-                      <line
-                        key={y}
-                        x1="18"
-                        x2="602"
-                        y1={y}
-                        y2={y}
-                        className="dashboard-activity-gridline"
-                      />
-                    ))}
-                    {activityOverview.total > 0 ? (
-                      <>
-                        <line
-                          x1="18"
-                          x2="602"
-                          y1={activityOverview.averageY}
-                          y2={activityOverview.averageY}
-                          className="dashboard-activity-average-line"
-                        />
-                        <path
-                          d={activityOverview.graphAreaPath}
-                          fill="url(#dashboardActivityArea)"
-                        />
-                        <path
-                          d={activityOverview.graphLinePath}
-                          className="dashboard-activity-line"
-                          stroke="url(#dashboardActivityLine)"
-                          fill="none"
-                        />
-                        {activityOverview.graphPoints.map(point => (
-                          <circle
-                            key={point.key}
-                            cx={point.x}
-                            cy={point.y}
-                            r={
-                              activityOverview.highlightPoint?.key === point.key
-                                ? 4.7
-                                : point.count > 0
-                                  ? 3.2
-                                  : 2.1
-                            }
-                            className={
-                              activityOverview.highlightPoint?.key === point.key
-                                ? "dashboard-activity-point is-highlight"
-                                : "dashboard-activity-point"
-                            }
-                          >
-                            <title>
-                              {`${point.title}: ${point.count} attempt${point.count === 1 ? "" : "s"}`}
-                            </title>
-                          </circle>
-                        ))}
-                      </>
-                    ) : (
-                      <path
-                        d="M 18 132 C 140 108 238 146 330 118 C 430 88 500 116 602 86"
-                        className="dashboard-activity-empty-line"
-                        fill="none"
-                      />
-                    )}
-                  </svg>
-
-                  <div
-                    className={`dashboard-activity-bars ${
-                      activityRange === "monthly" ? "is-dense" : ""
-                    }`}
-                  >
-                    {activityOverview.buckets.map(bucket => {
-                      const height =
-                        bucket.count === 0
-                          ? 14
-                          : Math.max(
-                              18,
-                              Math.round(
-                                (bucket.count / activityOverview.maxCount) * 56
+                        <span>Mon</span>
+                        <span />
+                        <span>Wed</span>
+                        <span />
+                        <span>Fri</span>
+                        <span />
+                        <span />
+                      </div>
+                      <div className="dashboard-heatmap-grid">
+                        {activityOverview.weeks.map(week => (
+                          <div key={week.key} className="dashboard-heatmap-week">
+                            {week.days.map((day, index) =>
+                              day ? (
+                                <span
+                                  key={day.key}
+                                  title={`${day.title}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
+                                  aria-label={`${day.title}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
+                                  className={`dashboard-heatmap-cell level-${day.intensity} ${
+                                    day.isCurrent ? "is-today" : ""
+                                  }`}
+                                />
+                              ) : (
+                                <span
+                                  key={`${week.key}-empty-${index}`}
+                                  className="dashboard-heatmap-cell is-empty"
+                                  aria-hidden="true"
+                                />
                               )
-                            );
-
-                      return (
-                        <div
-                          key={bucket.key}
-                          className="dashboard-activity-bar-column"
-                        >
-                          <span
-                            title={`${bucket.title}: ${bucket.count} attempt${bucket.count === 1 ? "" : "s"}`}
-                            className={`dashboard-activity-bar ${
-                              bucket.isCurrent ? "is-current" : ""
-                            }`}
-                            style={{
-                              height: `${height}px`,
-                              opacity: bucket.count === 0 ? 0.3 : 1,
-                            }}
-                          />
-                          <span
-                            className={`dashboard-activity-label text-xs ${
-                              bucket.isCurrent
-                                ? "font-semibold text-[var(--text-primary)]"
-                                : "text-[var(--text-secondary)]"
-                            }`}
-                          >
-                            {bucket.label}
-                          </span>
-                        </div>
-                      );
-                    })}
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
