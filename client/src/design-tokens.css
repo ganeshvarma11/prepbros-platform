@@ -833,6 +833,180 @@ html.light .badge-amber {
   white-space: nowrap;
 }
 
+.dashboard-activity-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  border-radius: 16px;
+  background: rgba(31, 41, 55, 0.08);
+}
+
+.dashboard-activity-summary > div {
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 16px 18px;
+}
+
+.dashboard-activity-summary-label,
+.dashboard-activity-kicker {
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.dashboard-activity-summary-value {
+  margin-top: 8px;
+  color: var(--text-1);
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.dashboard-activity-graph {
+  overflow: hidden;
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(248, 251, 255, 0.74)),
+    radial-gradient(circle at 82% 8%, rgba(255, 140, 50, 0.08), transparent 28%),
+    radial-gradient(circle at 12% 0%, rgba(89, 121, 232, 0.08), transparent 24%);
+}
+
+.dashboard-activity-graph-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 18px 0;
+}
+
+.dashboard-activity-pill {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.dashboard-activity-svg {
+  display: block;
+  width: 100%;
+  height: 230px;
+  margin-top: 4px;
+  overflow: visible;
+}
+
+.dashboard-activity-gridline {
+  stroke: rgba(31, 41, 55, 0.08);
+  stroke-width: 1;
+}
+
+.dashboard-activity-average-line {
+  stroke: rgba(16, 17, 20, 0.26);
+  stroke-width: 1.25;
+  stroke-dasharray: 5 7;
+}
+
+.dashboard-activity-line {
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 14px 16px rgba(255, 140, 50, 0.16));
+}
+
+.dashboard-activity-empty-line {
+  stroke: rgba(16, 17, 20, 0.22);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 8 10;
+}
+
+.dashboard-activity-point {
+  fill: #ffffff;
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+
+.dashboard-activity-point.is-highlight {
+  stroke: var(--brand);
+  stroke-width: 3;
+  filter: drop-shadow(0 8px 10px rgba(255, 140, 50, 0.32));
+}
+
+.dashboard-activity-bars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(52px, 1fr);
+  align-items: end;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 18px 18px;
+}
+
+.dashboard-activity-bars.is-dense {
+  grid-auto-columns: minmax(22px, 1fr);
+  gap: 6px;
+}
+
+.dashboard-activity-bar-column {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: 62px 18px;
+  align-items: end;
+  justify-items: center;
+  gap: 8px;
+}
+
+.dashboard-activity-bar {
+  display: block;
+  width: min(100%, 26px);
+  border-radius: 999px 999px 8px 8px;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--brand) 100%);
+  box-shadow: 0 16px 24px -20px rgba(255, 140, 50, 0.42);
+  transition:
+    height var(--t-base),
+    opacity var(--t-base),
+    transform var(--t-fast);
+}
+
+.dashboard-activity-bar:hover {
+  transform: translateY(-2px);
+}
+
+.dashboard-activity-bar.is-current {
+  outline: 2px solid rgba(255, 140, 50, 0.2);
+  outline-offset: 3px;
+}
+
+.dashboard-activity-bars.is-dense .dashboard-activity-label {
+  font-size: 10px;
+  opacity: 0;
+}
+
+.dashboard-activity-bars.is-dense
+  .dashboard-activity-bar-column:nth-child(5n + 1)
+  .dashboard-activity-label,
+.dashboard-activity-bars.is-dense
+  .dashboard-activity-bar-column:last-child
+  .dashboard-activity-label {
+  opacity: 1;
+}
+
 .dashboard-chip {
   border: 1px solid rgba(31, 41, 55, 0.08);
   background: rgba(245, 248, 252, 0.98);
@@ -978,6 +1152,40 @@ html.dark .dashboard-range-switch {
 html.dark .dashboard-range-switch button.is-active {
   background: rgba(255, 255, 255, 0.08);
   box-shadow: none;
+}
+
+html.dark .dashboard-activity-summary {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html.dark .dashboard-activity-summary > div {
+  background: rgba(16, 23, 34, 0.58);
+}
+
+html.dark .dashboard-activity-graph {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(16, 23, 34, 0.72), rgba(16, 23, 34, 0.48)),
+    radial-gradient(circle at 82% 8%, rgba(255, 140, 50, 0.08), transparent 28%),
+    radial-gradient(circle at 12% 0%, rgba(110, 151, 255, 0.08), transparent 24%);
+}
+
+html.dark .dashboard-activity-pill {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+html.dark .dashboard-activity-gridline {
+  stroke: rgba(255, 255, 255, 0.07);
+}
+
+html.dark .dashboard-activity-average-line {
+  stroke: rgba(255, 255, 255, 0.22);
+}
+
+html.dark .dashboard-activity-point {
+  fill: #101722;
 }
 
 html.dark .dashboard-progress-track {
@@ -1300,6 +1508,33 @@ html.light [data-slot="table-row"]:hover {
   .dashboard-page-header .page-title {
     max-width: none;
     font-size: clamp(2.1rem, 8vw, 2.8rem);
+  }
+
+  .dashboard-activity-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-activity-summary > div {
+    padding: 14px;
+  }
+
+  .dashboard-activity-graph-header {
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 16px 0;
+  }
+
+  .dashboard-activity-svg {
+    height: 190px;
+  }
+
+  .dashboard-activity-bars {
+    grid-auto-columns: minmax(42px, 1fr);
+    padding: 0 16px 16px;
+  }
+
+  .dashboard-activity-bars.is-dense {
+    grid-auto-columns: minmax(20px, 1fr);
   }
 
   .page-header {

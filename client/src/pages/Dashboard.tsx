@@ -52,6 +52,16 @@ type ActivityBucket = {
   isCurrent: boolean;
 };
 
+type ActivityGraphPoint = {
+  key: string;
+  x: number;
+  y: number;
+  count: number;
+  title: string;
+  label: string;
+  isCurrent: boolean;
+};
+
 const ACTIVITY_RANGES: {
   id: ActivityRange;
   label: string;
@@ -94,6 +104,9 @@ const toMonthKey = (value: Date | string) => {
 
 const clampPercent = (value: number) =>
   Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+
+const formatSignedPercent = (value: number) =>
+  `${value > 0 ? "+" : ""}${Math.round(value)}%`;
 
 const formatCount = (value: number) =>
   new Intl.NumberFormat("en-IN").format(value);
@@ -529,12 +542,91 @@ export default function Dashboard() {
             ? buildMonthBuckets(12)
             : buildDayBuckets(7);
     const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
+    const maxCount = Math.max(1, ...buckets.map(bucket => bucket.count));
+    const average = buckets.length > 0 ? total / buckets.length : 0;
+    const activeBuckets = buckets.filter(bucket => bucket.count > 0).length;
+    const bestBucket = buckets.reduce<ActivityBucket | null>((best, bucket) => {
+      if (!best || bucket.count > best.count) return bucket;
+      return best;
+    }, null);
+    const midpoint = Math.max(1, Math.floor(buckets.length / 2));
+    const firstHalfTotal = buckets
+      .slice(0, midpoint)
+      .reduce((sum, bucket) => sum + bucket.count, 0);
+    const secondHalfTotal = buckets
+      .slice(midpoint)
+      .reduce((sum, bucket) => sum + bucket.count, 0);
+    const trendPercent =
+      firstHalfTotal > 0
+        ? ((secondHalfTotal - firstHalfTotal) / firstHalfTotal) * 100
+        : secondHalfTotal > 0
+          ? 100
+          : 0;
+    const graphWidth = 620;
+    const graphHeight = 188;
+    const graphPaddingX = 18;
+    const graphPaddingTop = 20;
+    const graphPaddingBottom = 30;
+    const plotHeight = graphHeight - graphPaddingTop - graphPaddingBottom;
+    const graphPoints: ActivityGraphPoint[] = buckets.map((bucket, index) => {
+      const x =
+        buckets.length === 1
+          ? graphWidth / 2
+          : graphPaddingX +
+            (index / (buckets.length - 1)) *
+              (graphWidth - graphPaddingX * 2);
+      const y =
+        graphPaddingTop +
+        plotHeight -
+        (bucket.count / maxCount) * plotHeight;
+
+      return {
+        key: bucket.key,
+        x,
+        y,
+        count: bucket.count,
+        title: bucket.title,
+        label: bucket.label,
+        isCurrent: bucket.isCurrent,
+      };
+    });
+    const graphLinePath =
+      graphPoints.length > 0
+        ? graphPoints
+            .map((point, index) =>
+              `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`
+            )
+            .join(" ")
+        : "";
+    const graphAreaPath =
+      graphPoints.length > 0
+        ? `${graphLinePath} L ${graphPoints[graphPoints.length - 1].x.toFixed(2)} ${graphHeight - graphPaddingBottom} L ${graphPoints[0].x.toFixed(2)} ${graphHeight - graphPaddingBottom} Z`
+        : "";
+    const averageY =
+      graphPaddingTop + plotHeight - (average / maxCount) * plotHeight;
+    const highlightPoint =
+      graphPoints.find(point => point.isCurrent) ??
+      graphPoints.reduce<ActivityGraphPoint | null>((best, point) => {
+        if (!best || point.count > best.count) return point;
+        return best;
+      }, null);
 
     return {
       ...activeMeta,
       buckets,
       total,
-      maxCount: Math.max(1, ...buckets.map(bucket => bucket.count)),
+      maxCount,
+      average,
+      activeBuckets,
+      bestBucket,
+      trendPercent,
+      graphWidth,
+      graphHeight,
+      graphLinePath,
+      graphAreaPath,
+      graphPoints,
+      averageY,
+      highlightPoint,
     };
   }, [activityRange, resolvedAnswers, todayKey]);
 
@@ -873,7 +965,9 @@ export default function Dashboard() {
                       {activityOverview.title}
                     </p>
                     <p className="dashboard-detail-text mt-1 text-sm">
-                      {activityOverview.detail}
+                      {activityOverview.total > 0
+                        ? `${activityOverview.detail} with ${formatCount(activityOverview.total)} attempt${activityOverview.total === 1 ? "" : "s"}.`
+                        : `${activityOverview.detail}. Your progress graph will build as you practice.`}
                     </p>
                   </div>
 
@@ -896,66 +990,215 @@ export default function Dashboard() {
                         </button>
                       ))}
                     </div>
-                    <p className="dashboard-detail-text text-sm">
+                    <p className="dashboard-detail-text text-sm font-semibold">
                       {activityOverview.total > 0
-                        ? `${activityOverview.total} attempt${activityOverview.total === 1 ? "" : "s"} in this range`
-                        : "Your rhythm will appear after your next session"}
+                        ? `${formatSignedPercent(activityOverview.trendPercent)} vs earlier pace`
+                        : "Ready for your first session"}
                     </p>
                   </div>
                 </div>
 
-                <div
-                  className={`dashboard-activity-chart mt-5 ${
-                    activityRange === "monthly" ? "is-dense" : ""
-                  }`}
-                >
-                  {activityOverview.buckets.map(day => {
-                    const height =
-                      day.count === 0
-                        ? 14
-                        : Math.max(
-                            24,
-                            Math.round(
-                              (day.count / activityOverview.maxCount) * 100
-                            )
-                          );
+                <div className="dashboard-activity-summary mt-5">
+                  <div>
+                    <p className="dashboard-activity-summary-label">Attempts</p>
+                    <p className="dashboard-activity-summary-value">
+                      {formatCount(activityOverview.total)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="dashboard-activity-summary-label">
+                      Active{" "}
+                      {activityRange === "daily" || activityRange === "monthly"
+                        ? "days"
+                        : "months"}
+                    </p>
+                    <p className="dashboard-activity-summary-value">
+                      {formatCount(activityOverview.activeBuckets)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="dashboard-activity-summary-label">Average</p>
+                    <p className="dashboard-activity-summary-value">
+                      {activityOverview.average.toFixed(
+                        activityOverview.average >= 10 ? 0 : 1
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="dashboard-activity-summary-label">Best</p>
+                    <p className="dashboard-activity-summary-value">
+                      {formatCount(activityOverview.bestBucket?.count || 0)}
+                    </p>
+                  </div>
+                </div>
 
-                    return (
-                      <div
-                        key={day.key}
-                        className="flex min-w-0 flex-col items-center gap-2.5"
+                <div className="dashboard-activity-graph mt-5">
+                  <div className="dashboard-activity-graph-header">
+                    <div>
+                      <p className="dashboard-activity-kicker">
+                        Practice trend
+                      </p>
+                      <p className="dashboard-detail-text mt-1 text-sm">
+                        {activityOverview.bestBucket &&
+                        activityOverview.bestBucket.count > 0
+                          ? `Peak: ${activityOverview.bestBucket.title} with ${formatCount(activityOverview.bestBucket.count)} attempt${activityOverview.bestBucket.count === 1 ? "" : "s"}.`
+                          : "Start a set to see your strongest practice window."}
+                      </p>
+                    </div>
+                    <span className="dashboard-activity-pill">
+                      Avg {activityOverview.average.toFixed(1)}
+                    </span>
+                  </div>
+
+                  <svg
+                    className="dashboard-activity-svg"
+                    viewBox={`0 0 ${activityOverview.graphWidth} ${activityOverview.graphHeight}`}
+                    role="img"
+                    aria-label={`${activityOverview.title}: ${activityOverview.total} attempts`}
+                    preserveAspectRatio="none"
+                  >
+                    <defs>
+                      <linearGradient
+                        id="dashboardActivityLine"
+                        x1="0"
+                        x2="1"
+                        y1="0"
+                        y2="0"
                       >
-                        <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
-                          {day.count}
-                        </span>
+                        <stop offset="0%" stopColor="var(--accent)" />
+                        <stop offset="58%" stopColor="var(--brand)" />
+                        <stop offset="100%" stopColor="#ffb15f" />
+                      </linearGradient>
+                      <linearGradient
+                        id="dashboardActivityArea"
+                        x1="0"
+                        x2="0"
+                        y1="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="var(--brand)"
+                          stopOpacity="0.22"
+                        />
+                        <stop
+                          offset="62%"
+                          stopColor="var(--accent)"
+                          stopOpacity="0.08"
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="var(--accent)"
+                          stopOpacity="0"
+                        />
+                      </linearGradient>
+                    </defs>
+                    {[46, 92, 138].map(y => (
+                      <line
+                        key={y}
+                        x1="18"
+                        x2="602"
+                        y1={y}
+                        y2={y}
+                        className="dashboard-activity-gridline"
+                      />
+                    ))}
+                    {activityOverview.total > 0 ? (
+                      <>
+                        <line
+                          x1="18"
+                          x2="602"
+                          y1={activityOverview.averageY}
+                          y2={activityOverview.averageY}
+                          className="dashboard-activity-average-line"
+                        />
+                        <path
+                          d={activityOverview.graphAreaPath}
+                          fill="url(#dashboardActivityArea)"
+                        />
+                        <path
+                          d={activityOverview.graphLinePath}
+                          className="dashboard-activity-line"
+                          stroke="url(#dashboardActivityLine)"
+                          fill="none"
+                        />
+                        {activityOverview.graphPoints.map(point => (
+                          <circle
+                            key={point.key}
+                            cx={point.x}
+                            cy={point.y}
+                            r={
+                              activityOverview.highlightPoint?.key === point.key
+                                ? 4.7
+                                : point.count > 0
+                                  ? 3.2
+                                  : 2.1
+                            }
+                            className={
+                              activityOverview.highlightPoint?.key === point.key
+                                ? "dashboard-activity-point is-highlight"
+                                : "dashboard-activity-point"
+                            }
+                          >
+                            <title>
+                              {`${point.title}: ${point.count} attempt${point.count === 1 ? "" : "s"}`}
+                            </title>
+                          </circle>
+                        ))}
+                      </>
+                    ) : (
+                      <path
+                        d="M 18 132 C 140 108 238 146 330 118 C 430 88 500 116 602 86"
+                        className="dashboard-activity-empty-line"
+                        fill="none"
+                      />
+                    )}
+                  </svg>
+
+                  <div
+                    className={`dashboard-activity-bars ${
+                      activityRange === "monthly" ? "is-dense" : ""
+                    }`}
+                  >
+                    {activityOverview.buckets.map(bucket => {
+                      const height =
+                        bucket.count === 0
+                          ? 14
+                          : Math.max(
+                              18,
+                              Math.round(
+                                (bucket.count / activityOverview.maxCount) * 56
+                              )
+                            );
+
+                      return (
                         <div
-                          className={`dashboard-day-tile relative flex h-[124px] w-full items-end rounded-[16px] border px-2 pb-2 ${
-                            day.isCurrent
-                              ? "is-active border-[var(--brand-muted)]"
-                              : "border-[var(--border-soft)]"
-                          }`}
+                          key={bucket.key}
+                          className="dashboard-activity-bar-column"
                         >
-                          <div
-                            title={`${day.title}: ${day.count} attempt${day.count === 1 ? "" : "s"}`}
-                            className="w-full rounded-[10px] bg-[linear-gradient(180deg,var(--accent)_0%,var(--brand)_100%)] shadow-[0_16px_26px_-18px_rgba(87,123,235,0.42)] transition duration-300 hover:-translate-y-0.5"
+                          <span
+                            title={`${bucket.title}: ${bucket.count} attempt${bucket.count === 1 ? "" : "s"}`}
+                            className={`dashboard-activity-bar ${
+                              bucket.isCurrent ? "is-current" : ""
+                            }`}
                             style={{
-                              height: `${height}%`,
-                              opacity: day.count === 0 ? 0.42 : 1,
+                              height: `${height}px`,
+                              opacity: bucket.count === 0 ? 0.3 : 1,
                             }}
                           />
+                          <span
+                            className={`dashboard-activity-label text-xs ${
+                              bucket.isCurrent
+                                ? "font-semibold text-[var(--text-primary)]"
+                                : "text-[var(--text-secondary)]"
+                            }`}
+                          >
+                            {bucket.label}
+                          </span>
                         </div>
-                        <span
-                          className={`dashboard-activity-label text-xs ${
-                            day.isCurrent
-                              ? "font-semibold text-[var(--text-primary)]"
-                              : "text-[var(--text-secondary)]"
-                          }`}
-                        >
-                          {day.label}
-                        </span>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
