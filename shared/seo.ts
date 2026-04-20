@@ -1,5 +1,5 @@
 export const DEFAULT_SEO_SITE_NAME = "PrepBros";
-export const DEFAULT_SEO_SITE_URL = "https://prepbros.in";
+export const DEFAULT_SEO_SITE_URL = "https://www.prepbros.in";
 export const DEFAULT_SEO_DESCRIPTION =
   "PrepBros helps UPSC, SSC, state PSC, banking, and other government exam aspirants practice MCQs, revisit PYQs, track progress, and improve weak topics.";
 export const DEFAULT_OG_IMAGE_PATH = "/assets/prepbros-og.svg";
@@ -79,6 +79,14 @@ export type ResolvedSeoMetadata = {
   twitterHandle?: string;
   jsonLd: JsonLd;
 };
+
+function cleanConfigValue(value?: string) {
+  return value?.trim() || "";
+}
+
+function cleanSiteUrl(value?: string) {
+  return (cleanConfigValue(value) || DEFAULT_SEO_SITE_URL).replace(/\/+$/, "");
+}
 
 const sharedKeywords = [
   "UPSC preparation",
@@ -308,16 +316,16 @@ export function buildSeoRuntimeConfig(
   runtimeConfig: SeoRuntimeConfig = {}
 ) {
   return {
-    siteName: runtimeConfig.siteName || DEFAULT_SEO_SITE_NAME,
-    siteUrl: (runtimeConfig.siteUrl || DEFAULT_SEO_SITE_URL).replace(/\/+$/, ""),
-    supportEmail: runtimeConfig.supportEmail || "support@prepbros.in",
-    googleSiteVerification: runtimeConfig.googleSiteVerification || "",
-    bingSiteVerification: runtimeConfig.bingSiteVerification || "",
-    twitterHandle: runtimeConfig.twitterHandle || "",
-    defaultImagePath: runtimeConfig.defaultImagePath || DEFAULT_OG_IMAGE_PATH,
+    siteName: cleanConfigValue(runtimeConfig.siteName) || DEFAULT_SEO_SITE_NAME,
+    siteUrl: cleanSiteUrl(runtimeConfig.siteUrl),
+    supportEmail: cleanConfigValue(runtimeConfig.supportEmail) || "support@prepbros.in",
+    googleSiteVerification: cleanConfigValue(runtimeConfig.googleSiteVerification),
+    bingSiteVerification: cleanConfigValue(runtimeConfig.bingSiteVerification),
+    twitterHandle: cleanConfigValue(runtimeConfig.twitterHandle),
+    defaultImagePath: cleanConfigValue(runtimeConfig.defaultImagePath) || DEFAULT_OG_IMAGE_PATH,
     currentIsoDate:
-      runtimeConfig.currentIsoDate || new Date().toISOString(),
-    indexNowKey: runtimeConfig.indexNowKey || "",
+      cleanConfigValue(runtimeConfig.currentIsoDate) || new Date().toISOString(),
+    indexNowKey: cleanConfigValue(runtimeConfig.indexNowKey),
   };
 }
 

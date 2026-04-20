@@ -1,27 +1,35 @@
 const DEFAULT_SITE_NAME = "PrepBros";
 const DEFAULT_SUPPORT_EMAIL = "support@prepbros.in";
 const DEFAULT_EFFECTIVE_DATE = "March 25, 2026";
-const DEFAULT_SITE_URL = "https://prepbros.in";
+const DEFAULT_SITE_URL = "https://www.prepbros.in";
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "0.0.0.0"]);
 
+function cleanConfigValue(value?: string) {
+  return value?.trim() || "";
+}
+
+function cleanSiteUrl(value?: string) {
+  return (cleanConfigValue(value) || DEFAULT_SITE_URL).replace(/\/+$/, "");
+}
+
 export const siteConfig = {
-  siteName: import.meta.env.VITE_SITE_NAME || DEFAULT_SITE_NAME,
-  siteUrl: (import.meta.env.VITE_SITE_URL || DEFAULT_SITE_URL).replace(/\/+$/, ""),
-  legalEntity: import.meta.env.VITE_LEGAL_ENTITY || DEFAULT_SITE_NAME,
-  supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || DEFAULT_SUPPORT_EMAIL,
+  siteName: cleanConfigValue(import.meta.env.VITE_SITE_NAME) || DEFAULT_SITE_NAME,
+  siteUrl: cleanSiteUrl(import.meta.env.VITE_SITE_URL),
+  legalEntity: cleanConfigValue(import.meta.env.VITE_LEGAL_ENTITY) || DEFAULT_SITE_NAME,
+  supportEmail: cleanConfigValue(import.meta.env.VITE_SUPPORT_EMAIL) || DEFAULT_SUPPORT_EMAIL,
   billingEmail:
-    import.meta.env.VITE_BILLING_EMAIL ||
-    import.meta.env.VITE_SUPPORT_EMAIL ||
+    cleanConfigValue(import.meta.env.VITE_BILLING_EMAIL) ||
+    cleanConfigValue(import.meta.env.VITE_SUPPORT_EMAIL) ||
     DEFAULT_SUPPORT_EMAIL,
   companyAddress:
-    import.meta.env.VITE_COMPANY_ADDRESS || "Hyderabad, Telangana, India",
-  governingLaw: import.meta.env.VITE_GOVERNING_LAW || "India",
+    cleanConfigValue(import.meta.env.VITE_COMPANY_ADDRESS) || "Hyderabad, Telangana, India",
+  governingLaw: cleanConfigValue(import.meta.env.VITE_GOVERNING_LAW) || "India",
   legalEffectiveDate:
-    import.meta.env.VITE_LEGAL_EFFECTIVE_DATE || DEFAULT_EFFECTIVE_DATE,
+    cleanConfigValue(import.meta.env.VITE_LEGAL_EFFECTIVE_DATE) || DEFAULT_EFFECTIVE_DATE,
   paymentProviderLabel:
-    import.meta.env.VITE_PAYMENT_PROVIDER_LABEL || "our secure checkout partner",
-  monthlyCheckoutUrl: import.meta.env.VITE_PRO_MONTHLY_CHECKOUT_URL || "",
-  annualCheckoutUrl: import.meta.env.VITE_PRO_ANNUAL_CHECKOUT_URL || "",
+    cleanConfigValue(import.meta.env.VITE_PAYMENT_PROVIDER_LABEL) || "our secure checkout partner",
+  monthlyCheckoutUrl: cleanConfigValue(import.meta.env.VITE_PRO_MONTHLY_CHECKOUT_URL),
+  annualCheckoutUrl: cleanConfigValue(import.meta.env.VITE_PRO_ANNUAL_CHECKOUT_URL),
 };
 
 function getConfiguredSiteOrigin() {

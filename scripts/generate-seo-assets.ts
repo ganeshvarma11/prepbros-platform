@@ -1,16 +1,18 @@
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
   generateRobotsTxt,
   generateSitemapXml,
+  replaceSeoHead,
 } from "../shared/seo";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const publicDir = path.join(rootDir, "client", "public");
+const indexHtmlPath = path.join(rootDir, "client", "index.html");
 
 const runtime = {
   siteName: process.env.VITE_SITE_NAME,
@@ -23,6 +25,9 @@ const runtime = {
 };
 
 await mkdir(publicDir, { recursive: true });
+
+const indexHtml = await readFile(indexHtmlPath, "utf8");
+await writeFile(indexHtmlPath, replaceSeoHead(indexHtml, "/", runtime), "utf8");
 
 await writeFile(
   path.join(publicDir, "robots.txt"),

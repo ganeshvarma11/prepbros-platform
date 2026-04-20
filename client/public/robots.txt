@@ -5,4 +5,4 @@ Disallow: /admin
 Disallow: /dashboard
 Disallow: /explore
 Disallow: /profile
-Sitemap: https://prepbros.in/sitemap.xml
+Sitemap: https://www.prepbros.in/sitemap.xml
