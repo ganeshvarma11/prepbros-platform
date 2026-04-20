@@ -1,7 +1,7 @@
 export const DEFAULT_SEO_SITE_NAME = "PrepBros";
 export const DEFAULT_SEO_SITE_URL = "https://prepbros.in";
 export const DEFAULT_SEO_DESCRIPTION =
-  "PrepBros helps UPSC, SSC, and state exam aspirants practice daily MCQs, revisit PYQs, track progress, and improve weak topics with a focused prep system.";
+  "PrepBros helps UPSC, SSC, state PSC, banking, and other government exam aspirants practice MCQs, revisit PYQs, track progress, and improve weak topics.";
 export const DEFAULT_OG_IMAGE_PATH = "/assets/prepbros-og.svg";
 export const DEFAULT_LOGO_IMAGE_PATH = "/assets/prepbros-logo-final.svg";
 export const DEFAULT_OG_IMAGE_WIDTH = "1200";
@@ -105,7 +105,7 @@ export const seoRoutes: SeoRoute[] = [
   },
   {
     path: "/practice",
-    title: "Practice Questions, PYQs & Topic Drills",
+    title: "Practice Questions",
     description:
       "Solve topic-wise practice questions, previous year papers, and exam-specific MCQs for UPSC, SSC, TSPSC, APPSC, RRB, and IBPS.",
     keywords: ["practice questions", "MCQs", "PYQs", "topic-wise practice"],
@@ -118,7 +118,7 @@ export const seoRoutes: SeoRoute[] = [
   },
   {
     path: "/aptitude",
-    title: "Aptitude & Reasoning Practice",
+    title: "Aptitude Practice",
     description:
       "Practice quantitative aptitude, reasoning, reading comprehension, data interpretation, and mental ability for government exams.",
     keywords: ["aptitude practice", "reasoning questions", "quantitative aptitude"],
@@ -131,7 +131,7 @@ export const seoRoutes: SeoRoute[] = [
   },
   {
     path: "/contests",
-    title: "Exam Contests & Weekly Challenges",
+    title: "Exam Contests",
     description:
       "Join weekly contests, follow upcoming exam challenges, and add time pressure and competition to your preparation routine.",
     keywords: ["exam contest", "weekly challenge", "mock competition"],
@@ -155,7 +155,7 @@ export const seoRoutes: SeoRoute[] = [
   },
   {
     path: "/resources",
-    title: "Study Resources, Books & PDFs",
+    title: "Study Resources",
     description:
       "Browse curated study resources, books, PDFs, and channels for UPSC, SSC, and other government exam preparation paths.",
     keywords: ["study resources", "UPSC books", "SSC PDFs", "exam materials"],
@@ -168,7 +168,7 @@ export const seoRoutes: SeoRoute[] = [
   },
   {
     path: "/updates",
-    title: "Exam Updates, Job Alerts & Application Deadlines",
+    title: "Exam Updates",
     description:
       "Track upcoming exams, government job alerts, application deadlines, and official apply links with filters for state, eligibility, and exam type.",
     keywords: [
@@ -186,7 +186,7 @@ export const seoRoutes: SeoRoute[] = [
   },
   {
     path: "/premium",
-    title: "Premium Plans for Serious Aspirants",
+    title: "Premium Plans",
     description:
       "Compare PrepBros plans, premium features, and billing options for aspirants who want unlimited access and stronger progress tools.",
     keywords: ["premium plan", "exam prep subscription", "PrepBros pricing"],
@@ -373,6 +373,7 @@ function buildStructuredData(
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteName,
+    alternateName: ["Prep Bros", "PrepBros.in"],
     url: siteUrl,
     logo: buildAbsoluteUrl(siteUrl, DEFAULT_LOGO_IMAGE_PATH),
     contactPoint: [
@@ -389,14 +390,26 @@ function buildStructuredData(
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: siteName,
+    alternateName: ["Prep Bros", "PrepBros.in"],
     url: siteUrl,
     description: DEFAULT_SEO_DESCRIPTION,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${buildAbsoluteUrl(siteUrl, "/resources")}?search={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
   };
+
+  const sitelinkPages = getIndexableSeoRoutes()
+    .filter(
+      (seoRoute) =>
+        seoRoute.path !== "/" &&
+        !["/privacy", "/terms", "/status"].includes(seoRoute.path)
+    )
+    .map((seoRoute) => ({
+      "@type": "WebPage",
+      name: seoRoute.title,
+      url: buildAbsoluteUrl(siteUrl, seoRoute.path),
+    }));
+
+  if (sitelinkPages.length > 0) {
+    webSite.hasPart = sitelinkPages;
+  }
 
   const page: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -591,7 +604,7 @@ export function generateSitemapXml(runtimeConfig: SeoRuntimeConfig = {}) {
       }
 
       if (typeof route.priority === "number") {
-        parts.push(`    <priority>${route.priority.toFixed(1)}</priority>`);
+        parts.push(`    <priority>${route.priority.toFixed(2)}</priority>`);
       }
 
       parts.push("  </url>");

@@ -6,8 +6,10 @@ import { siteConfig } from "@/lib/siteConfig";
 
 const FOOTER_LINKS = [
   { label: "Practice", href: "/practice" },
+  { label: "Aptitude", href: "/aptitude" },
+  { label: "Contests", href: "/contests" },
+  { label: "Resources", href: "/resources" },
   { label: "Updates", href: "/updates" },
-  { label: "Dashboard", href: "/dashboard" },
   { label: "Premium", href: "/premium" },
   { label: "Support", href: "/support" },
   { label: "Privacy", href: "/privacy" },

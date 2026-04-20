@@ -16,19 +16,27 @@ import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
-const DEFAULT_NAV_LINKS = [
+type NavLink = {
+  href: string;
+  label: string;
+  anchor?: boolean;
+};
+
+const DEFAULT_NAV_LINKS: NavLink[] = [
   { href: "/practice", label: "Practice" },
   { href: "/updates", label: "Updates" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/#review-system", label: "Review", anchor: true },
+  { href: "/resources", label: "Resources" },
+  { href: "/aptitude", label: "Aptitude" },
+  { href: "/premium", label: "Premium" },
   { href: "/support", label: "Support" },
 ];
 
-const LANDING_NAV_LINKS = [
+const LANDING_NAV_LINKS: NavLink[] = [
   { href: "/practice", label: "Practice" },
   { href: "/updates", label: "Updates" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/#review-system", label: "Review", anchor: true },
+  { href: "/resources", label: "Resources" },
+  { href: "/contests", label: "Contests" },
+  { href: "/premium", label: "Pricing" },
 ];
 
 interface NavbarProps {
