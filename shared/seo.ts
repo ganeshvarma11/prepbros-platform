@@ -85,7 +85,19 @@ function cleanConfigValue(value?: string) {
 }
 
 function cleanSiteUrl(value?: string) {
-  return (cleanConfigValue(value) || DEFAULT_SEO_SITE_URL).replace(/\/+$/, "");
+  const cleaned = (cleanConfigValue(value) || DEFAULT_SEO_SITE_URL).replace(/\/+$/, "");
+
+  try {
+    const url = new URL(cleaned);
+
+    if (url.hostname === "prepbros.in") {
+      url.hostname = "www.prepbros.in";
+    }
+
+    return url.origin;
+  } catch {
+    return cleaned;
+  }
 }
 
 const sharedKeywords = [
