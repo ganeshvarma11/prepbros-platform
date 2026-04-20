@@ -13,10 +13,11 @@ interface AuthContextType {
     email: string,
     password: string,
     fullName?: string,
-    targetExam?: string,
+    targetExam?: string
   ) => Promise<{ error: any; session: Session | null }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
+  resendSignupConfirmation: (email: string) => Promise<{ error: any }>;
   sendPhoneOtp: (phone: string) => Promise<{ error: any }>;
   verifyPhoneOtp: (phone: string, token: string) => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -42,7 +43,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -55,9 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     fullName?: string,
-    targetExam?: string,
+    targetExam?: string
   ) => {
-    const normalizedName = fullName?.trim() || email.split("@")[0] || "Aspirant";
+    const normalizedName =
+      fullName?.trim() || email.split("@")[0] || "Aspirant";
 
     const {
       data: { session },
@@ -77,7 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     return { error };
   };
 
@@ -85,7 +92,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const redirectTo = getAuthRedirectUrl("/practice");
 
     if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(POST_AUTH_REDIRECT_STORAGE_KEY, "/practice");
+      window.sessionStorage.setItem(
+        POST_AUTH_REDIRECT_STORAGE_KEY,
+        "/practice"
+      );
     }
 
     const { error } = await supabase.auth.signInWithOAuth({
@@ -99,6 +109,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.sessionStorage.removeItem(POST_AUTH_REDIRECT_STORAGE_KEY);
     }
 
+    return { error };
+  };
+
+  const resendSignupConfirmation = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: {
+        emailRedirectTo: getAuthRedirectUrl("/practice"),
+      },
+    });
     return { error };
   };
 
@@ -149,6 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signIn,
         signInWithGoogle,
+        resendSignupConfirmation,
         sendPhoneOtp,
         verifyPhoneOtp,
         resetPassword,

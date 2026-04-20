@@ -15,6 +15,7 @@ import { z } from "zod";
 import { Link, useLocation } from "wouter";
 
 import BrandLogo from "@/components/BrandLogo";
+import GoogleIcon from "@/components/GoogleIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackEvent } from "@/lib/analytics";
 import { getPolicyUrl } from "@/lib/siteConfig";
@@ -51,13 +52,17 @@ export default function AuthModal({
   onClose,
   defaultTab = "login",
 }: AuthModalProps) {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resendSignupConfirmation } =
+    useAuth();
   const [, setLocation] = useLocation();
   const [tab, setTab] = useState<"login" | "signup">(defaultTab);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [resendMessage, setResendMessage] = useState("");
   const [confirmedEmail, setConfirmedEmail] = useState("");
 
   const loginForm = useForm<LoginValues>({
@@ -79,9 +84,13 @@ export default function AuthModal({
     if (!isOpen) return;
     setTab(defaultTab);
     setSubmitError("");
+    setResendMessage("");
     setShowPassword(false);
     setLoading(false);
+    setOauthLoading(false);
+    setResendLoading(false);
     setSuccess(false);
+    setConfirmedEmail("");
     loginForm.reset({ email: "", password: "" });
     signupForm.reset({
       fullName: "",
@@ -106,6 +115,7 @@ export default function AuthModal({
   const handleLogin = loginForm.handleSubmit(async data => {
     setLoading(true);
     setSubmitError("");
+    setResendMessage("");
     const { error: authError } = await signIn(data.email, data.password);
     setLoading(false);
 
@@ -125,6 +135,7 @@ export default function AuthModal({
   const handleSignup = signupForm.handleSubmit(async data => {
     setLoading(true);
     setSubmitError("");
+    setResendMessage("");
 
     const { error: authError, session } = await signUp(
       data.email,
@@ -153,6 +164,51 @@ export default function AuthModal({
     trackEvent("auth_signup_success", { target_exam: data.targetExam });
     setSuccess(true);
   });
+
+  const handleGoogleAuth = async () => {
+    setOauthLoading(true);
+    setSubmitError("");
+    setResendMessage("");
+    trackEvent("auth_google_started", { source: "modal", mode: tab });
+
+    const { error } = await signInWithGoogle();
+
+    if (error) {
+      setSubmitError(
+        error.message || "Google sign in is not available right now."
+      );
+      setOauthLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!confirmedEmail) return;
+
+    setResendLoading(true);
+    setSubmitError("");
+    setResendMessage("");
+
+    const { error } = await resendSignupConfirmation(confirmedEmail);
+    setResendLoading(false);
+
+    if (error) {
+      setSubmitError(
+        error.message ||
+          "We could not resend the confirmation email. Try again in a moment."
+      );
+      return;
+    }
+
+    trackEvent("auth_signup_confirmation_resent");
+    setResendMessage("Confirmation email sent again.");
+  };
+
+  const goToPractice = () => {
+    onClose();
+    setLocation("/practice");
+  };
+
+  const isBusy = loading || oauthLoading;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 md:p-4">
@@ -211,9 +267,7 @@ export default function AuthModal({
                       size={18}
                       className="mt-0.5 text-[var(--brand)]"
                     />
-                    <p className="text-sm text-slate-600">
-                      {item}
-                    </p>
+                    <p className="text-sm text-slate-600">{item}</p>
                   </div>
                 ))}
               </div>
@@ -234,16 +288,44 @@ export default function AuthModal({
                   <span className="font-semibold text-[var(--text-primary)]">
                     {confirmedEmail}
                   </span>
-                  . Open it to activate your account. The confirmation link
-                  will take you straight into practice.
+                  . You can start practicing now, then verify when convenient to
+                  activate progress sync on your account.
                 </p>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="btn-primary mx-auto mt-8 rounded-full px-6"
-                >
-                  Continue
-                </button>
+                <div className="mx-auto mt-8 flex w-full max-w-sm flex-col gap-3">
+                  <button
+                    type="button"
+                    onClick={goToPractice}
+                    className="btn-primary flex w-full rounded-[12px] px-6 py-3"
+                  >
+                    Start practicing now
+                    <ArrowRight size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResendConfirmation}
+                    disabled={resendLoading}
+                    className="btn-secondary flex w-full rounded-[12px] px-6 py-3"
+                  >
+                    {resendLoading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Resend confirmation email"
+                    )}
+                  </button>
+                </div>
+                {resendMessage ? (
+                  <p className="mt-4 text-sm font-medium text-[var(--green)]">
+                    {resendMessage}
+                  </p>
+                ) : null}
+                {submitError ? (
+                  <div className="mx-auto mt-4 max-w-sm rounded-[14px] border border-[var(--red)]/20 bg-[var(--red-bg)] px-4 py-3 text-sm text-[var(--red)]">
+                    {submitError}
+                  </div>
+                ) : null}
               </div>
             ) : (
               <>
@@ -294,6 +376,32 @@ export default function AuthModal({
                       {item === "login" ? "Log in" : "Sign up"}
                     </button>
                   ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleGoogleAuth();
+                  }}
+                  disabled={isBusy}
+                  className="mb-4 inline-flex h-12 w-full items-center justify-center gap-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface-1)] px-5 text-[15px] font-semibold text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-70 md:mb-5"
+                >
+                  {oauthLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <GoogleIcon />
+                  )}
+                  {tab === "login"
+                    ? "Continue with Google"
+                    : "Sign up with Google"}
+                </button>
+
+                <div className="mb-4 flex items-center gap-4 md:mb-5">
+                  <div className="h-px flex-1 bg-[var(--border)]" />
+                  <span className="text-xs uppercase tracking-[0.24em] text-[var(--text-faint)]">
+                    or
+                  </span>
+                  <div className="h-px flex-1 bg-[var(--border)]" />
                 </div>
 
                 {tab === "login" ? (
@@ -384,7 +492,7 @@ export default function AuthModal({
 
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={isBusy}
                       className="btn-primary flex w-full rounded-[12px] py-2.5 md:py-3"
                     >
                       {loading ? (
@@ -548,7 +656,7 @@ export default function AuthModal({
 
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={isBusy}
                       className="btn-primary flex w-full rounded-[12px] py-2.5 md:py-3"
                     >
                       {loading ? (
