@@ -1374,6 +1374,66 @@ select::placeholder {
   opacity: 0.9;
 }
 
+.theme-toggle {
+  width: 54px;
+  min-width: 54px;
+  height: 28px;
+}
+
+.theme-toggle::after {
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+}
+
+.theme-toggle[data-state="on"] {
+  --toggle-thumb-x: 26px;
+}
+
+.theme-toggle__icon {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  opacity: 0.48;
+  transform: translateY(-50%);
+  transition:
+    color var(--t-base),
+    opacity var(--t-base),
+    transform var(--t-base);
+  pointer-events: none;
+}
+
+.theme-toggle__icon--sun {
+  left: 7px;
+}
+
+.theme-toggle__icon--moon {
+  right: 7px;
+}
+
+.theme-toggle[data-state="off"] .theme-toggle__icon--sun {
+  color: var(--brand);
+  opacity: 0.95;
+}
+
+.theme-toggle[data-state="off"] .theme-toggle__icon--moon {
+  opacity: 0.4;
+}
+
+.theme-toggle[data-state="on"] .theme-toggle__icon--sun {
+  opacity: 0.4;
+}
+
+.theme-toggle[data-state="on"] .theme-toggle__icon--moon {
+  color: var(--brand);
+  opacity: 0.95;
+}
+
 .option-btn {
   width: 100%;
   text-align: left;
